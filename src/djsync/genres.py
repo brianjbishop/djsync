@@ -41,7 +41,7 @@ def _batch_artist_genres(
     """Return all genre strings for a batch of artist ids (max 50)."""
     if not artist_ids:
         return []
-    result = client.artists(artist_ids[:50])
+    result = spotify.call_spotify(client.artists, artist_ids[:50])
     genres: list[str] = []
     for artist in result.get("artists") or []:
         if artist is None:

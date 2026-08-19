@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Any, Callable, TypeVar
 
 import spotipy
+from spotipy.exceptions import SpotifyException
 from spotipy.oauth2 import SpotifyOAuth
 
 from djsync import sigils
@@ -14,6 +16,9 @@ __all__ = [
     "Track",
     "Playlist",
     "Album",
+    "RateLimitedError",
+    "format_rate_limit_message",
+    "call_spotify",
     "get_client",
     "fetch_playlists",
     "fetch_tracks",
@@ -26,6 +31,58 @@ SCOPE = (
 )
 CACHE_PATH = ".cache"
 
+T = TypeVar("T")
+
+
+class RateLimitedError(Exception):
+    """Raised when Spotify returns HTTP 429 for this application."""
+
+    def __init__(self, retry_after_seconds: int, *, message: str | None = None) -> None:
+        self.retry_after_seconds = retry_after_seconds
+        super().__init__(message or format_rate_limit_message(retry_after_seconds))
+
+
+def format_rate_limit_message(retry_after_seconds: int) -> str:
+    """Return a human-readable rate-limit message for CLI and web UI."""
+    if retry_after_seconds >= 3600:
+        wait = f"~{retry_after_seconds / 3600:.1f} hours"
+    elif retry_after_seconds >= 60:
+        wait = f"~{retry_after_seconds // 60} minutes"
+    else:
+        wait = f"~{retry_after_seconds} seconds"
+    return (
+        f"Spotify rate limit reached for this application. "
+        f"Retry after {wait} ({retry_after_seconds} s). "
+        "This lockout is per-application, not per-user."
+    )
+
+
+def _parse_retry_after(headers: Any) -> int:
+    if not headers:
+        return 0
+    raw = headers.get("Retry-After") or headers.get("retry-after")
+    if raw is None:
+        return 0
+    try:
+        return int(raw)
+    except (TypeError, ValueError):
+        return 0
+
+
+def call_spotify(fn: Callable[..., T], /, *args: Any, **kwargs: Any) -> T:
+    """Call a Spotipy method and translate HTTP 429 into RateLimitedError."""
+    return _spotify_call(fn, *args, **kwargs)
+
+
+def _spotify_call(fn: Callable[..., T], /, *args: Any, **kwargs: Any) -> T:
+    """Call a Spotipy method and translate HTTP 429 into RateLimitedError."""
+    try:
+        return fn(*args, **kwargs)
+    except SpotifyException as exc:
+        if exc.http_status == 429:
+            raise RateLimitedError(_parse_retry_after(exc.headers)) from exc
+        raise
+
 
 @dataclass(frozen=True)
 class Playlist:
@@ -33,6 +90,7 @@ class Playlist:
     name: str
     track_count: int
     sigils: frozenset[str]
+    snapshot_id: str = ""
 
 
 @dataclass(frozen=True)
@@ -84,7 +142,7 @@ def fetch_playlists(client: spotipy.Spotify) -> list[Playlist]:
     limit = 50
 
     while True:
-        page = client.current_user_playlists(limit=limit, offset=offset)
+        page = _spotify_call(client.current_user_playlists, limit=limit, offset=offset)
         items = page.get("items") or []
 
         for item in items:
@@ -105,6 +163,7 @@ def fetch_playlists(client: spotipy.Spotify) -> list[Playlist]:
                     name=name,
                     track_count=_track_total(item),
                     sigils=frozenset(sigils.parse_sigils(name)),
+                    snapshot_id=item.get("snapshot_id") or "",
                 )
             )
 
@@ -122,7 +181,9 @@ def fetch_tracks(client: spotipy.Spotify, playlist_id: str) -> list[Track]:
     limit = 100
 
     while True:
-        page = client.playlist_tracks(playlist_id, limit=limit, offset=offset)
+        page = _spotify_call(
+            client.playlist_tracks, playlist_id, limit=limit, offset=offset
+        )
         items = page.get("items") or []
 
         for item in items:
@@ -183,7 +244,7 @@ def fetch_saved_albums(client: spotipy.Spotify) -> list[Album]:
     limit = 50
 
     while True:
-        page = client.current_user_saved_albums(limit=limit, offset=offset)
+        page = _spotify_call(client.current_user_saved_albums, limit=limit, offset=offset)
         items = page.get("items") or []
 
         for item in items:
@@ -240,7 +301,7 @@ def fetch_album_tracks(
     limit = 50
 
     while True:
-        page = client.album_tracks(album_id, limit=limit, offset=offset)
+        page = _spotify_call(client.album_tracks, album_id, limit=limit, offset=offset)
         items = page.get("items") or []
 
         for track in items:

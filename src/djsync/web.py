@@ -73,7 +73,7 @@ def _merge_playlists(cache_data: dict[str, Any]) -> list[dict[str, Any]]:
     genre_map = genres.load_genres()
     rows: list[dict[str, Any]] = []
     for p in cache_data.get("playlists") or []:
-        row = dict(p)
+        row = {key: value for key, value in p.items() if key != "tracks"}
         row["selected"] = row["id"] in selected
         row["genre"] = genre_map.get(row["id"])
         rows.append(row)
@@ -113,12 +113,26 @@ def create_app() -> Flask:
     def api_destination() -> Any:
         return jsonify(_destination_payload())
 
+    def _rate_limit_response(exc: spotify.RateLimitedError) -> tuple[Any, int]:
+        return (
+            jsonify(
+                {
+                    "error": str(exc),
+                    "rate_limited": True,
+                    "retry_after_seconds": exc.retry_after_seconds,
+                }
+            ),
+            429,
+        )
+
     @app.get("/api/playlists")
     def api_playlists() -> Any:
         refresh = request.args.get("refresh") == "1"
         try:
             client = spotify.get_client()
             data = cache.get_or_build_cache(client, refresh=refresh)
+        except spotify.RateLimitedError as exc:
+            return _rate_limit_response(exc)
         except RuntimeError as exc:
             return jsonify({"error": str(exc)}), 500
         payload = _cache_response(data)
@@ -136,6 +150,8 @@ def create_app() -> Flask:
         try:
             client = spotify.get_client()
             data = cache.get_or_build_cache(client, refresh=refresh)
+        except spotify.RateLimitedError as exc:
+            return _rate_limit_response(exc)
         except RuntimeError as exc:
             return jsonify({"error": str(exc)}), 500
         payload = _cache_response(data)
@@ -149,10 +165,21 @@ def create_app() -> Flask:
 
     @app.post("/api/refresh")
     def api_refresh() -> Any:
+        body = request.get_json(silent=True) or {}
+        max_playlists = body.get("max_playlists")
+        if max_playlists is not None and not isinstance(max_playlists, int):
+            return jsonify({"error": "max_playlists must be an integer"}), 400
         try:
             client = spotify.get_client()
-            data = cache.build_cache(client)
+            prior = cache.load_cache()
+            data = cache.build_cache(
+                client,
+                max_playlists=max_playlists,
+                prior=prior,
+            )
             cache.save_cache(data)
+        except spotify.RateLimitedError as exc:
+            return _rate_limit_response(exc)
         except RuntimeError as exc:
             return jsonify({"error": str(exc)}), 500
         return jsonify(_cache_response(data))
@@ -365,7 +392,7 @@ def create_app() -> Flask:
                         _job.skipped += result.skipped
                         _job.failed += result.failed
                         _job.unverified_explicit.extend(result.unverified_explicit)
-            except RuntimeError as exc:
+            except (spotify.RateLimitedError, RuntimeError) as exc:
                 with _job_lock:
                     _job.log.append(f"ERROR: {exc}")
             finally:

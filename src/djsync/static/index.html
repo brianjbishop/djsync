@@ -254,6 +254,13 @@ a:hover { text-decoration: underline; }
   color: #f5a8a0;
 }
 
+.alert-error.rate-limited {
+  background: var(--warn-bg);
+  border-color: rgba(245, 166, 35, 0.45);
+  color: #ffd08a;
+  font-weight: 500;
+}
+
 .alert-info {
   background: var(--accent-glow);
   border-color: rgba(29, 185, 84, 0.3);
@@ -1006,6 +1013,11 @@ tr.group-header:first-child td {
   function showError(msg) {
     els.errorAlert.textContent = msg;
     els.errorAlert.classList.remove("hidden");
+    if (/rate limit/i.test(msg)) {
+      els.errorAlert.classList.add("rate-limited");
+    } else {
+      els.errorAlert.classList.remove("rate-limited");
+    }
   }
 
   function clearError() {

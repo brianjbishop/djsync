@@ -8,6 +8,7 @@ from unittest.mock import patch
 import pytest
 
 from djsync.config import Destination
+from djsync import spotify
 from djsync.web import create_app
 
 
@@ -43,6 +44,24 @@ def test_index_no_store_cache_control(client) -> None:
     resp = test_client.get("/")
     assert resp.status_code == 200
     assert resp.headers.get("Cache-Control") == "no-store"
+
+
+def test_api_refresh_rate_limited(client, monkeypatch: pytest.MonkeyPatch) -> None:
+    test_client, _dest = client
+    exc = spotify.RateLimitedError(3600)
+
+    def _boom(*_args, **_kwargs):
+        raise exc
+
+    monkeypatch.setattr("djsync.web.spotify.get_client", lambda: object())
+    monkeypatch.setattr("djsync.web.cache.build_cache", _boom)
+
+    resp = test_client.post("/api/refresh", json={})
+    assert resp.status_code == 429
+    data = resp.get_json()
+    assert data["rate_limited"] is True
+    assert data["retry_after_seconds"] == 3600
+    assert "per-application" in data["error"]
 
 
 def test_api_sync_rejects_unmounted_drive(client) -> None:
