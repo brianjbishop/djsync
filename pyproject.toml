@@ -28,6 +28,7 @@ build-backend = "uv_build"
 [tool.uv.build-backend]
 module-name = "djsync"
 module-root = "src"
+source-include = ["djsync/static/**"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

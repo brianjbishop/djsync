@@ -194,52 +194,52 @@ def create_app() -> Flask:
         job_id = "sync"
 
         def run_sync() -> None:
-        with _job_lock:
-            _job.running = True
-            _job.current_playlist = None
-            _job.current_track = None
-            _job.done = 0
-            _job.total = sum(
-                max(0, by_id[str(pid)]["track_count"] - by_id[str(pid)]["downloaded_count"])
-                for pid in playlist_ids
-                if str(pid) in by_id
-            )
-            _job.downloaded = 0
-            _job.skipped = 0
-            _job.failed = 0
-            _job.log = []
-
-        try:
-            client = spotify.get_client()
-            for pl in targets:
-                with _job_lock:
-                    _job.current_playlist = pl.name
-
-                def on_log(msg: str) -> None:
-                    with _job_lock:
-                        _job.log.append(msg)
-                        if len(_job.log) > 200:
-                            _job.log = _job.log[-200:]
-
-                def on_track(name: str) -> None:
-                    with _job_lock:
-                        _job.current_track = name
-
-                def on_progress() -> None:
-                    with _job_lock:
-                        _job.done += 1
-
-                result = sync.sync_playlist(
-                    client,
-                    pl,
-                    on_log=on_log,
-                    on_track=on_track,
-                    on_progress=on_progress,
+            with _job_lock:
+                _job.running = True
+                _job.current_playlist = None
+                _job.current_track = None
+                _job.done = 0
+                _job.total = sum(
+                    max(0, by_id[str(pid)]["track_count"] - by_id[str(pid)]["downloaded_count"])
+                    for pid in playlist_ids
+                    if str(pid) in by_id
                 )
-                with _job_lock:
-                    _job.downloaded += result.downloaded
-                    _job.skipped += result.skipped
-                    _job.failed += result.failed
+                _job.downloaded = 0
+                _job.skipped = 0
+                _job.failed = 0
+                _job.log = []
+
+            try:
+                client = spotify.get_client()
+                for pl in targets:
+                    with _job_lock:
+                        _job.current_playlist = pl.name
+
+                    def on_log(msg: str) -> None:
+                        with _job_lock:
+                            _job.log.append(msg)
+                            if len(_job.log) > 200:
+                                _job.log = _job.log[-200:]
+
+                    def on_track(name: str) -> None:
+                        with _job_lock:
+                            _job.current_track = name
+
+                    def on_progress() -> None:
+                        with _job_lock:
+                            _job.done += 1
+
+                    result = sync.sync_playlist(
+                        client,
+                        pl,
+                        on_log=on_log,
+                        on_track=on_track,
+                        on_progress=on_progress,
+                    )
+                    with _job_lock:
+                        _job.downloaded += result.downloaded
+                        _job.skipped += result.skipped
+                        _job.failed += result.failed
             except RuntimeError as exc:
                 with _job_lock:
                     _job.log.append(f"ERROR: {exc}")
