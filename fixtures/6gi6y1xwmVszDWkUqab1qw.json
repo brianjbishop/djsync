@@ -1,0 +1,241 @@
+{
+  "spotify": {
+    "id": "6gi6y1xwmVszDWkUqab1qw",
+    "name": "OUT WEST (feat. Young Thug)",
+    "artists": [
+      "JACKBOYS",
+      "Travis Scott",
+      "Young Thug"
+    ],
+    "album": "JACKBOYS",
+    "duration_ms": 157712,
+    "isrc": "USSM11914988"
+  },
+  "candidates": [
+    {
+      "video_id": "Z4reQmzuB4M",
+      "url": "https://www.youtube.com/watch?v=Z4reQmzuB4M",
+      "title": "JACKBOYS, Travis Scott - OUT WEST (Audio) ft. Young Thug",
+      "channel": "Travis Scott",
+      "duration_s": 160,
+      "view_count": 161561707,
+      "is_art_track": false,
+      "description": "JACKBOYS OUT NOW: https://JACKBOYS.lnk.to/JACKBOYS OFFICIAL STORE: https://JACKBOYS.travisscott.com/ ..."
+    },
+    {
+      "video_id": "qAlF70MdfwU",
+      "url": "https://www.youtube.com/watch?v=qAlF70MdfwU",
+      "title": "JACKBOYS & Travis Scott feat. Young Thug - OUT WEST (Official Music Video)",
+      "channel": "Travis Scott",
+      "duration_s": 208,
+      "view_count": 92255465,
+      "is_art_track": false,
+      "description": "JACKBOYS OUT NOW: https://JACKBOYS.lnk.to/JACKBOYS OFFICIAL STORE: https://JACKBOYS.travisscott.com/ Directed by ..."
+    },
+    {
+      "video_id": "uKvE2Yve9vc",
+      "url": "https://www.youtube.com/watch?v=uKvE2Yve9vc",
+      "title": "Travis Scott - Out West (Lyrics) ft. Young Thug",
+      "channel": "steezy   ",
+      "duration_s": 164,
+      "view_count": 17540516,
+      "is_art_track": false,
+      "description": "Today: Travis Scott - Out West (Lyrics) ft. Young Thug Join the Notification Squad! Stream Travis Scott - Out West (Lyrics) ft."
+    },
+    {
+      "video_id": "RIuk23XHYj0",
+      "url": "https://www.youtube.com/watch?v=RIuk23XHYj0",
+      "title": "JACKBOYS - GANG GANG feat. Sheck Wes, Don Toliver, Luxury Tax 50 & Cactus Jack (Official)",
+      "channel": "Travis Scott",
+      "duration_s": 251,
+      "view_count": 76534073,
+      "is_art_track": false,
+      "description": "JACKBOYS OUT NOW: https://JACKBOYS.lnk.to/JACKBOYS OFFICIAL STORE: https://JACKBOYS.travisscott.com/ Directed by ..."
+    },
+    {
+      "video_id": "k_a9yYQzSYI",
+      "url": "https://www.youtube.com/watch?v=k_a9yYQzSYI",
+      "title": "JACKBOYS, Travis Scott - Out West (ft. Young Thug) Lyrics | slangin' out west",
+      "channel": "TikTokTunes",
+      "duration_s": 190,
+      "view_count": 5765747,
+      "is_art_track": false,
+      "description": "stream JACKBOYS, Travis Scott - Out West (ft. Young Thug) Lyrics | slangin' out west: https://spoti.fi/2nMhW6J ⭐ Instagram: ..."
+    },
+    {
+      "video_id": "leJNDpm_G10",
+      "url": "https://www.youtube.com/watch?v=leJNDpm_G10",
+      "title": "Young Thug - Hot ft. Gunna & Travis Scott [Official Music Video]",
+      "channel": "Young Thug",
+      "duration_s": 309,
+      "view_count": 281198244,
+      "is_art_track": false,
+      "description": "Young Thug - Hot ft. Gunna & Travis Scott [Official Video] Stream \"So Much Fun\" on all platforms: ..."
+    },
+    {
+      "video_id": "Hh-x9QqUmok",
+      "url": "https://www.youtube.com/watch?v=Hh-x9QqUmok",
+      "title": "JACKBOYS, Travis Scott - OUT WEST ft. Young Thug (Lyrics)",
+      "channel": "Hip Hop/R&B Lyrics",
+      "duration_s": 158,
+      "view_count": 70266,
+      "is_art_track": false,
+      "description": "JACKBOYS, Travis Scott - OUT WEST ft. Young Thug (Lyrics) ▻ For all inquiries, please send an email to: ..."
+    },
+    {
+      "video_id": "nlsoeKSCm0o",
+      "url": "https://www.youtube.com/watch?v=nlsoeKSCm0o",
+      "title": "OUTWEST - Travis Scott ft. Young Thug",
+      "channel": "Gliderwill",
+      "duration_s": 158,
+      "view_count": 95128,
+      "is_art_track": false,
+      "description": "Like, Comment, Subscribe Below ! ⬇️ Follow My Instagram : @_Gliderwill https://instagram.com/_Gliderwill/ Artists want me to ..."
+    },
+    {
+      "video_id": "9_7h5gtElWs",
+      "url": "https://www.youtube.com/watch?v=9_7h5gtElWs",
+      "title": "JACKBOYS (full Album)",
+      "channel": "PROD. COVIL CORP ♪",
+      "duration_s": 1128,
+      "view_count": 28789346,
+      "is_art_track": false,
+      "description": "TRACK LIST 00:00 - INTRO 00:47 - JACKBOYS - OUT WEST ft. Young Thug 03:25 - JACKBOYS, Sheck Wes - GANG GANG ..."
+    },
+    {
+      "video_id": "cnxc95J4AP0",
+      "url": "https://www.youtube.com/watch?v=cnxc95J4AP0",
+      "title": "Travis Scott - OUT WEST ft. Young Thug (Chase B, Mike Dean, Extended Intro + Outro)",
+      "channel": "ekdo",
+      "duration_s": 196,
+      "view_count": 14189,
+      "is_art_track": false,
+      "description": "New Intro from OUT WEST with Mike Dean and Chase B style synth and transition all made by me Soundcloud: ..."
+    }
+  ],
+  "scores": [
+    {
+      "video_id": "Z4reQmzuB4M",
+      "total": 7.977096919216422,
+      "breakdown": {
+        "duration_delta": 3.8227692307692243,
+        "art_track": 0.0,
+        "title_similarity": 0.9230769230769231,
+        "artist_match": 2.0,
+        "negative_flags": 0.0,
+        "view_count": 1.2312507653702738
+      }
+    },
+    {
+      "video_id": "nlsoeKSCm0o",
+      "total": 7.746746939717367,
+      "breakdown": {
+        "duration_delta": 4.0,
+        "art_track": 0.0,
+        "title_similarity": 1.0,
+        "artist_match": 2.0,
+        "negative_flags": 0.0,
+        "view_count": 0.7467469397173666
+      }
+    },
+    {
+      "video_id": "Hh-x9QqUmok",
+      "total": 7.650089634882392,
+      "breakdown": {
+        "duration_delta": 4.0,
+        "art_track": 0.0,
+        "title_similarity": 0.9230769230769231,
+        "artist_match": 2.0,
+        "negative_flags": 0.0,
+        "view_count": 0.7270127118054693
+      }
+    },
+    {
+      "video_id": "uKvE2Yve9vc",
+      "total": 5.564116197480457,
+      "breakdown": {
+        "duration_delta": 1.3612307692307626,
+        "art_track": 0.0,
+        "title_similarity": 1.1162790697674418,
+        "artist_match": 2.0,
+        "negative_flags": 0.0,
+        "view_count": 1.0866063584822523
+      }
+    },
+    {
+      "video_id": "leJNDpm_G10",
+      "total": 0.08553370906080282,
+      "breakdown": {
+        "duration_delta": -4.0,
+        "art_track": 0.0,
+        "title_similarity": 0.8181818181818181,
+        "artist_match": 2.0,
+        "negative_flags": 0.0,
+        "view_count": 1.2673518908789847
+      }
+    },
+    {
+      "video_id": "qAlF70MdfwU",
+      "total": 0.08363770492381861,
+      "breakdown": {
+        "duration_delta": -4.0,
+        "art_track": 0.0,
+        "title_similarity": 0.8888888888888888,
+        "artist_match": 2.0,
+        "negative_flags": 0.0,
+        "view_count": 1.1947488160349298
+      }
+    },
+    {
+      "video_id": "k_a9yYQzSYI",
+      "total": -0.1131443787189329,
+      "breakdown": {
+        "duration_delta": -4.0,
+        "art_track": 0.0,
+        "title_similarity": 0.8727272727272727,
+        "artist_match": 2.0,
+        "negative_flags": 0.0,
+        "view_count": 1.0141283485537944
+      }
+    },
+    {
+      "video_id": "9_7h5gtElWs",
+      "total": -0.13111522785171714,
+      "breakdown": {
+        "duration_delta": -4.0,
+        "art_track": 0.0,
+        "title_similarity": 0.75,
+        "artist_match": 2.0,
+        "negative_flags": 0.0,
+        "view_count": 1.1188847721482829
+      }
+    },
+    {
+      "video_id": "cnxc95J4AP0",
+      "total": -0.26092357091393703,
+      "breakdown": {
+        "duration_delta": -4.0,
+        "art_track": 0.0,
+        "title_similarity": 1.1162790697674418,
+        "artist_match": 2.0,
+        "negative_flags": 0.0,
+        "view_count": 0.6227973593186211
+      }
+    },
+    {
+      "video_id": "RIuk23XHYj0",
+      "total": -2.7857762055860777,
+      "breakdown": {
+        "duration_delta": -4.0,
+        "art_track": 0.0,
+        "title_similarity": 0.5316455696202531,
+        "artist_match": 2.0,
+        "negative_flags": -2.5,
+        "view_count": 1.1825782247936691
+      }
+    }
+  ],
+  "chosen_video_id": "Z4reQmzuB4M",
+  "timestamp": "2026-08-19T21:34:51.254893+00:00",
+  "weights_version": "2f40f5f26d141c5d"
+}

@@ -1,0 +1,239 @@
+{
+  "spotify": {
+    "id": "0Kuuk3DYQwNsD6qWA3EmPV",
+    "name": "Nothing but Net",
+    "artists": [
+      "Travis Scott"
+    ],
+    "album": "We Run This, Vol. 13 (Mixed by Mr. E)",
+    "duration_ms": 211162,
+    "isrc": "uscgh1616427"
+  },
+  "candidates": [
+    {
+      "video_id": "z8ezlcjRfCw",
+      "url": "https://www.youtube.com/watch?v=z8ezlcjRfCw",
+      "title": "Nothing but Net",
+      "channel": "Travis Scott",
+      "duration_s": 212,
+      "view_count": 638386,
+      "is_art_track": true,
+      "description": "Provided to YouTube by CDBaby Nothing but Net · Travis Scott We Run This, Vol. 13 (Mixed by Mr. E) ℗ 2016 Various Artists ..."
+    },
+    {
+      "video_id": "CtbT7ZtU4PE",
+      "url": "https://www.youtube.com/watch?v=CtbT7ZtU4PE",
+      "title": "Travis Scott - Nothing But Net",
+      "channel": "Zenzele Nikwe",
+      "duration_s": 242,
+      "view_count": 211540,
+      "is_art_track": false,
+      "description": ""
+    },
+    {
+      "video_id": "6g0d4de3UvM",
+      "url": "https://www.youtube.com/watch?v=6g0d4de3UvM",
+      "title": "Travi$ Scott ft. PARTYNEXTDOOR & Young Thug - Nothing But Net",
+      "channel": "JRMVN Music",
+      "duration_s": 246,
+      "view_count": 142941,
+      "is_art_track": false,
+      "description": "To download this song: http://digitaldripped.com/s/Travi-Scott-Nothing-But-Net-Prod-By-Boi-1da-808-Mafia-Travi-Scott.22540."
+    },
+    {
+      "video_id": "jp11mvoG00Y",
+      "url": "https://www.youtube.com/watch?v=jp11mvoG00Y",
+      "title": "Travis Scott Rodeo Tour: \"Nothing But Net ft. Young Thug\" Live",
+      "channel": "seanwuzy",
+      "duration_s": 179,
+      "view_count": 5542,
+      "is_art_track": false,
+      "description": "Travis Scott & Young Thug perform \" Nothing But Net\" Live Rodeo Tour in Atlanta."
+    },
+    {
+      "video_id": "vIVlB1x1NkE",
+      "url": "https://www.youtube.com/watch?v=vIVlB1x1NkE",
+      "title": "Travis Scott Ft. PARTYNEXTDOOR & Young Thug - Nothing But Net Lyrics",
+      "channel": "GOODMusiC TV",
+      "duration_s": 292,
+      "view_count": 49159,
+      "is_art_track": false,
+      "description": "Travis Scott Ft. PARTYNEXTDOOR & Young Thug - Nothing But Net Lyrics Travis Scott Ft. PARTYNEXTDOOR & Young Thug ..."
+    },
+    {
+      "video_id": "zi9FS2Q6yi4",
+      "url": "https://www.youtube.com/watch?v=zi9FS2Q6yi4",
+      "title": "TRAVI$ Scott - Perfect (feat. Young Thug, PARTYNEXTDOOR)",
+      "channel": "Unreleased 2",
+      "duration_s": 467,
+      "view_count": 26186,
+      "is_art_track": true,
+      "description": "Provided to YouTube by Epic/Grand Hustle Perfect · Travis Scott · Young Thug · PARTYNEXTDOOR Nothing But Net ℗ 2014 Epic ..."
+    },
+    {
+      "video_id": "J79WMTU6xKI",
+      "url": "https://www.youtube.com/watch?v=J79WMTU6xKI",
+      "title": "Travis Scott - Nothing but Net Ft. PND (No Young Thug)",
+      "channel": "LaFlame Fy",
+      "duration_s": 166,
+      "view_count": 849,
+      "is_art_track": false,
+      "description": ""
+    },
+    {
+      "video_id": "Rk2b7sA_3Lc",
+      "url": "https://www.youtube.com/watch?v=Rk2b7sA_3Lc",
+      "title": "travis scott & young thug - nothing but net [slowed & reverb]",
+      "channel": "junji",
+      "duration_s": 275,
+      "view_count": 8582,
+      "is_art_track": false,
+      "description": "ABC, about to cum, she like children on her tummy. ~ wish you were here ~ ~ junji. text me on Instagram ..."
+    },
+    {
+      "video_id": "j8Va8VVXhXs",
+      "url": "https://www.youtube.com/watch?v=j8Va8VVXhXs",
+      "title": "Travi$ Scott - Nothing But Net ft. Young Thug & PARTYNEXTDOOR 1080p",
+      "channel": "Malluminati",
+      "duration_s": 245,
+      "view_count": 2389,
+      "is_art_track": false,
+      "description": "Travis Scott - Nothing But Net ft. Young Thug & PARTYNEXTDOOR LA FLAME RODEO NEW MUSIC 2015 HD TOUR Michael ..."
+    },
+    {
+      "video_id": "eXjwfrdVrCw",
+      "url": "https://www.youtube.com/watch?v=eXjwfrdVrCw",
+      "title": "Travi$ Scott(Feat. Young Thug & Partynextdoor) Nothing But Net",
+      "channel": "Jason Sutherland",
+      "duration_s": 241,
+      "view_count": 232,
+      "is_art_track": false,
+      "description": "Nothing But Net."
+    }
+  ],
+  "scores": [
+    {
+      "video_id": "z8ezlcjRfCw",
+      "total": 15.8707626051805,
+      "breakdown": {
+        "duration_delta": 4.0,
+        "art_track": 6.0,
+        "title_similarity": 3.0,
+        "artist_match": 2.0,
+        "negative_flags": 0.0,
+        "view_count": 0.8707626051805011
+      }
+    },
+    {
+      "video_id": "zi9FS2Q6yi4",
+      "total": 3.721536391643634,
+      "breakdown": {
+        "duration_delta": -4.0,
+        "art_track": 6.0,
+        "title_similarity": 1.0588235294117647,
+        "artist_match": 0.0,
+        "negative_flags": 0.0,
+        "view_count": 0.6627128622318693
+      }
+    },
+    {
+      "video_id": "CtbT7ZtU4PE",
+      "total": 0.8918324387678446,
+      "breakdown": {
+        "duration_delta": -4.0,
+        "art_track": 0.0,
+        "title_similarity": 2.0930232558139537,
+        "artist_match": 2.0,
+        "negative_flags": 0.0,
+        "view_count": 0.7988091829538909
+      }
+    },
+    {
+      "video_id": "J79WMTU6xKI",
+      "total": 0.23941283885714376,
+      "breakdown": {
+        "duration_delta": -4.0,
+        "art_track": 0.0,
+        "title_similarity": 1.7999999999999998,
+        "artist_match": 2.0,
+        "negative_flags": 0.0,
+        "view_count": 0.43941283885714394
+      }
+    },
+    {
+      "video_id": "vIVlB1x1NkE",
+      "total": -0.028652585065020553,
+      "breakdown": {
+        "duration_delta": -4.0,
+        "art_track": 0.0,
+        "title_similarity": 1.267605633802817,
+        "artist_match": 2.0,
+        "negative_flags": 0.0,
+        "view_count": 0.7037417811321625
+      }
+    },
+    {
+      "video_id": "eXjwfrdVrCw",
+      "total": -1.5020394689889545,
+      "breakdown": {
+        "duration_delta": -4.0,
+        "art_track": 0.0,
+        "title_similarity": 2.142857142857143,
+        "artist_match": 0.0,
+        "negative_flags": 0.0,
+        "view_count": 0.3551033881539028
+      }
+    },
+    {
+      "video_id": "6g0d4de3UvM",
+      "total": -1.941011736137571,
+      "breakdown": {
+        "duration_delta": -4.0,
+        "art_track": 0.0,
+        "title_similarity": 1.2857142857142856,
+        "artist_match": 0.0,
+        "negative_flags": 0.0,
+        "view_count": 0.7732739781481435
+      }
+    },
+    {
+      "video_id": "j8Va8VVXhXs",
+      "total": -2.30902978854199,
+      "breakdown": {
+        "duration_delta": -4.0,
+        "art_track": 0.0,
+        "title_similarity": 1.1842105263157894,
+        "artist_match": 0.0,
+        "negative_flags": 0.0,
+        "view_count": 0.5067596851422206
+      }
+    },
+    {
+      "video_id": "jp11mvoG00Y",
+      "total": -2.7055615558823636,
+      "breakdown": {
+        "duration_delta": -4.0,
+        "art_track": 0.0,
+        "title_similarity": 1.2328767123287672,
+        "artist_match": 2.0,
+        "negative_flags": -2.5,
+        "view_count": 0.5615617317888691
+      }
+    },
+    {
+      "video_id": "Rk2b7sA_3Lc",
+      "total": -4.7432874664545945,
+      "breakdown": {
+        "duration_delta": -4.0,
+        "art_track": 0.0,
+        "title_similarity": 1.6666666666666667,
+        "artist_match": 2.0,
+        "negative_flags": -5.0,
+        "view_count": 0.5900458668787387
+      }
+    }
+  ],
+  "chosen_video_id": "z8ezlcjRfCw",
+  "timestamp": "2026-08-19T21:34:40.068095+00:00",
+  "weights_version": "2f40f5f26d141c5d"
+}

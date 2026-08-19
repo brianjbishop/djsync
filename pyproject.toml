@@ -1,0 +1,36 @@
+[project]
+name = "djsync"
+version = "0.1.0"
+description = "Sync DJ Spotify playlists to an external drive as MP3s"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "click>=8.1",
+    "flask>=3.0",
+    "mutagen>=1.47",
+    "python-dotenv>=1.0",
+    "spotipy>=2.24",
+    "yt-dlp>=2024.0",
+]
+
+[project.scripts]
+djsync = "djsync.cli:main"
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+]
+
+[build-system]
+requires = ["uv_build>=0.9,<0.12"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+module-name = "djsync"
+module-root = "src"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# Resolve the package from src/ directly. uv's editable-install .pth is
+# skipped by `site` in this venv, so tests must not depend on it.
+pythonpath = ["src"]

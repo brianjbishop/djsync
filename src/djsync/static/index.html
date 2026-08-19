@@ -1,0 +1,1354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>djsync</title>
+<style>
+:root {
+  --bg: #0d0f12;
+  --bg-elevated: #151820;
+  --bg-hover: #1c2129;
+  --bg-muted: #232933;
+  --border: #2a3140;
+  --border-subtle: #1f2430;
+  --text: #e8eaed;
+  --text-muted: #8b939e;
+  --text-dim: #5c6470;
+  --accent: #1db954;
+  --accent-dim: #168f42;
+  --accent-glow: rgba(29, 185, 84, 0.15);
+  --warn: #f5a623;
+  --warn-bg: rgba(245, 166, 35, 0.12);
+  --danger: #e74c3c;
+  --complete: #4a5568;
+  --complete-bg: rgba(74, 85, 104, 0.15);
+  --partial: #f5a623;
+  --partial-bg: rgba(245, 166, 35, 0.18);
+  --none: #6b7280;
+  --radius: 6px;
+  --radius-sm: 4px;
+  --font: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --summary-h: 64px;
+  --toolbar-h: 52px;
+  --fs-xs: 11px;
+  --fs-sm: 12px;
+  --fs-base: 13px;
+  --fs-md: 14px;
+  --fs-lg: 16px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: var(--fs-base);
+  line-height: 1.4;
+  -webkit-font-smoothing: antialiased;
+}
+
+button, input { font: inherit; color: inherit; }
+button { cursor: pointer; border: none; background: none; }
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+#app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  max-width: 1600px;
+  margin: 0 auto;
+}
+
+/* Toolbar */
+.toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 10px 16px;
+  background: var(--bg-elevated);
+  border-bottom: 1px solid var(--border);
+  min-height: var(--toolbar-h);
+}
+
+.toolbar h1 {
+  font-size: var(--fs-lg);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  margin-right: 4px;
+}
+
+.toolbar .meta {
+  font-size: var(--fs-sm);
+  color: var(--text-muted);
+}
+
+.toolbar .meta.stale { color: var(--warn); }
+
+.toolbar-spacer { flex: 1; }
+
+.toolbar label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--fs-sm);
+  color: var(--text-muted);
+}
+
+.toolbar select {
+  background: var(--bg-muted);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 5px 8px;
+  color: var(--text);
+  outline: none;
+}
+
+.toolbar select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-glow);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  transition: background 0.12s, border-color 0.12s, opacity 0.12s;
+}
+
+.btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.btn-ghost {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+}
+
+.btn-ghost:hover:not(:disabled) {
+  background: var(--bg-hover);
+  color: var(--text);
+  border-color: var(--text-dim);
+}
+
+.btn-primary {
+  background: var(--accent);
+  border: 1px solid var(--accent-dim);
+  color: #fff;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: var(--accent-dim);
+}
+
+.btn-danger {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+}
+
+.btn-danger:hover:not(:disabled) {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+.spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+.spinner.hidden { display: none; }
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Alerts */
+.alert {
+  margin: 12px 16px 0;
+  padding: 10px 14px;
+  border-radius: var(--radius);
+  font-size: var(--fs-sm);
+  border: 1px solid;
+}
+
+.alert-error {
+  background: rgba(231, 76, 60, 0.1);
+  border-color: rgba(231, 76, 60, 0.35);
+  color: #f5a8a0;
+}
+
+.alert-info {
+  background: var(--accent-glow);
+  border-color: rgba(29, 185, 84, 0.3);
+  color: #9ae6b0;
+}
+
+.alert.hidden { display: none; }
+
+/* Main content */
+.main {
+  flex: 1;
+  overflow: auto;
+  padding-bottom: calc(var(--summary-h) + 16px);
+}
+
+.table-wrap {
+  padding: 0 8px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+colgroup .col-check { width: 36px; }
+colgroup .col-name { width: auto; }
+colgroup .col-tracks { width: 56px; }
+colgroup .col-dl { width: 72px; }
+colgroup .col-sigils { width: 140px; }
+colgroup .col-date { width: 88px; }
+colgroup .col-spotify { width: 40px; }
+
+thead th {
+  position: sticky;
+  top: var(--toolbar-h);
+  z-index: 10;
+  background: var(--bg);
+  padding: 8px 6px;
+  text-align: left;
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border);
+  user-select: none;
+  white-space: nowrap;
+}
+
+thead th.sortable {
+  cursor: pointer;
+}
+
+thead th.sortable:hover {
+  color: var(--text);
+  background: var(--bg-elevated);
+}
+
+thead th .arrow {
+  display: inline-block;
+  margin-left: 3px;
+  opacity: 0;
+  font-size: 10px;
+}
+
+thead th.sorted .arrow { opacity: 1; }
+
+tbody tr.data-row {
+  cursor: pointer;
+  border-bottom: 1px solid var(--border-subtle);
+  transition: background 0.08s;
+}
+
+tbody tr.data-row:hover {
+  background: var(--bg-hover);
+}
+
+tbody tr.data-row.selected {
+  background: rgba(29, 185, 84, 0.06);
+}
+
+tbody tr.data-row.status-complete {
+  opacity: 0.55;
+}
+
+tbody tr.data-row.status-complete:hover {
+  opacity: 0.75;
+}
+
+tbody tr.data-row.status-partial {
+  background: var(--partial-bg);
+}
+
+tbody tr.data-row.status-partial:hover {
+  background: rgba(245, 166, 35, 0.24);
+}
+
+tbody tr.data-row.status-partial.selected {
+  background: rgba(245, 166, 35, 0.28);
+}
+
+tbody td {
+  padding: 5px 6px;
+  vertical-align: middle;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--fs-sm);
+}
+
+td.col-check {
+  text-align: center;
+}
+
+td.col-check input[type="checkbox"] {
+  width: 15px;
+  height: 15px;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+td.col-name {
+  font-weight: 500;
+  font-size: var(--fs-base);
+}
+
+td.col-tracks, td.col-date {
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+td.col-dl {
+  font-variant-numeric: tabular-nums;
+  font-size: var(--fs-xs);
+  font-weight: 500;
+}
+
+.dl-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+}
+
+.dl-badge.complete {
+  color: var(--complete);
+  background: var(--complete-bg);
+}
+
+.dl-badge.partial {
+  color: var(--partial);
+  background: var(--warn-bg);
+  font-weight: 600;
+}
+
+.dl-badge.none {
+  color: var(--none);
+}
+
+.sigils {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+}
+
+.sigil {
+  display: inline-block;
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-size: var(--fs-xs);
+  font-family: var(--mono);
+  background: var(--bg-muted);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+}
+
+.sigil.dim {
+  opacity: 0.35;
+}
+
+.btn-spotify {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  transition: color 0.12s, background 0.12s;
+}
+
+.btn-spotify:hover {
+  color: var(--accent);
+  background: var(--accent-glow);
+}
+
+.btn-spotify svg {
+  width: 16px;
+  height: 16px;
+  fill: currentColor;
+}
+
+/* Group headers */
+tr.group-header td {
+  padding: 8px 6px 4px;
+  background: var(--bg-elevated);
+  border-bottom: 1px solid var(--border);
+  border-top: 1px solid var(--border-subtle);
+}
+
+tr.group-header:first-child td {
+  border-top: none;
+}
+
+.group-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--text);
+}
+
+.group-label .count {
+  font-weight: 400;
+  color: var(--text-muted);
+  font-size: var(--fs-xs);
+}
+
+.group-toggle {
+  color: var(--text-dim);
+  font-size: 10px;
+  width: 16px;
+  text-align: center;
+  transition: transform 0.15s;
+}
+
+.group-toggle.collapsed {
+  transform: rotate(-90deg);
+}
+
+.empty-state {
+  padding: 48px 24px;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.empty-state p {
+  margin-top: 8px;
+  font-size: var(--fs-sm);
+}
+
+/* Summary bar */
+.summary-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 20px;
+  background: var(--bg-elevated);
+  border-top: 1px solid var(--border);
+  box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.35);
+  min-height: var(--summary-h);
+}
+
+.summary-stats {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  font-size: var(--fs-sm);
+}
+
+.summary-stats .stat strong {
+  font-weight: 600;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+.summary-stats .stat span {
+  color: var(--text-muted);
+}
+
+.summary-actions {
+  margin-left: auto;
+  display: flex;
+  gap: 8px;
+}
+
+/* Modal overlay */
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(0, 0, 0, 0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.overlay.hidden { display: none; }
+
+.modal {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  width: 100%;
+  max-width: 520px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
+}
+
+.modal-wide { max-width: 640px; }
+
+.modal-header {
+  padding: 16px 20px 12px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.modal-header h2 {
+  font-size: var(--fs-lg);
+  font-weight: 600;
+}
+
+.modal-header p {
+  margin-top: 4px;
+  font-size: var(--fs-sm);
+  color: var(--text-muted);
+}
+
+.modal-body {
+  padding: 12px 20px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.modal-footer {
+  padding: 12px 20px;
+  border-top: 1px solid var(--border-subtle);
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.confirm-list {
+  list-style: none;
+  max-height: 280px;
+  overflow-y: auto;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+}
+
+.confirm-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 12px;
+  font-size: var(--fs-sm);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.confirm-list li:last-child { border-bottom: none; }
+
+.confirm-list .pl-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.confirm-list .pl-tracks {
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+
+.confirm-total {
+  margin-top: 12px;
+  padding: 10px 12px;
+  background: var(--bg-muted);
+  border-radius: var(--radius-sm);
+  font-size: var(--fs-sm);
+}
+
+.confirm-note {
+  margin-top: 10px;
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+/* Progress panel */
+.progress-panel {
+  margin: 12px 16px;
+  padding: 14px 16px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.progress-panel.hidden { display: none; }
+
+.progress-panel h3 {
+  font-size: var(--fs-md);
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.progress-current {
+  font-size: var(--fs-sm);
+  color: var(--text-muted);
+  margin-bottom: 8px;
+  min-height: 18px;
+}
+
+.progress-current strong {
+  color: var(--text);
+  font-weight: 500;
+}
+
+.progress-bar-wrap {
+  height: 6px;
+  background: var(--bg-muted);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+
+.progress-bar {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 3px;
+  transition: width 0.3s ease;
+  width: 0%;
+}
+
+.progress-stats {
+  display: flex;
+  gap: 16px;
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+  margin-bottom: 10px;
+}
+
+.progress-stats span strong {
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+.log-box {
+  height: 120px;
+  overflow-y: auto;
+  background: var(--bg);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  font-family: var(--mono);
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.log-box .log-line {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+@media (max-width: 1200px) {
+  colgroup .col-sigils { width: 100px; }
+  colgroup .col-date { width: 76px; }
+  td.col-name { font-size: var(--fs-sm); }
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <header class="toolbar">
+    <h1>djsync</h1>
+    <span class="meta" id="generatedAt">Loading…</span>
+    <div class="toolbar-spacer"></div>
+    <label>
+      Group
+      <select id="groupBy">
+        <option value="none">None</option>
+        <option value="sigil">Sigil</option>
+      </select>
+    </label>
+    <button type="button" class="btn btn-ghost" id="btnSelectAll">Select all</button>
+    <button type="button" class="btn btn-ghost" id="btnClearAll">Clear all</button>
+    <button type="button" class="btn btn-ghost" id="btnRefresh">
+      <span class="spinner hidden" id="refreshSpinner"></span>
+      Refresh
+    </button>
+  </header>
+
+  <div class="alert alert-error hidden" id="errorAlert"></div>
+  <div class="alert alert-info hidden" id="infoAlert"></div>
+
+  <div class="progress-panel hidden" id="progressPanel">
+    <h3>Syncing…</h3>
+    <div class="progress-current" id="progressCurrent"></div>
+    <div class="progress-bar-wrap">
+      <div class="progress-bar" id="progressBar"></div>
+    </div>
+    <div class="progress-stats" id="progressStats"></div>
+    <div class="log-box" id="logBox"></div>
+  </div>
+
+  <main class="main">
+    <div class="table-wrap">
+      <table id="playlistTable">
+        <colgroup>
+          <col class="col-check">
+          <col class="col-name">
+          <col class="col-tracks">
+          <col class="col-dl">
+          <col class="col-sigils">
+          <col class="col-date">
+          <col class="col-spotify">
+        </colgroup>
+        <thead>
+          <tr>
+            <th class="col-check"><span class="sr-only">Select</span></th>
+            <th class="col-name sortable" data-sort="name">Name <span class="arrow">▲</span></th>
+            <th class="col-tracks sortable" data-sort="track_count">Tracks <span class="arrow">▲</span></th>
+            <th class="col-dl sortable" data-sort="status">Downloaded <span class="arrow">▲</span></th>
+            <th class="col-sigils">Sigils</th>
+            <th class="col-date sortable" data-sort="last_added">Last added <span class="arrow">▲</span></th>
+            <th class="col-spotify"><span class="sr-only">Spotify</span></th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+      <div class="empty-state hidden" id="emptyState">
+        <strong>No playlists</strong>
+        <p>Click Refresh to scan your Spotify library.</p>
+      </div>
+    </div>
+  </main>
+
+  <footer class="summary-bar">
+    <div class="summary-stats">
+      <div class="stat"><strong id="sumPlaylists">0</strong> <span>playlists selected</span></div>
+      <div class="stat"><strong id="sumTracks">0</strong> <span>tracks total</span></div>
+      <div class="stat"><strong id="sumSize">0 MB</strong> <span>estimated (~9.5 MB/track)</span></div>
+    </div>
+    <div class="summary-actions">
+      <button type="button" class="btn btn-primary" id="btnDownload" disabled>Download selected</button>
+    </div>
+  </footer>
+</div>
+
+<div class="overlay hidden" id="confirmOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Confirm download</h2>
+      <p>The following playlists will be synced to your drive.</p>
+    </div>
+    <div class="modal-body">
+      <ul class="confirm-list" id="confirmList"></ul>
+      <div class="confirm-total" id="confirmTotal"></div>
+      <p class="confirm-note">Already-downloaded tracks are skipped automatically, so the actual download count may be lower than shown.</p>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-ghost" id="btnConfirmCancel">Cancel</button>
+      <button type="button" class="btn btn-primary" id="btnConfirmOk">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<style>.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0}</style>
+
+<script>
+(function () {
+  "use strict";
+
+  const BYTES_PER_TRACK = 9.5 * 1024 * 1024;
+  const STATUS_ORDER = { none: 0, partial: 1, complete: 2 };
+
+  const state = {
+    playlists: [],
+    timestamp: null,
+    sortKey: "name",
+    sortReverse: false,
+    groupBy: "none",
+    collapsedGroups: new Set(),
+    syncing: false,
+    selectionTimer: null,
+    statusTimer: null,
+    loading: true,
+    refreshing: false,
+  };
+
+  const $ = (id) => document.getElementById(id);
+
+  const els = {
+    generatedAt: $("generatedAt"),
+    groupBy: $("groupBy"),
+    btnSelectAll: $("btnSelectAll"),
+    btnClearAll: $("btnClearAll"),
+    btnRefresh: $("btnRefresh"),
+    refreshSpinner: $("refreshSpinner"),
+    errorAlert: $("errorAlert"),
+    infoAlert: $("infoAlert"),
+    progressPanel: $("progressPanel"),
+    progressCurrent: $("progressCurrent"),
+    progressBar: $("progressBar"),
+    progressStats: $("progressStats"),
+    logBox: $("logBox"),
+    tableBody: $("tableBody"),
+    emptyState: $("emptyState"),
+    sumPlaylists: $("sumPlaylists"),
+    sumTracks: $("sumTracks"),
+    sumSize: $("sumSize"),
+    btnDownload: $("btnDownload"),
+    confirmOverlay: $("confirmOverlay"),
+    confirmList: $("confirmList"),
+    confirmTotal: $("confirmTotal"),
+    btnConfirmCancel: $("btnConfirmCancel"),
+    btnConfirmOk: $("btnConfirmOk"),
+  };
+
+  function showError(msg) {
+    els.errorAlert.textContent = msg;
+    els.errorAlert.classList.remove("hidden");
+  }
+
+  function clearError() {
+    els.errorAlert.classList.add("hidden");
+    els.errorAlert.textContent = "";
+  }
+
+  function showInfo(msg) {
+    els.infoAlert.textContent = msg;
+    els.infoAlert.classList.remove("hidden");
+  }
+
+  function clearInfo() {
+    els.infoAlert.classList.add("hidden");
+    els.infoAlert.textContent = "";
+  }
+
+  function formatSize(bytes) {
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
+    if (bytes < 1024 * 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(1) + " MB";
+    return (bytes / (1024 * 1024 * 1024)).toFixed(2) + " GB";
+  }
+
+  function formatDate(iso) {
+    if (!iso) return "—";
+    try {
+      const d = new Date(iso);
+      if (isNaN(d.getTime())) return "—";
+      return d.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
+    } catch (_) {
+      return "—";
+    }
+  }
+
+  function formatGeneratedAt(iso) {
+    if (!iso) return "Cache time unknown";
+    try {
+      const d = new Date(iso);
+      const rel = timeAgo(d);
+      return "Data from " + d.toLocaleString() + " (" + rel + ")";
+    } catch (_) {
+      return "Cache time unknown";
+    }
+  }
+
+  function timeAgo(date) {
+    const sec = Math.floor((Date.now() - date.getTime()) / 1000);
+    if (sec < 60) return "just now";
+    if (sec < 3600) return Math.floor(sec / 60) + "m ago";
+    if (sec < 86400) return Math.floor(sec / 3600) + "h ago";
+    return Math.floor(sec / 86400) + "d ago";
+  }
+
+  function selectedIds() {
+    return state.playlists.filter((p) => p.selected).map((p) => p.id);
+  }
+
+  function sortPlaylists(list) {
+    const key = state.sortKey;
+    const rev = state.sortReverse;
+    const sorted = list.slice();
+    sorted.sort((a, b) => {
+      let cmp = 0;
+      if (key === "name") {
+        cmp = a.name.toLowerCase().localeCompare(b.name.toLowerCase());
+      } else if (key === "track_count") {
+        cmp = a.track_count - b.track_count;
+      } else if (key === "last_added") {
+        cmp = (a.last_added || "").localeCompare(b.last_added || "");
+      } else if (key === "status") {
+        cmp = (STATUS_ORDER[a.status] || 0) - (STATUS_ORDER[b.status] || 0);
+      }
+      return rev ? -cmp : cmp;
+    });
+    return sorted;
+  }
+
+  function visibleSigils(sigils) {
+    const all = sigils || [];
+    const filtered = all.filter((s) => s !== "d");
+    return filtered.length ? filtered : all;
+  }
+
+  function renderSigils(sigils) {
+    const all = sigils || [];
+    if (!all.length) return '<span class="sigil dim">—</span>';
+    return all.map((s) => {
+      const dim = s === "d" ? " dim" : "";
+      return '<span class="sigil' + dim + '">$' + escapeHtml(s) + "</span>";
+    }).join("");
+  }
+
+  function escapeHtml(str) {
+    return String(str)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
+
+  function spotifyIcon() {
+    return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>';
+  }
+
+  function buildGroupedRows(sorted) {
+    if (state.groupBy === "none") {
+      return sorted.map((p) => ({ type: "row", playlist: p }));
+    }
+
+    const groups = {};
+    for (const p of sorted) {
+      const sigils = visibleSigils(p.sigils);
+      const keys = sigils.length ? sigils.map((s) => "$" + s) : ["(no sigil)"];
+      for (const key of keys) {
+        if (!groups[key]) groups[key] = [];
+        groups[key].push(p);
+      }
+    }
+
+    const rows = [];
+    const labels = Object.keys(groups).sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
+    for (const label of labels) {
+      const items = groups[label];
+      rows.push({ type: "group", label, count: items.length, ids: items.map((p) => p.id) });
+      if (!state.collapsedGroups.has(label)) {
+        for (const p of items) {
+          rows.push({ type: "row", playlist: p });
+        }
+      }
+    }
+    return rows;
+  }
+
+  function renderTable() {
+    const sorted = sortPlaylists(state.playlists);
+    const rows = buildGroupedRows(sorted);
+
+    if (!sorted.length && !state.loading) {
+      els.tableBody.innerHTML = "";
+      els.emptyState.classList.remove("hidden");
+      document.getElementById("playlistTable").classList.add("hidden");
+    } else {
+      els.emptyState.classList.add("hidden");
+      document.getElementById("playlistTable").classList.remove("hidden");
+    }
+
+    let html = "";
+    for (const row of rows) {
+      if (row.type === "group") {
+        const collapsed = state.collapsedGroups.has(row.label);
+        const allSelected = row.ids.every((id) => {
+          const p = state.playlists.find((x) => x.id === id);
+          return p && p.selected;
+        });
+        const someSelected = !allSelected && row.ids.some((id) => {
+          const p = state.playlists.find((x) => x.id === id);
+          return p && p.selected;
+        });
+        html += '<tr class="group-header" data-group="' + escapeHtml(row.label) + '">';
+        html += '<td colspan="7">';
+        html += '<div class="group-label">';
+        html += '<span class="group-toggle' + (collapsed ? " collapsed" : "") + '">▼</span>';
+        html += '<input type="checkbox" class="group-check" data-group="' + escapeHtml(row.label) + '"' +
+          (allSelected ? " checked" : "") +
+          (someSelected ? ' data-indeterminate="1"' : "") + ">";
+        html += "<span>" + escapeHtml(row.label) + '</span>';
+        html += '<span class="count">' + row.count + " playlist" + (row.count !== 1 ? "s" : "") + "</span>";
+        html += "</div></td></tr>";
+      } else {
+        const p = row.playlist;
+        const dl = p.downloaded_count + "/" + p.track_count;
+        const statusClass = "status-" + (p.status || "none");
+        html += '<tr class="data-row ' + statusClass + (p.selected ? " selected" : "") + '" data-id="' + escapeHtml(p.id) + '">';
+        html += '<td class="col-check"><input type="checkbox" class="row-check" data-id="' + escapeHtml(p.id) + '"' + (p.selected ? " checked" : "") + "></td>";
+        html += '<td class="col-name" title="' + escapeHtml(p.name) + '">' + escapeHtml(p.name) + "</td>";
+        html += '<td class="col-tracks">' + p.track_count + "</td>";
+        html += '<td class="col-dl"><span class="dl-badge ' + escapeHtml(p.status || "none") + '">' + dl + "</span></td>";
+        html += '<td class="col-sigils"><div class="sigils">' + renderSigils(p.sigils) + "</div></td>";
+        html += '<td class="col-date">' + formatDate(p.last_added) + "</td>";
+        html += '<td class="col-spotify"><a class="btn-spotify" href="' + escapeHtml(p.spotify_uri) + '" title="Open in Spotify" data-no-toggle="1">' + spotifyIcon() + "</a></td>";
+        html += "</tr>";
+      }
+    }
+    els.tableBody.innerHTML = html;
+
+    els.tableBody.querySelectorAll('input[data-indeterminate="1"]').forEach((cb) => {
+      cb.indeterminate = true;
+    });
+
+    document.querySelectorAll("thead th.sortable").forEach((th) => {
+      th.classList.toggle("sorted", th.dataset.sort === state.sortKey);
+      const arrow = th.querySelector(".arrow");
+      if (arrow) {
+        arrow.textContent = state.sortReverse ? "▼" : "▲";
+      }
+    });
+
+    updateSummary();
+  }
+
+  function updateSummary() {
+    const selected = state.playlists.filter((p) => p.selected);
+    const trackTotal = selected.reduce((s, p) => s + p.track_count, 0);
+    const sizeBytes = trackTotal * BYTES_PER_TRACK;
+
+    els.sumPlaylists.textContent = String(selected.length);
+    els.sumTracks.textContent = String(trackTotal);
+    els.sumSize.textContent = formatSize(sizeBytes);
+
+    const disabled = selected.length === 0 || state.syncing;
+    els.btnDownload.disabled = disabled;
+    els.btnSelectAll.disabled = state.syncing || !state.playlists.length;
+    els.btnClearAll.disabled = state.syncing || !state.playlists.length;
+    els.btnRefresh.disabled = state.refreshing || state.syncing;
+  }
+
+  function updateGeneratedAt() {
+    els.generatedAt.textContent = formatGeneratedAt(state.timestamp);
+    if (state.timestamp) {
+      try {
+        const age = (Date.now() - new Date(state.timestamp).getTime()) / 3600000;
+        els.generatedAt.classList.toggle("stale", age > 24);
+      } catch (_) {
+        els.generatedAt.classList.remove("stale");
+      }
+    }
+  }
+
+  function setPlaylists(data) {
+    state.playlists = data.playlists || [];
+    state.timestamp = data.timestamp || null;
+    state.loading = false;
+    updateGeneratedAt();
+    renderTable();
+  }
+
+  async function apiFetch(url, options) {
+    const res = await fetch(url, options);
+    let body = null;
+    const ct = res.headers.get("content-type") || "";
+    if (ct.includes("application/json")) {
+      body = await res.json();
+    }
+    if (!res.ok) {
+      const msg = (body && body.error) ? body.error : ("HTTP " + res.status);
+      throw new Error(msg);
+    }
+    return body;
+  }
+
+  async function loadPlaylists() {
+    clearError();
+    try {
+      const data = await apiFetch("/api/playlists");
+      setPlaylists(data);
+    } catch (err) {
+      state.loading = false;
+      showError("Failed to load playlists: " + err.message);
+      renderTable();
+    }
+  }
+
+  function scheduleSelectionSave() {
+    if (state.selectionTimer) clearTimeout(state.selectionTimer);
+    state.selectionTimer = setTimeout(saveSelection, 300);
+  }
+
+  async function saveSelection() {
+    const ids = selectedIds();
+    try {
+      await apiFetch("/api/selection", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ selected: ids }),
+      });
+    } catch (err) {
+      showError("Failed to save selection: " + err.message);
+    }
+  }
+
+  function togglePlaylist(id) {
+    if (state.syncing) return;
+    const p = state.playlists.find((x) => x.id === id);
+    if (!p) return;
+    p.selected = !p.selected;
+    renderTable();
+    scheduleSelectionSave();
+  }
+
+  function setAllSelected(selected) {
+    if (state.syncing) return;
+    for (const p of state.playlists) p.selected = selected;
+    renderTable();
+    scheduleSelectionSave();
+  }
+
+  function setGroupSelected(groupLabel, selected) {
+    if (state.syncing) return;
+    const sorted = sortPlaylists(state.playlists);
+    const groups = {};
+    for (const p of sorted) {
+      const sigils = visibleSigils(p.sigils);
+      const keys = sigils.length ? sigils.map((s) => "$" + s) : ["(no sigil)"];
+      for (const key of keys) {
+        if (!groups[key]) groups[key] = [];
+        groups[key].push(p);
+      }
+    }
+    const items = groups[groupLabel] || [];
+    for (const p of items) p.selected = selected;
+    renderTable();
+    scheduleSelectionSave();
+  }
+
+  async function refreshPlaylists() {
+    if (state.refreshing || state.syncing) return;
+    state.refreshing = true;
+    els.refreshSpinner.classList.remove("hidden");
+    clearError();
+    showInfo("Refreshing playlist cache — this scans Spotify and may take a minute…");
+    updateSummary();
+    try {
+      const data = await apiFetch("/api/refresh", { method: "POST" });
+      clearInfo();
+      setPlaylists(data);
+    } catch (err) {
+      clearInfo();
+      showError("Refresh failed: " + err.message);
+    } finally {
+      state.refreshing = false;
+      els.refreshSpinner.classList.add("hidden");
+      updateSummary();
+    }
+  }
+
+  function openConfirm() {
+    const selected = state.playlists.filter((p) => p.selected);
+    if (!selected.length) return;
+
+    let totalTracks = 0;
+    let missingTracks = 0;
+    els.confirmList.innerHTML = selected.map((p) => {
+      totalTracks += p.track_count;
+      const missing = Math.max(0, p.track_count - (p.downloaded_count || 0));
+      missingTracks += missing;
+      return '<li><span class="pl-name">' + escapeHtml(p.name) + '</span><span class="pl-tracks">' +
+        p.track_count + " tracks</span></li>";
+    }).join("");
+
+    const estSize = formatSize(missingTracks * BYTES_PER_TRACK);
+    els.confirmTotal.innerHTML = "<strong>" + selected.length + "</strong> playlists · " +
+      "<strong>" + totalTracks + "</strong> tracks total · " +
+      "up to <strong>" + missingTracks + "</strong> to download (~" + estSize + ")";
+    els.confirmOverlay.classList.remove("hidden");
+  }
+
+  function closeConfirm() {
+    els.confirmOverlay.classList.add("hidden");
+  }
+
+  async function startSync() {
+    closeConfirm();
+    const ids = selectedIds();
+    if (!ids.length) return;
+    clearError();
+    try {
+      await apiFetch("/api/sync", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ playlist_ids: ids }),
+      });
+      state.syncing = true;
+      els.progressPanel.classList.remove("hidden");
+      updateSummary();
+      pollStatus();
+    } catch (err) {
+      showError("Failed to start sync: " + err.message);
+    }
+  }
+
+  function renderProgress(st) {
+    const pct = st.total > 0 ? Math.min(100, (st.done / st.total) * 100) : 0;
+    els.progressBar.style.width = pct.toFixed(1) + "%";
+
+    let current = "";
+    if (st.current_playlist) {
+      current += "<strong>" + escapeHtml(st.current_playlist) + "</strong>";
+      if (st.current_track) {
+        current += " — " + escapeHtml(st.current_track);
+      }
+    } else if (st.running) {
+      current = "Starting…";
+    }
+    els.progressCurrent.innerHTML = current;
+
+    els.progressStats.innerHTML =
+      '<span><strong>' + st.done + "</strong> / " + st.total + " tracks</span>" +
+      '<span>Downloaded: <strong>' + st.downloaded + "</strong></span>" +
+      '<span>Skipped: <strong>' + st.skipped + "</strong></span>" +
+      '<span>Failed: <strong>' + st.failed + "</strong></span>";
+
+    const logs = st.log || [];
+    els.logBox.innerHTML = logs.map((line) =>
+      '<div class="log-line">' + escapeHtml(line) + "</div>"
+    ).join("");
+    els.logBox.scrollTop = els.logBox.scrollHeight;
+  }
+
+  async function pollStatus() {
+    if (state.statusTimer) clearInterval(state.statusTimer);
+    state.statusTimer = setInterval(async () => {
+      try {
+        const st = await apiFetch("/api/status");
+        renderProgress(st);
+        if (!st.running && state.syncing) {
+          state.syncing = false;
+          clearInterval(state.statusTimer);
+          state.statusTimer = null;
+          showInfo("Sync finished. Refreshing playlist data…");
+          updateSummary();
+          await loadPlaylists();
+          clearInfo();
+        }
+      } catch (err) {
+        showError("Status poll failed: " + err.message);
+      }
+    }, 1000);
+
+    try {
+      const st = await apiFetch("/api/status");
+      renderProgress(st);
+      if (st.running) {
+        state.syncing = true;
+        els.progressPanel.classList.remove("hidden");
+        updateSummary();
+      } else if (!st.running && state.syncing) {
+        state.syncing = false;
+        els.progressPanel.classList.add("hidden");
+      }
+    } catch (_) { /* ignore initial status failure */ }
+  }
+
+  document.querySelectorAll("thead th.sortable").forEach((th) => {
+    th.addEventListener("click", () => {
+      const key = th.dataset.sort;
+      if (state.sortKey === key) {
+        state.sortReverse = !state.sortReverse;
+      } else {
+        state.sortKey = key;
+        state.sortReverse = key === "name" ? false : key === "last_added";
+      }
+      renderTable();
+    });
+  });
+
+  els.groupBy.addEventListener("change", () => {
+    state.groupBy = els.groupBy.value;
+    state.collapsedGroups.clear();
+    renderTable();
+  });
+
+  els.btnSelectAll.addEventListener("click", () => setAllSelected(true));
+  els.btnClearAll.addEventListener("click", () => setAllSelected(false));
+  els.btnRefresh.addEventListener("click", refreshPlaylists);
+  els.btnDownload.addEventListener("click", openConfirm);
+  els.btnConfirmCancel.addEventListener("click", closeConfirm);
+  els.btnConfirmOk.addEventListener("click", startSync);
+
+  els.confirmOverlay.addEventListener("click", (e) => {
+    if (e.target === els.confirmOverlay) closeConfirm();
+  });
+
+  els.tableBody.addEventListener("click", (e) => {
+    const target = e.target;
+
+    if (target.closest("[data-no-toggle]")) {
+      e.stopPropagation();
+      return;
+    }
+
+    const groupHeader = target.closest("tr.group-header");
+    if (groupHeader) {
+      if (target.classList.contains("group-check") || target.closest(".group-check")) {
+        e.stopPropagation();
+        const label = groupHeader.dataset.group;
+        const cb = groupHeader.querySelector(".group-check");
+        const selected = cb.checked;
+        cb.indeterminate = false;
+        setGroupSelected(label, selected);
+        return;
+      }
+      const label = groupHeader.dataset.group;
+      if (state.collapsedGroups.has(label)) {
+        state.collapsedGroups.delete(label);
+      } else {
+        state.collapsedGroups.add(label);
+      }
+      renderTable();
+      return;
+    }
+
+    const row = target.closest("tr.data-row");
+    if (!row) return;
+
+    if (target.classList.contains("row-check")) {
+      e.stopPropagation();
+      togglePlaylist(row.dataset.id);
+      return;
+    }
+
+    togglePlaylist(row.dataset.id);
+  });
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && !els.confirmOverlay.classList.contains("hidden")) {
+      closeConfirm();
+    }
+  });
+
+  loadPlaylists();
+  pollStatus();
+})();
+</script>
+</body>
+</html>

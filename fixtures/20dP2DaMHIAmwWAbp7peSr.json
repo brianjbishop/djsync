@@ -1,0 +1,241 @@
+{
+  "spotify": {
+    "id": "20dP2DaMHIAmwWAbp7peSr",
+    "name": "pick up the phone (feat. Quavo)",
+    "artists": [
+      "Young Thug",
+      "Travis Scott",
+      "Quavo"
+    ],
+    "album": "Birds In The Trap Sing McKnight",
+    "duration_ms": 252256,
+    "isrc": "USSM11604495"
+  },
+  "candidates": [
+    {
+      "video_id": "mZDinQ92OZQ",
+      "url": "https://www.youtube.com/watch?v=mZDinQ92OZQ",
+      "title": "Young Thug, Travis Scott - Pick Up the Phone (Explicit) ft. Quavo",
+      "channel": "Travis Scott",
+      "duration_s": 303,
+      "view_count": 40942694,
+      "is_art_track": false,
+      "description": "Available at iTunes: http://smarturl.it/BITTSM Apple Music: http://smarturl.it/BITTSM_AM Spotify: http://smarturl.it/BITTSM_Sptfy ..."
+    },
+    {
+      "video_id": "VAybGW3DI9Q",
+      "url": "https://www.youtube.com/watch?v=VAybGW3DI9Q",
+      "title": "pick up the phone",
+      "channel": "Young Thug",
+      "duration_s": 253,
+      "view_count": 52846301,
+      "is_art_track": true,
+      "description": "Provided to YouTube by Cactus Jack / Epic pick up the phone · Young Thug · Travis Scott · Quavo pick up the phone ℗ 2016 ..."
+    },
+    {
+      "video_id": "7iA9rGYp9VA",
+      "url": "https://www.youtube.com/watch?v=7iA9rGYp9VA",
+      "title": "Travis Scott x Young Thug - Pick Up the Phone ft. Quavo (Audio)",
+      "channel": "Jpks",
+      "duration_s": 252,
+      "view_count": 647131,
+      "is_art_track": false,
+      "description": "Travis Scott x Young Thug - Pick Up the Phone ft. Quavo Audio."
+    },
+    {
+      "video_id": "P9YklbrMZog",
+      "url": "https://www.youtube.com/watch?v=P9YklbrMZog",
+      "title": "Young Thug, Starrah - Pick Up The Phone (Demo) ft. Quavo",
+      "channel": "Frogeye00",
+      "duration_s": 245,
+      "view_count": 111033,
+      "is_art_track": false,
+      "description": "This wasn't on YouTube so I decided to change that lol."
+    },
+    {
+      "video_id": "xxsVv0MMs7I",
+      "url": "https://www.youtube.com/watch?v=xxsVv0MMs7I",
+      "title": "Young Thug, Travis Scott - Pick Up the Phone [Lyrics] ft. Quavo",
+      "channel": "Aquila",
+      "duration_s": 253,
+      "view_count": 150183,
+      "is_art_track": false,
+      "description": "Young Thug, Travis Scott - Pick Up the Phone (ft. Quavo) Stream: https://smarturl.it/BITTSM » Drill Playlist: ..."
+    },
+    {
+      "video_id": "JKWabfC9k64",
+      "url": "https://www.youtube.com/watch?v=JKWabfC9k64",
+      "title": "Young Thug, Travis Scott ft. Quavo - Pick Up the Phone (Acapella) [BEST ON YOUTUBE]",
+      "channel": "Blessedworld",
+      "duration_s": 255,
+      "view_count": 389,
+      "is_art_track": false,
+      "description": "FREE LARRY FREE YOUNG THUG."
+    },
+    {
+      "video_id": "d67cGwCskGM",
+      "url": "https://www.youtube.com/watch?v=d67cGwCskGM",
+      "title": "travis scott & young thug ft. quavo ~ pick up the phone ﾉ slowed + reverb ﾉ",
+      "channel": "rum world",
+      "duration_s": 316,
+      "view_count": 1668503,
+      "is_art_track": false,
+      "description": "slowed + reverb by rumworld - contact paid submissions, questions, concerns, just want to talk: rumworldgifs@gmail.com ..."
+    },
+    {
+      "video_id": "eMxNtqr01do",
+      "url": "https://www.youtube.com/watch?v=eMxNtqr01do",
+      "title": "Travis Scott - Pick Up The Phone ft.Young Thug, Quavo",
+      "channel": "Tasanai Ketmongkol",
+      "duration_s": 229,
+      "view_count": 133191,
+      "is_art_track": false,
+      "description": "Travis Scott - Pick Up The Phone ft.Young Thug, Quavo."
+    },
+    {
+      "video_id": "A80irvSI8Xk",
+      "url": "https://www.youtube.com/watch?v=A80irvSI8Xk",
+      "title": "Young Thug, Travis Scott - pick up the phone ft. Quavo (Instrumental)",
+      "channel": "Rockstar Beats",
+      "duration_s": 253,
+      "view_count": 38076,
+      "is_art_track": false,
+      "description": "DOWNLOAD LINK: https://hypeddit.com/sh6o6o Originally produced by Allen Ritter, MIKE DEAN, Ging & Vinylz Get access to ALL ..."
+    },
+    {
+      "video_id": "r4fGOh1oC1A",
+      "url": "https://www.youtube.com/watch?v=r4fGOh1oC1A",
+      "title": "Young Thug, Travis Scott - pick up the phone ft. Quavo (Clean Version)",
+      "channel": "Cleanmusic.mp3",
+      "duration_s": 252,
+      "view_count": 4654,
+      "is_art_track": false,
+      "description": ""
+    }
+  ],
+  "scores": [
+    {
+      "video_id": "VAybGW3DI9Q",
+      "total": 16.158452190343912,
+      "breakdown": {
+        "duration_delta": 4.0,
+        "art_track": 6.0,
+        "title_similarity": 3.0,
+        "artist_match": 2.0,
+        "negative_flags": 0.0,
+        "view_count": 1.1584521903439113
+      }
+    },
+    {
+      "video_id": "7iA9rGYp9VA",
+      "total": 8.349909800929325,
+      "breakdown": {
+        "duration_delta": 4.0,
+        "art_track": 0.0,
+        "title_similarity": 1.4782608695652175,
+        "artist_match": 2.0,
+        "negative_flags": 0.0,
+        "view_count": 0.8716489313641074
+      }
+    },
+    {
+      "video_id": "xxsVv0MMs7I",
+      "total": 8.298881609772979,
+      "breakdown": {
+        "duration_delta": 4.0,
+        "art_track": 0.0,
+        "title_similarity": 1.5223880597014925,
+        "artist_match": 2.0,
+        "negative_flags": 0.0,
+        "view_count": 0.7764935500714861
+      }
+    },
+    {
+      "video_id": "r4fGOh1oC1A",
+      "total": 8.072576012499097,
+      "breakdown": {
+        "duration_delta": 4.0,
+        "art_track": 0.0,
+        "title_similarity": 1.5223880597014925,
+        "artist_match": 2.0,
+        "negative_flags": 0.0,
+        "view_count": 0.5501879527976042
+      }
+    },
+    {
+      "video_id": "JKWabfC9k64",
+      "total": 7.453201596909314,
+      "breakdown": {
+        "duration_delta": 3.5421538461538464,
+        "art_track": 0.0,
+        "title_similarity": 1.5223880597014925,
+        "artist_match": 2.0,
+        "negative_flags": 0.0,
+        "view_count": 0.38865969105397485
+      }
+    },
+    {
+      "video_id": "A80irvSI8Xk",
+      "total": 5.709487468299757,
+      "breakdown": {
+        "duration_delta": 4.0,
+        "art_track": 0.0,
+        "title_similarity": 1.5223880597014925,
+        "artist_match": 2.0,
+        "negative_flags": -2.5,
+        "view_count": 0.6870994085982653
+      }
+    },
+    {
+      "video_id": "P9YklbrMZog",
+      "total": 5.167518149694426,
+      "breakdown": {
+        "duration_delta": 0.7655384615384615,
+        "art_track": 0.0,
+        "title_similarity": 1.6451612903225805,
+        "artist_match": 2.0,
+        "negative_flags": 0.0,
+        "view_count": 0.7568183978333839
+      }
+    },
+    {
+      "video_id": "mZDinQ92OZQ",
+      "total": 0.6642145236225725,
+      "breakdown": {
+        "duration_delta": -4.0,
+        "art_track": 0.0,
+        "title_similarity": 1.5223880597014925,
+        "artist_match": 2.0,
+        "negative_flags": 0.0,
+        "view_count": 1.14182646392108
+      }
+    },
+    {
+      "video_id": "eMxNtqr01do",
+      "total": 0.29105978074623573,
+      "breakdown": {
+        "duration_delta": -4.0,
+        "art_track": 0.0,
+        "title_similarity": 1.5223880597014925,
+        "artist_match": 2.0,
+        "negative_flags": 0.0,
+        "view_count": 0.7686717210447432
+      }
+    },
+    {
+      "video_id": "d67cGwCskGM",
+      "total": -4.866650912177343,
+      "breakdown": {
+        "duration_delta": -4.0,
+        "art_track": 0.0,
+        "title_similarity": 1.2000000000000002,
+        "artist_match": 2.0,
+        "negative_flags": -5.0,
+        "view_count": 0.9333490878226562
+      }
+    }
+  ],
+  "chosen_video_id": "VAybGW3DI9Q",
+  "timestamp": "2026-08-19T21:34:19.097675+00:00",
+  "weights_version": "2f40f5f26d141c5d"
+}

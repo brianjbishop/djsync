@@ -1,0 +1,241 @@
+{
+  "spotify": {
+    "id": "6Yqmv7XJLCrQEauMbPGZSw",
+    "name": "Maria I'm Drunk (feat. Justin Bieber & Young Thug)",
+    "artists": [
+      "Travis Scott",
+      "Justin Bieber",
+      "Young Thug"
+    ],
+    "album": "Rodeo",
+    "duration_ms": 349933,
+    "isrc": "USSM11506736"
+  },
+  "candidates": [
+    {
+      "video_id": "JYko5hDmN7Q",
+      "url": "https://www.youtube.com/watch?v=JYko5hDmN7Q",
+      "title": "Travis Scott - Maria I'm Drunk (Feat.Young Thug, Justin Bieber)",
+      "channel": "FrayXQ",
+      "duration_s": 360,
+      "view_count": 13014845,
+      "is_art_track": false,
+      "description": "Travis Scott - Maria I'm Drunk (ft. Young Thug, Justin Bieber) Rodeo Lyrics - [Part 1: Maria] [Intro: Travis Scott & Young Thug] Made ..."
+    },
+    {
+      "video_id": "fI-mnYR-Mp8",
+      "url": "https://www.youtube.com/watch?v=fI-mnYR-Mp8",
+      "title": "Maria I'm Drunk",
+      "channel": "Travis Scott",
+      "duration_s": 350,
+      "view_count": 42985218,
+      "is_art_track": true,
+      "description": "Provided to YouTube by Cactus Jack / Epic Maria I'm Drunk · Travis Scott · Justin Bieber · Young Thug Rodeo ℗ 2015 Cactus Jack ..."
+    },
+    {
+      "video_id": "Mar7RGprd6s",
+      "url": "https://www.youtube.com/watch?v=Mar7RGprd6s",
+      "title": "Travis Scott - Maria I'm Drunk ft. Justin Bieber, Young Thug (Music Video)",
+      "channel": "Hip Hop/R&B Lyrics",
+      "duration_s": 350,
+      "view_count": 1865,
+      "is_art_track": false,
+      "description": "Travis Scott - Maria I'm Drunk ft. Justin Bieber, Young Thug (Music Video) Follow: https://www.instagram.com/travisscott ..."
+    },
+    {
+      "video_id": "SJpDJaB0Yp4",
+      "url": "https://www.youtube.com/watch?v=SJpDJaB0Yp4",
+      "title": "Justin bieber part on scoot travis song *maria i'm drunk*",
+      "channel": "Justin BieberTeam",
+      "duration_s": 38,
+      "view_count": 108172,
+      "is_art_track": false,
+      "description": "Hey guys don't forget to shoutout our instagram @jbtdotcom Likes, comment, and subscribe guys!"
+    },
+    {
+      "video_id": "yax9dmIjOMI",
+      "url": "https://www.youtube.com/watch?v=yax9dmIjOMI",
+      "title": "Travis Scott - Maria I'm Drunk feat. Justin Bieber & Young Thug (Music Video)",
+      "channel": "New Generation",
+      "duration_s": 436,
+      "view_count": 9174092,
+      "is_art_track": false,
+      "description": "(UNOFFICIAL) fan video https://www.facebook.com/travisscottlaflame/?fref=ts."
+    },
+    {
+      "video_id": "xn5JkQJmQEA",
+      "url": "https://www.youtube.com/watch?v=xn5JkQJmQEA",
+      "title": "Maria I'm Drunk",
+      "channel": "Travis Scott",
+      "duration_s": 350,
+      "view_count": 150540,
+      "is_art_track": true,
+      "description": "Provided to YouTube by Cactus Jack / Epic Maria I'm Drunk · Travis Scott · Justin Bieber · Young Thug Rodeo ℗ 2015 Cactus Jack ..."
+    },
+    {
+      "video_id": "p0Coob1sWx8",
+      "url": "https://www.youtube.com/watch?v=p0Coob1sWx8",
+      "title": "(Clean Lyrics) Travis Scott - Maria I'm Drunk (Ft. Justin Bieber, Young Thug)",
+      "channel": "Sam Vision",
+      "duration_s": 344,
+      "view_count": 31303,
+      "is_art_track": false,
+      "description": "This is the third Travis Scott video I've made in a row, I should probably make a clean lyric video for someone else. Original song: ..."
+    },
+    {
+      "video_id": "kS-nJIIRJW8",
+      "url": "https://www.youtube.com/watch?v=kS-nJIIRJW8",
+      "title": "Maria I'm Drunk (No Justin Bieber) - Travis Scott, Young Thug",
+      "channel": "scrimexo",
+      "duration_s": 312,
+      "view_count": 12442,
+      "is_art_track": false,
+      "description": "A verison of Travis Scott's \"Maria I'm Drunk\" off of his 2015 album Rodeo, without Justin Bieber. Still has Young Thug. Personally ..."
+    },
+    {
+      "video_id": "g2yum7yYqek",
+      "url": "https://www.youtube.com/watch?v=g2yum7yYqek",
+      "title": "Travis Scott - Maria I'm Drunk (Lost Verses)",
+      "channel": "Rare Vibezz",
+      "duration_s": 327,
+      "view_count": 202227,
+      "is_art_track": false,
+      "description": "Audio by Travis Scott performing Maria I'm Drunk (ft. Young Thug, Justin Bieber) All rights reserved to the mentioned artists."
+    },
+    {
+      "video_id": "4P90VYq1-3E",
+      "url": "https://www.youtube.com/watch?v=4P90VYq1-3E",
+      "title": "Travis Scott - Maria I'm Drunk (feat. Justin Bieber & Young Thug)",
+      "channel": "nea ☆彡",
+      "duration_s": 350,
+      "view_count": 15273,
+      "is_art_track": false,
+      "description": ""
+    }
+  ],
+  "scores": [
+    {
+      "video_id": "fI-mnYR-Mp8",
+      "total": 16.144997871556857,
+      "breakdown": {
+        "duration_delta": 4.0,
+        "art_track": 6.0,
+        "title_similarity": 3.0,
+        "artist_match": 2.0,
+        "negative_flags": 0.0,
+        "view_count": 1.1449978715568578
+      }
+    },
+    {
+      "video_id": "xn5JkQJmQEA",
+      "total": 15.776648219489932,
+      "breakdown": {
+        "duration_delta": 4.0,
+        "art_track": 6.0,
+        "title_similarity": 3.0,
+        "artist_match": 2.0,
+        "negative_flags": 0.0,
+        "view_count": 0.7766482194899309
+      }
+    },
+    {
+      "video_id": "4P90VYq1-3E",
+      "total": 8.72061617375394,
+      "breakdown": {
+        "duration_delta": 4.0,
+        "art_track": 0.0,
+        "title_similarity": 2.0930232558139537,
+        "artist_match": 2.0,
+        "negative_flags": 0.0,
+        "view_count": 0.627592917939987
+      }
+    },
+    {
+      "video_id": "Mar7RGprd6s",
+      "total": 7.758242379714389,
+      "breakdown": {
+        "duration_delta": 4.0,
+        "art_track": 0.0,
+        "title_similarity": 1.267605633802817,
+        "artist_match": 2.0,
+        "negative_flags": 0.0,
+        "view_count": 0.4906367459115722
+      }
+    },
+    {
+      "video_id": "p0Coob1sWx8",
+      "total": 6.347055538740159,
+      "breakdown": {
+        "duration_delta": 1.5796923076923122,
+        "art_track": 0.0,
+        "title_similarity": 2.0930232558139537,
+        "artist_match": 2.0,
+        "negative_flags": 0.0,
+        "view_count": 0.6743399752338936
+      }
+    },
+    {
+      "video_id": "JYko5hDmN7Q",
+      "total": 4.1958814185500035,
+      "breakdown": {
+        "duration_delta": -0.9643076923076972,
+        "art_track": 0.0,
+        "title_similarity": 2.0930232558139537,
+        "artist_match": 2.0,
+        "negative_flags": 0.0,
+        "view_count": 1.0671658550437466
+      }
+    },
+    {
+      "video_id": "g2yum7yYqek",
+      "total": 0.8888994488312926,
+      "breakdown": {
+        "duration_delta": -4.0,
+        "art_track": 0.0,
+        "title_similarity": 2.0930232558139537,
+        "artist_match": 2.0,
+        "negative_flags": 0.0,
+        "view_count": 0.7958761930173389
+      }
+    },
+    {
+      "video_id": "kS-nJIIRJW8",
+      "total": 0.28090543183529104,
+      "breakdown": {
+        "duration_delta": -4.0,
+        "art_track": 0.0,
+        "title_similarity": 1.6666666666666667,
+        "artist_match": 2.0,
+        "negative_flags": 0.0,
+        "view_count": 0.6142387651686243
+      }
+    },
+    {
+      "video_id": "yax9dmIjOMI",
+      "total": 0.27726118308374215,
+      "breakdown": {
+        "duration_delta": -4.0,
+        "art_track": 0.0,
+        "title_similarity": 1.2328767123287672,
+        "artist_match": 2.0,
+        "negative_flags": 0.0,
+        "view_count": 1.044384470754975
+      }
+    },
+    {
+      "video_id": "SJpDJaB0Yp4",
+      "total": 0.04083211686181443,
+      "breakdown": {
+        "duration_delta": -4.0,
+        "art_track": 0.0,
+        "title_similarity": 1.2857142857142856,
+        "artist_match": 2.0,
+        "negative_flags": 0.0,
+        "view_count": 0.7551178311475288
+      }
+    }
+  ],
+  "chosen_video_id": "fI-mnYR-Mp8",
+  "timestamp": "2026-08-19T21:34:04.594897+00:00",
+  "weights_version": "2f40f5f26d141c5d"
+}

@@ -1,0 +1,13 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Credentials and OAuth token cache
+.env
+.cache
+
+# Generated local state (rebuildable; not source)
+.djsync_cache.json
+selection.json
+genres.json

@@ -1,0 +1,241 @@
+{
+  "spotify": {
+    "id": "4KDNRh9Oor80z3XIxdWlui",
+    "name": "Bubbly (with Drake & Travis Scott)",
+    "artists": [
+      "Young Thug",
+      "Drake",
+      "Travis Scott"
+    ],
+    "album": "Punk",
+    "duration_ms": 165066,
+    "isrc": "USAT22106845"
+  },
+  "candidates": [
+    {
+      "video_id": "uCDE-S1AjuQ",
+      "url": "https://www.youtube.com/watch?v=uCDE-S1AjuQ",
+      "title": "Young Thug - Bubbly (with Drake & Travis Scott) [Official Audio]",
+      "channel": "Young Thug",
+      "duration_s": 166,
+      "view_count": 13780350,
+      "is_art_track": false,
+      "description": "The official audio for Young Thug's \"Bubbly\" with Drake & Travis Scott from his album 'Punk' - Out Now! Stream 'Punk' on all ..."
+    },
+    {
+      "video_id": "Y2rWwsbjUhw",
+      "url": "https://www.youtube.com/watch?v=Y2rWwsbjUhw",
+      "title": "Young Thug - Bubbly (with Drake & Travis Scott) [Official Lyric Video]",
+      "channel": "Young Thug",
+      "duration_s": 164,
+      "view_count": 5471499,
+      "is_art_track": false,
+      "description": "The official lyric video for Young Thug's \"Bubbly\" with Drake & Travis Scott from his album 'Punk' - Out Now! Stream 'Punk' on all ..."
+    },
+    {
+      "video_id": "9YZiXdNnVgw",
+      "url": "https://www.youtube.com/watch?v=9YZiXdNnVgw",
+      "title": "Young Thug - Bubbly (with Drake & Travis Scott) [Official Lyric Video]",
+      "channel": "Young Thug",
+      "duration_s": 166,
+      "view_count": 2053449,
+      "is_art_track": false,
+      "description": "The official lyric video for Young Thug's \"Bubbly\" with Drake & Travis Scott from his album 'Punk' - Out Now! Stream 'Punk' on all ..."
+    },
+    {
+      "video_id": "hDUBd6ES8hw",
+      "url": "https://www.youtube.com/watch?v=hDUBd6ES8hw",
+      "title": "Young Thug - Bubbly ft. Travis Scott [WITHOUT Drake's Part]",
+      "channel": "Sebastian Augustin",
+      "duration_s": 136,
+      "view_count": 42168,
+      "is_art_track": false,
+      "description": "Young Thug's song, Bubbly, from his brand new project, Punk, featuring Travis Scott, now without Drake's part."
+    },
+    {
+      "video_id": "cVXROx77v00",
+      "url": "https://www.youtube.com/watch?v=cVXROx77v00",
+      "title": "Young Thug - BUBBLY ft. Drake & Travis Scott (Official Video)",
+      "channel": "Global Iso Wars",
+      "duration_s": 169,
+      "view_count": 158698,
+      "is_art_track": false,
+      "description": "GET YOUR MUSIC POSTED HERE ON OUR YOUTUBE CHANNEL https://rapoutlet.com/ Young Thug - BUBBLY ft. Drake ..."
+    },
+    {
+      "video_id": "fEZ5UchO_es",
+      "url": "https://www.youtube.com/watch?v=fEZ5UchO_es",
+      "title": "Bubbly (with Drake & Travis Scott)",
+      "channel": "Young Thug",
+      "duration_s": 166,
+      "view_count": 113619,
+      "is_art_track": true,
+      "description": "Provided to YouTube by 300 Entertainment/Atl Bubbly (with Drake & Travis Scott) · Young Thug · Drake · Travis Scott Punk ℗ 2021 ..."
+    },
+    {
+      "video_id": "SNeGZVvvzQI",
+      "url": "https://www.youtube.com/watch?v=SNeGZVvvzQI",
+      "title": "Young Thug - Bubbly [Official Music Video] (with Drake & Travis Scott)",
+      "channel": "LyricAss",
+      "duration_s": 167,
+      "view_count": 1231,
+      "is_art_track": false,
+      "description": "Get a free month of youtube premium. click this link and sign up - http://surl.li/aktj (After you've completed \"sign up,\" you'll need to ..."
+    },
+    {
+      "video_id": "CIdj9Nobrso",
+      "url": "https://www.youtube.com/watch?v=CIdj9Nobrso",
+      "title": "Young Thug - Bubbly (with Drake & Travis Scott) (Bass Boosted)",
+      "channel": "MAVRICS",
+      "duration_s": 166,
+      "view_count": 892,
+      "is_art_track": false,
+      "description": "Song :- Young Thug - Bubbly (with Drake & Travis Scott) (Bass Boosted) Official Video for \" Bubbly ..."
+    },
+    {
+      "video_id": "VPThtJ3SS3Q",
+      "url": "https://www.youtube.com/watch?v=VPThtJ3SS3Q",
+      "title": "Stephen Curry Mix - \"Bubbly\" ft. Young Thug, Drake & Travis Scott",
+      "channel": "MCD prod.",
+      "duration_s": 166,
+      "view_count": 2856,
+      "is_art_track": false,
+      "description": "Music in this video: \"Bubbly\" - Young Thug(with Drake & Travis Scott). I take no claim to this music or videos this is solely for the ..."
+    },
+    {
+      "video_id": "5w2LmM7fqMg",
+      "url": "https://www.youtube.com/watch?v=5w2LmM7fqMg",
+      "title": "Young Thug - Bubbly (with Drake & Travis Scott) [Official Audio] REACTION",
+      "channel": "Zy & Shrimp",
+      "duration_s": 546,
+      "view_count": 11925,
+      "is_art_track": false,
+      "description": "Subscribe to our other channels: Zy & Shrimp Vlogs: https://www.youtube.com/c/ZyShrimpVlogs E & Z Family: ..."
+    }
+  ],
+  "scores": [
+    {
+      "video_id": "fEZ5UchO_es",
+      "total": 15.758318217741186,
+      "breakdown": {
+        "duration_delta": 4.0,
+        "art_track": 6.0,
+        "title_similarity": 3.0,
+        "artist_match": 2.0,
+        "negative_flags": 0.0,
+        "view_count": 0.758318217741186
+      }
+    },
+    {
+      "video_id": "uCDE-S1AjuQ",
+      "total": 8.636106433251646,
+      "breakdown": {
+        "duration_delta": 4.0,
+        "art_track": 0.0,
+        "title_similarity": 1.5652173913043477,
+        "artist_match": 2.0,
+        "negative_flags": 0.0,
+        "view_count": 1.0708890419472987
+      }
+    },
+    {
+      "video_id": "Y2rWwsbjUhw",
+      "total": 8.575933351838065,
+      "breakdown": {
+        "duration_delta": 4.0,
+        "art_track": 0.0,
+        "title_similarity": 1.5652173913043477,
+        "artist_match": 2.0,
+        "negative_flags": 0.0,
+        "view_count": 1.010715960533717
+      }
+    },
+    {
+      "video_id": "9YZiXdNnVgw",
+      "total": 8.512090011189338,
+      "breakdown": {
+        "duration_delta": 4.0,
+        "art_track": 0.0,
+        "title_similarity": 1.5652173913043477,
+        "artist_match": 2.0,
+        "negative_flags": 0.0,
+        "view_count": 0.946872619884991
+      }
+    },
+    {
+      "video_id": "SNeGZVvvzQI",
+      "total": 8.028808997478608,
+      "breakdown": {
+        "duration_delta": 4.0,
+        "art_track": 0.0,
+        "title_similarity": 1.5652173913043477,
+        "artist_match": 2.0,
+        "negative_flags": 0.0,
+        "view_count": 0.463591606174261
+      }
+    },
+    {
+      "video_id": "VPThtJ3SS3Q",
+      "total": 7.0898151074859825,
+      "breakdown": {
+        "duration_delta": 4.0,
+        "art_track": 0.0,
+        "title_similarity": 0.5714285714285714,
+        "artist_match": 2.0,
+        "negative_flags": 0.0,
+        "view_count": 0.5183865360574114
+      }
+    },
+    {
+      "video_id": "cVXROx77v00",
+      "total": 6.389932282371812,
+      "breakdown": {
+        "duration_delta": 2.8098461538461557,
+        "art_track": 0.0,
+        "title_similarity": 0.8,
+        "artist_match": 2.0,
+        "negative_flags": 0.0,
+        "view_count": 0.7800861285256562
+      }
+    },
+    {
+      "video_id": "CIdj9Nobrso",
+      "total": 5.507845110137629,
+      "breakdown": {
+        "duration_delta": 4.0,
+        "art_track": 0.0,
+        "title_similarity": 1.5652173913043477,
+        "artist_match": 2.0,
+        "negative_flags": -2.5,
+        "view_count": 0.44262771883328195
+      }
+    },
+    {
+      "video_id": "5w2LmM7fqMg",
+      "total": -0.2635257792485419,
+      "breakdown": {
+        "duration_delta": -4.0,
+        "art_track": 0.0,
+        "title_similarity": 1.125,
+        "artist_match": 2.0,
+        "negative_flags": 0.0,
+        "view_count": 0.6114742207514581
+      }
+    },
+    {
+      "video_id": "hDUBd6ES8hw",
+      "total": -0.3831740815881274,
+      "breakdown": {
+        "duration_delta": -4.0,
+        "art_track": 0.0,
+        "title_similarity": 0.9230769230769231,
+        "artist_match": 2.0,
+        "negative_flags": 0.0,
+        "view_count": 0.6937489953349495
+      }
+    }
+  ],
+  "chosen_video_id": "fEZ5UchO_es",
+  "timestamp": "2026-08-19T21:36:23.494107+00:00",
+  "weights_version": "2f40f5f26d141c5d"
+}

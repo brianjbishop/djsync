@@ -1,0 +1,242 @@
+{
+  "spotify": {
+    "id": "5ALc7rbru6QOLGodVSDocc",
+    "name": "Floyd Mayweather (feat. Travis Scott, Gucci Mane and Gunna)",
+    "artists": [
+      "Young Thug",
+      "Travis Scott",
+      "Gucci Mane",
+      "Gunna"
+    ],
+    "album": "JEFFERY",
+    "duration_ms": 358506,
+    "isrc": "USAT21602476"
+  },
+  "candidates": [
+    {
+      "video_id": "G5HBShHQu0Q",
+      "url": "https://www.youtube.com/watch?v=G5HBShHQu0Q",
+      "title": "Young Thug - Floyd Mayweather (feat. Travis Scott, Gucci Mane and Gunna) [Official Audio]",
+      "channel": "Young Thug",
+      "duration_s": 362,
+      "view_count": 16106275,
+      "is_art_track": false,
+      "description": "Young Thug - Floyd Mayweather (feat. Travis Scott, Gucci Mane and Gunna) Get your tickets to the HiHorsed Tour: ..."
+    },
+    {
+      "video_id": "leJNDpm_G10",
+      "url": "https://www.youtube.com/watch?v=leJNDpm_G10",
+      "title": "Young Thug - Hot ft. Gunna & Travis Scott [Official Music Video]",
+      "channel": "Young Thug",
+      "duration_s": 309,
+      "view_count": 281198026,
+      "is_art_track": false,
+      "description": "Young Thug - Hot ft. Gunna & Travis Scott [Official Video] Stream \"So Much Fun\" on all platforms: ..."
+    },
+    {
+      "video_id": "INH6-9G3b6U",
+      "url": "https://www.youtube.com/watch?v=INH6-9G3b6U",
+      "title": "Floyd Mayweather (Clean) - Young Thug (feat. Travis Scott, Gucci Mane & Gunna)",
+      "channel": "Anthony Lee 69",
+      "duration_s": 360,
+      "view_count": 6062,
+      "is_art_track": false,
+      "description": "I do not own this. All of this belongs to Young Thug Like, Subscribe & Have a Nice Day!!!!! Copyright Disclaimer Under Section 107 ..."
+    },
+    {
+      "video_id": "da7oLPQn97g",
+      "url": "https://www.youtube.com/watch?v=da7oLPQn97g",
+      "title": "Young Thug - No My Name Is JEFFREY - Floyd Mayweather (Ft. Gunna, Gucci Mane & Travis Scott)",
+      "channel": "𝟣³𝟥³DøฬИ-𝟤-đเєƐ³Ɛ¹",
+      "duration_s": 360,
+      "view_count": 43,
+      "is_art_track": false,
+      "description": "Young Thug - No My Name Is JEFFREY - Floyd Mayweather (Ft. Gunna, Gucci Mane & Travis Scott)"
+    },
+    {
+      "video_id": "sKHChT1gMQI",
+      "url": "https://www.youtube.com/watch?v=sKHChT1gMQI",
+      "title": "Young Thug - Floyd Mayweather feat. Gunna & Gucci Mane",
+      "channel": "SkeetOffOnTheLunchLady",
+      "duration_s": 273,
+      "view_count": 184141,
+      "is_art_track": false,
+      "description": "Buy Young Thug Album \"Jeffery\" On iTunes: ..."
+    },
+    {
+      "video_id": "giQgGKvb0Fo",
+      "url": "https://www.youtube.com/watch?v=giQgGKvb0Fo",
+      "title": "Young Thug: Mayweather [Ft. Travis Scott, Gucci Mane, and Gunna] [Bass Boosted]",
+      "channel": "MadeGeek Bass Boost",
+      "duration_s": 362,
+      "view_count": 4184,
+      "is_art_track": false,
+      "description": "Young Thug: Mayweather [Ft. Travis Scott, Gucci Mane, and Gunna] Bass Boosted By: MadeGeek Bass Boost Please e-mail us for ..."
+    },
+    {
+      "video_id": "dfkE5Rd6zsI",
+      "url": "https://www.youtube.com/watch?v=dfkE5Rd6zsI",
+      "title": "Floyd Mayweather - Young Thug (The Original Version)",
+      "channel": "Professor Pluto",
+      "duration_s": 359,
+      "view_count": 27015,
+      "is_art_track": false,
+      "description": ""
+    },
+    {
+      "video_id": "KcsZiTFfSbA",
+      "url": "https://www.youtube.com/watch?v=KcsZiTFfSbA",
+      "title": "Young Thug - Floyd Mayweather (feat. Travis Scott, Gucci Mane and Gunna) (Chopped + Screwed)",
+      "channel": "JBSCREWEDUP CHOPS",
+      "duration_s": 583,
+      "view_count": 584,
+      "is_art_track": false,
+      "description": ""
+    },
+    {
+      "video_id": "s2dEtBMErZc",
+      "url": "https://www.youtube.com/watch?v=s2dEtBMErZc",
+      "title": "Young Thug - Floyd Mayweather Feat. Travis Scott, Gucci Mane and Gunna",
+      "channel": "300 Entertainment",
+      "duration_s": 362,
+      "view_count": 1586529,
+      "is_art_track": false,
+      "description": "\"\"JEFFERY\"\" Available Now Spotify: http://flyt.it/NoMyNameIsJefferySp iTunes: http://flyt.it/NoMyNameIsJeffery Apple Music: ..."
+    },
+    {
+      "video_id": "cTGQrA5HHIU",
+      "url": "https://www.youtube.com/watch?v=cTGQrA5HHIU",
+      "title": "Young Thug \"With That\" featuring Duke",
+      "channel": "Young Thug",
+      "duration_s": 205,
+      "view_count": 231311426,
+      "is_art_track": false,
+      "description": "Young Thug Releases \"With That\" featuring Duke Barter 6 challenge win $5k: https://300ent.ffm.to/barter6challenge."
+    }
+  ],
+  "scores": [
+    {
+      "video_id": "dfkE5Rd6zsI",
+      "total": 8.897301296678988,
+      "breakdown": {
+        "duration_delta": 4.0,
+        "art_track": 0.0,
+        "title_similarity": 2.2325581395348837,
+        "artist_match": 2.0,
+        "negative_flags": 0.0,
+        "view_count": 0.6647431571441033
+      }
+    },
+    {
+      "video_id": "INH6-9G3b6U",
+      "total": 8.799961274770128,
+      "breakdown": {
+        "duration_delta": 4.0,
+        "art_track": 0.0,
+        "title_similarity": 2.2325581395348837,
+        "artist_match": 2.0,
+        "negative_flags": 0.0,
+        "view_count": 0.5674031352352449
+      }
+    },
+    {
+      "video_id": "G5HBShHQu0Q",
+      "total": 8.394222794695358,
+      "breakdown": {
+        "duration_delta": 3.080615384615367,
+        "art_track": 0.0,
+        "title_similarity": 2.2325581395348837,
+        "artist_match": 2.0,
+        "negative_flags": 0.0,
+        "view_count": 1.0810492705451076
+      }
+    },
+    {
+      "video_id": "da7oLPQn97g",
+      "total": 7.723440978396005,
+      "breakdown": {
+        "duration_delta": 4.0,
+        "art_track": 0.0,
+        "title_similarity": 1.476923076923077,
+        "artist_match": 2.0,
+        "negative_flags": 0.0,
+        "view_count": 0.2465179014729281
+      }
+    },
+    {
+      "video_id": "s2dEtBMErZc",
+      "total": 7.181414335233197,
+      "breakdown": {
+        "duration_delta": 3.080615384615367,
+        "art_track": 0.0,
+        "title_similarity": 1.1707317073170733,
+        "artist_match": 2.0,
+        "negative_flags": 0.0,
+        "view_count": 0.9300672433007567
+      }
+    },
+    {
+      "video_id": "giQgGKvb0Fo",
+      "total": 5.069815649910705,
+      "breakdown": {
+        "duration_delta": 3.080615384615367,
+        "art_track": 0.0,
+        "title_similarity": 1.945945945945946,
+        "artist_match": 2.0,
+        "negative_flags": -2.5,
+        "view_count": 0.5432543193493918
+      }
+    },
+    {
+      "video_id": "KcsZiTFfSbA",
+      "total": 0.6476315194472108,
+      "breakdown": {
+        "duration_delta": -4.0,
+        "art_track": 0.0,
+        "title_similarity": 2.2325581395348837,
+        "artist_match": 2.0,
+        "negative_flags": 0.0,
+        "view_count": 0.41507337991232707
+      }
+    },
+    {
+      "video_id": "sKHChT1gMQI",
+      "total": 0.26669600529202997,
+      "breakdown": {
+        "duration_delta": -4.0,
+        "art_track": 0.0,
+        "title_similarity": 1.476923076923077,
+        "artist_match": 2.0,
+        "negative_flags": 0.0,
+        "view_count": 0.789772928368953
+      }
+    },
+    {
+      "video_id": "leJNDpm_G10",
+      "total": -0.1557250827012232,
+      "breakdown": {
+        "duration_delta": -4.0,
+        "art_track": 0.0,
+        "title_similarity": 0.576923076923077,
+        "artist_match": 2.0,
+        "negative_flags": 0.0,
+        "view_count": 1.2673518403756998
+      }
+    },
+    {
+      "video_id": "cTGQrA5HHIU",
+      "total": -0.15713514270446283,
+      "breakdown": {
+        "duration_delta": -4.0,
+        "art_track": 0.0,
+        "title_similarity": 0.5882352941176471,
+        "artist_match": 2.0,
+        "negative_flags": 0.0,
+        "view_count": 1.25462956317789
+      }
+    }
+  ],
+  "chosen_video_id": "dfkE5Rd6zsI",
+  "timestamp": "2026-08-19T21:32:01.656576+00:00",
+  "weights_version": "2f40f5f26d141c5d"
+}

@@ -1,0 +1,241 @@
+{
+  "spotify": {
+    "id": "4ea9w8c4ROqiZpJVhfBA3m",
+    "name": "Hot (Remix) [feat. Gunna and Travis Scott]",
+    "artists": [
+      "Young Thug",
+      "Travis Scott",
+      "Gunna"
+    ],
+    "album": "So Much Fun (Deluxe)",
+    "duration_ms": 279906,
+    "isrc": "USAT21906512"
+  },
+  "candidates": [
+    {
+      "video_id": "leJNDpm_G10",
+      "url": "https://www.youtube.com/watch?v=leJNDpm_G10",
+      "title": "Young Thug - Hot ft. Gunna & Travis Scott [Official Music Video]",
+      "channel": "Young Thug",
+      "duration_s": 309,
+      "view_count": 281198026,
+      "is_art_track": false,
+      "description": "Young Thug - Hot ft. Gunna & Travis Scott [Official Video] Stream \"So Much Fun\" on all platforms: ..."
+    },
+    {
+      "video_id": "QHRV99Ff9N0",
+      "url": "https://www.youtube.com/watch?v=QHRV99Ff9N0",
+      "title": "Hot (Remix) (feat. Gunna and Travis Scott)",
+      "channel": "Young Thug",
+      "duration_s": 280,
+      "view_count": 6420980,
+      "is_art_track": true,
+      "description": "Provided to YouTube by 300 Entertainment/Atl Hot (Remix) (feat. Gunna and Travis Scott) · Young Thug · Gunna · Travis Scott Hot ..."
+    },
+    {
+      "video_id": "bICi2mKwmpA",
+      "url": "https://www.youtube.com/watch?v=bICi2mKwmpA",
+      "title": "Young Thug - Hot (Remix) [feat. Gunna and Travis Scott]",
+      "channel": "ysl",
+      "duration_s": 280,
+      "view_count": 253690,
+      "is_art_track": false,
+      "description": "Complete Album Playlist - https://www.youtube.com/playlist?list=PLMzyPujdwy4yZz0bXjjLBPz5DI2dRINls [Intro: Gunna] Wheezy ..."
+    },
+    {
+      "video_id": "ERb5MyXRDCA",
+      "url": "https://www.youtube.com/watch?v=ERb5MyXRDCA",
+      "title": "Young Thug - Hot Remix (Lyrics) ft. Travis Scott & Gunna",
+      "channel": "FutureHype",
+      "duration_s": 291,
+      "view_count": 4139085,
+      "is_art_track": false,
+      "description": "Stream Young Thug - Hot Remix ft. Travis Scott & Gunna: ..."
+    },
+    {
+      "video_id": "PRWockrwEXU",
+      "url": "https://www.youtube.com/watch?v=PRWockrwEXU",
+      "title": "Young Thug - Hot ft. Gunna (Official Audio)",
+      "channel": "Young Thug",
+      "duration_s": 194,
+      "view_count": 59797013,
+      "is_art_track": false,
+      "description": "Young Thug - Hot ft. Gunna Stream So Much Fun Now! https://youngthug.ffm.to/somuchfun Listen to So Much Fun on YouTube ..."
+    },
+    {
+      "video_id": "sTo10TJT_88",
+      "url": "https://www.youtube.com/watch?v=sTo10TJT_88",
+      "title": "young thug, gunna & travis scott - hot (slowed + reverb)",
+      "channel": "meeser",
+      "duration_s": 335,
+      "view_count": 6816378,
+      "is_art_track": false,
+      "description": ""
+    },
+    {
+      "video_id": "majqSlnDZGU",
+      "url": "https://www.youtube.com/watch?v=majqSlnDZGU",
+      "title": "Hot Remix Live - Young Thug (ft Gunna & Travis Scott)",
+      "channel": "XTROS",
+      "duration_s": 334,
+      "view_count": 1615926,
+      "is_art_track": false,
+      "description": "Hot Remix with Travis Scott live at Astroworld."
+    },
+    {
+      "video_id": "oXbY5S7QSoQ",
+      "url": "https://www.youtube.com/watch?v=oXbY5S7QSoQ",
+      "title": "Young Thug ft Gunna and Travis Scott - Hot (Remix) | iFruit Radio",
+      "channel": "Original Soundtrack",
+      "duration_s": 315,
+      "view_count": 317692,
+      "is_art_track": false,
+      "description": "Music from Grand Theft Auto V (2013) published by Rockstar Games. iFruit Radio (GTA V Radio Station) hosted by Danny Brown ..."
+    },
+    {
+      "video_id": "hj_j5eIE4Cg",
+      "url": "https://www.youtube.com/watch?v=hj_j5eIE4Cg",
+      "title": "Hot Remix - Kendrick Lamar, J. Cole, Mac Miller, Tyler The Creator, Jay Rock, Travis Scott, Gunna",
+      "channel": "Nitin Randhawa",
+      "duration_s": 591,
+      "view_count": 8338764,
+      "is_art_track": false,
+      "description": "Young Thug - Hot Remix - Kendrick Lamar, J. Cole, Mac Miller, Tyler The Creator, Jay Rock, Travis Scott, Gunna, Nitin Randhawa ..."
+    },
+    {
+      "video_id": "RGY4w3jlKqw",
+      "url": "https://www.youtube.com/watch?v=RGY4w3jlKqw",
+      "title": "Young Thug - Hot (Remix) Ft. Gunna & Travis Scott",
+      "channel": "New Music Friday",
+      "duration_s": 285,
+      "view_count": 27766,
+      "is_art_track": false,
+      "description": "Young Thug - \"Hot\" (Remix) Ft. Gunna & Travis Scott Stream or Download: https://YoungThug.ffm.to/SoMuchFun Follow New ..."
+    }
+  ],
+  "scores": [
+    {
+      "video_id": "QHRV99Ff9N0",
+      "total": 16.021140207722937,
+      "breakdown": {
+        "duration_delta": 4.0,
+        "art_track": 6.0,
+        "title_similarity": 3.0,
+        "artist_match": 2.0,
+        "negative_flags": 0.0,
+        "view_count": 1.0211402077229352
+      }
+    },
+    {
+      "video_id": "bICi2mKwmpA",
+      "total": 7.869469288466446,
+      "breakdown": {
+        "duration_delta": 4.0,
+        "art_track": 0.0,
+        "title_similarity": 1.0588235294117647,
+        "artist_match": 2.0,
+        "negative_flags": 0.0,
+        "view_count": 0.8106457590546815
+      }
+    },
+    {
+      "video_id": "RGY4w3jlKqw",
+      "total": 5.2240678055797245,
+      "breakdown": {
+        "duration_delta": 2.0960000000000036,
+        "art_track": 0.0,
+        "title_similarity": 0.46153846153846156,
+        "artist_match": 2.0,
+        "negative_flags": 0.0,
+        "view_count": 0.6665293440412593
+      }
+    },
+    {
+      "video_id": "ERb5MyXRDCA",
+      "total": 1.7962279752017398,
+      "breakdown": {
+        "duration_delta": -1.5963076923076889,
+        "art_track": 0.0,
+        "title_similarity": 0.4,
+        "artist_match": 2.0,
+        "negative_flags": 0.0,
+        "view_count": 0.9925356675094288
+      }
+    },
+    {
+      "video_id": "PRWockrwEXU",
+      "total": -0.14119038302640585,
+      "breakdown": {
+        "duration_delta": -4.0,
+        "art_track": 0.0,
+        "title_similarity": 0.6923076923076923,
+        "artist_match": 2.0,
+        "negative_flags": 0.0,
+        "view_count": 1.1665019246659019
+      }
+    },
+    {
+      "video_id": "leJNDpm_G10",
+      "total": -0.2711096980858386,
+      "breakdown": {
+        "duration_delta": -4.0,
+        "art_track": 0.0,
+        "title_similarity": 0.46153846153846156,
+        "artist_match": 2.0,
+        "negative_flags": 0.0,
+        "view_count": 1.2673518403756998
+      }
+    },
+    {
+      "video_id": "hj_j5eIE4Cg",
+      "total": -0.7640325419654708,
+      "breakdown": {
+        "duration_delta": -4.0,
+        "art_track": 0.0,
+        "title_similarity": 0.19780219780219782,
+        "artist_match": 2.0,
+        "negative_flags": 0.0,
+        "view_count": 1.0381652602323315
+      }
+    },
+    {
+      "video_id": "oXbY5S7QSoQ",
+      "total": -0.8532702817084827,
+      "breakdown": {
+        "duration_delta": -4.0,
+        "art_track": 0.0,
+        "title_similarity": 0.3214285714285714,
+        "artist_match": 2.0,
+        "negative_flags": 0.0,
+        "view_count": 0.8253011468629459
+      }
+    },
+    {
+      "video_id": "majqSlnDZGU",
+      "total": -2.925879596518651,
+      "breakdown": {
+        "duration_delta": -4.0,
+        "art_track": 0.0,
+        "title_similarity": 0.6428571428571428,
+        "artist_match": 2.0,
+        "negative_flags": -2.5,
+        "view_count": 0.9312632606242062
+      }
+    },
+    {
+      "video_id": "sTo10TJT_88",
+      "total": -5.47496694053038,
+      "breakdown": {
+        "duration_delta": -4.0,
+        "art_track": 0.0,
+        "title_similarity": 0.5,
+        "artist_match": 2.0,
+        "negative_flags": -5.0,
+        "view_count": 1.0250330594696202
+      }
+    }
+  ],
+  "chosen_video_id": "QHRV99Ff9N0",
+  "timestamp": "2026-08-19T21:33:15.267121+00:00",
+  "weights_version": "2f40f5f26d141c5d"
+}

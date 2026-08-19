@@ -1,0 +1,242 @@
+{
+  "spotify": {
+    "id": "7uZqvqXzzYMKrexKxdcGmd",
+    "name": "Diamonds Dancing (feat. Travis Scott)",
+    "artists": [
+      "Young Stoner Life",
+      "Young Thug",
+      "Gunna",
+      "Travis Scott"
+    ],
+    "album": "Slime Language 2",
+    "duration_ms": 242600,
+    "isrc": "QMCE32100198"
+  },
+  "candidates": [
+    {
+      "video_id": "xuqqyiuJicI",
+      "url": "https://www.youtube.com/watch?v=xuqqyiuJicI",
+      "title": "Young Stoner Life, Young Thug & Gunna - Diamonds Dancing (feat. Travis Scott) [Official Audio]",
+      "channel": "Young Thug",
+      "duration_s": 243,
+      "view_count": 6894759,
+      "is_art_track": false,
+      "description": "Young Stoner Life Records Presents the official audio for Young Thug & Gunna's \"Diamonds Dancing\" featuring Travis Scott from ..."
+    },
+    {
+      "video_id": "5rvzTLIkUeQ",
+      "url": "https://www.youtube.com/watch?v=5rvzTLIkUeQ",
+      "title": "Young Thug & Gunna - Diamonds Dancing (feat. Travis Scott) [Official Audio] | Young Stoner Life",
+      "channel": "YOUNG STONER LIFE RECORDS",
+      "duration_s": 243,
+      "view_count": 131613,
+      "is_art_track": false,
+      "description": "Young Stoner Life Records Presents the official audio for Young Thug & Gunna's \"Diamonds Dancing\" featuring Travis Scott from ..."
+    },
+    {
+      "video_id": "YS6WYR-T_gk",
+      "url": "https://www.youtube.com/watch?v=YS6WYR-T_gk",
+      "title": "Diamonds Dancing (feat. Travis Scott)",
+      "channel": "Young Stoner Life - Topic",
+      "duration_s": 243,
+      "view_count": 67317,
+      "is_art_track": true,
+      "description": "Provided to YouTube by 300 Entertainment Diamonds Dancing (feat. Travis Scott) · Young Stoner Life · Young Thug · Gunna ..."
+    },
+    {
+      "video_id": "oP-h0RWHiFs",
+      "url": "https://www.youtube.com/watch?v=oP-h0RWHiFs",
+      "title": "Young Stoner Life, Young Thug, Gunna - Diamonds Dancing (Lyrics) Feat.  Travis Scott",
+      "channel": "Rap Paradise",
+      "duration_s": 243,
+      "view_count": 21146,
+      "is_art_track": false,
+      "description": "Welcome to Paradise Your Home For The Best Rap Music With Lyrics! “Young Stoner Life, Young Thug, Gunna - Diamonds ..."
+    },
+    {
+      "video_id": "6DYl_8x6QYg",
+      "url": "https://www.youtube.com/watch?v=6DYl_8x6QYg",
+      "title": "Young Thug ft. Travis Scott, Gunna \"Diamonds Dancing\" (Music Video)",
+      "channel": "Tempo Talk",
+      "duration_s": 336,
+      "view_count": 8832,
+      "is_art_track": false,
+      "description": "Trending #Subscribe Check us out on Facebook:https://www.facebook.com/muzikguru365/"
+    },
+    {
+      "video_id": "ONjrbGMiFno",
+      "url": "https://www.youtube.com/watch?v=ONjrbGMiFno",
+      "title": "Young Stoner Life, Young Thug & Gunna - Diamonds Dancing (feat. Travis Scott)  1 Hour Version",
+      "channel": "1 Hour Heat",
+      "duration_s": 3627,
+      "view_count": 2197,
+      "is_art_track": false,
+      "description": "Reminder: I will never take down any of my videos, YouTube has become much stricter with copyright and therefore will remove ..."
+    },
+    {
+      "video_id": "6Kj3e8FtYT8",
+      "url": "https://www.youtube.com/watch?v=6Kj3e8FtYT8",
+      "title": "Young Thug - Diamonds Dancing (Travis Scott Only)",
+      "channel": "BiaXiDeNTJr",
+      "duration_s": 181,
+      "view_count": 19967,
+      "is_art_track": false,
+      "description": "Here is a looped edit of the new La Flame feature on YSL's new album, Slime Language 2."
+    },
+    {
+      "video_id": "leJNDpm_G10",
+      "url": "https://www.youtube.com/watch?v=leJNDpm_G10",
+      "title": "Young Thug - Hot ft. Gunna & Travis Scott [Official Music Video]",
+      "channel": "Young Thug",
+      "duration_s": 309,
+      "view_count": 281198244,
+      "is_art_track": false,
+      "description": "Young Thug - Hot ft. Gunna & Travis Scott [Official Video] Stream \"So Much Fun\" on all platforms: ..."
+    },
+    {
+      "video_id": "p14wpn1XTDE",
+      "url": "https://www.youtube.com/watch?v=p14wpn1XTDE",
+      "title": "Young Stoner Life - Diamonds Dancing (feat. Young Thug, Gunna & Travis Scott) (2021)",
+      "channel": "penny docs",
+      "duration_s": 243,
+      "view_count": 141,
+      "is_art_track": false,
+      "description": ""
+    },
+    {
+      "video_id": "Sevhj75lj80",
+      "url": "https://www.youtube.com/watch?v=Sevhj75lj80",
+      "title": "Young Thug & Gunna - Ski [Official Video] | Young Stoner Life",
+      "channel": "Young Thug",
+      "duration_s": 155,
+      "view_count": 66133851,
+      "is_art_track": false,
+      "description": "Young Stoner Life Records Presents the official video for Young Thug & Gunna's \"Ski\" from the album 'Slime Language 2 ..."
+    }
+  ],
+  "scores": [
+    {
+      "video_id": "YS6WYR-T_gk",
+      "total": 15.724219680708165,
+      "breakdown": {
+        "duration_delta": 4.0,
+        "art_track": 6.0,
+        "title_similarity": 3.0,
+        "artist_match": 2.0,
+        "negative_flags": 0.0,
+        "view_count": 0.7242196807081649
+      }
+    },
+    {
+      "video_id": "xuqqyiuJicI",
+      "total": 8.458613693905448,
+      "breakdown": {
+        "duration_delta": 4.0,
+        "art_track": 0.0,
+        "title_similarity": 1.4328358208955223,
+        "artist_match": 2.0,
+        "negative_flags": 0.0,
+        "view_count": 1.0257778730099263
+      }
+    },
+    {
+      "video_id": "p14wpn1XTDE",
+      "total": 8.242843251657458,
+      "breakdown": {
+        "duration_delta": 4.0,
+        "art_track": 0.0,
+        "title_similarity": 1.92,
+        "artist_match": 2.0,
+        "negative_flags": 0.0,
+        "view_count": 0.3228432516574584
+      }
+    },
+    {
+      "video_id": "5rvzTLIkUeQ",
+      "total": 8.200731134149704,
+      "breakdown": {
+        "duration_delta": 4.0,
+        "art_track": 0.0,
+        "title_similarity": 1.4328358208955223,
+        "artist_match": 2.0,
+        "negative_flags": 0.0,
+        "view_count": 0.7678953132541815
+      }
+    },
+    {
+      "video_id": "oP-h0RWHiFs",
+      "total": 7.778199079499013,
+      "breakdown": {
+        "duration_delta": 4.0,
+        "art_track": 0.0,
+        "title_similarity": 1.1294117647058823,
+        "artist_match": 2.0,
+        "negative_flags": 0.0,
+        "view_count": 0.6487873147931306
+      }
+    },
+    {
+      "video_id": "6Kj3e8FtYT8",
+      "total": 0.8776083247352332,
+      "breakdown": {
+        "duration_delta": -4.0,
+        "art_track": 0.0,
+        "title_similarity": 2.2325581395348837,
+        "artist_match": 2.0,
+        "negative_flags": 0.0,
+        "view_count": 0.6450501852003495
+      }
+    },
+    {
+      "video_id": "6DYl_8x6QYg",
+      "total": 0.06883931148861289,
+      "breakdown": {
+        "duration_delta": -4.0,
+        "art_track": 0.0,
+        "title_similarity": 1.476923076923077,
+        "artist_match": 2.0,
+        "negative_flags": 0.0,
+        "view_count": 0.5919162345655359
+      }
+    },
+    {
+      "video_id": "leJNDpm_G10",
+      "total": -0.27110964758255374,
+      "breakdown": {
+        "duration_delta": -4.0,
+        "art_track": 0.0,
+        "title_similarity": 0.46153846153846156,
+        "artist_match": 2.0,
+        "negative_flags": 0.0,
+        "view_count": 1.2673518908789847
+      }
+    },
+    {
+      "video_id": "Sevhj75lj80",
+      "total": -0.2713808715727415,
+      "breakdown": {
+        "duration_delta": -4.0,
+        "art_track": 0.0,
+        "title_similarity": 0.5555555555555556,
+        "artist_match": 2.0,
+        "negative_flags": 0.0,
+        "view_count": 1.173063572871703
+      }
+    },
+    {
+      "video_id": "ONjrbGMiFno",
+      "total": -0.32796413946980596,
+      "breakdown": {
+        "duration_delta": -4.0,
+        "art_track": 0.0,
+        "title_similarity": 1.1707317073170733,
+        "artist_match": 2.0,
+        "negative_flags": 0.0,
+        "view_count": 0.5013041532131207
+      }
+    }
+  ],
+  "chosen_video_id": "YS6WYR-T_gk",
+  "timestamp": "2026-08-19T21:35:59.389145+00:00",
+  "weights_version": "2f40f5f26d141c5d"
+}

@@ -1,0 +1,240 @@
+{
+  "spotify": {
+    "id": "3RZftiuTcLOqpsd8ZlwNhr",
+    "name": "Hop Off A Jet (feat. Travis Scott)",
+    "artists": [
+      "Young Thug",
+      "Travis Scott"
+    ],
+    "album": "So Much Fun (Deluxe)",
+    "duration_ms": 174066,
+    "isrc": "USAT21907513"
+  },
+  "candidates": [
+    {
+      "video_id": "6E5VX5ZqJps",
+      "url": "https://www.youtube.com/watch?v=6E5VX5ZqJps",
+      "title": "Young Thug - Hop Off a Jet ft. Travis Scott [Official Audio]",
+      "channel": "Young Thug",
+      "duration_s": 175,
+      "view_count": 6591599,
+      "is_art_track": false,
+      "description": "Young Thug - Hop Off a Jet ft. Travis Scott Stream \"So Much Fun\" (Deluxe) Now: https://youngthug.ffm.to/somuchfundeluxe Follow ..."
+    },
+    {
+      "video_id": "T76uB3cvsbw",
+      "url": "https://www.youtube.com/watch?v=T76uB3cvsbw",
+      "title": "Young Thug - Hop Off a Jet ft. Travis Scott (Lyrics)",
+      "channel": "Rap City",
+      "duration_s": 175,
+      "view_count": 179872,
+      "is_art_track": false,
+      "description": "Young Thug - Hop Off a Jet ft. Travis Scott (Lyrics) Subscribe here: http://bit.ly/rapcitysub Follow us on Spotify: ..."
+    },
+    {
+      "video_id": "PJWHAiDARMQ",
+      "url": "https://www.youtube.com/watch?v=PJWHAiDARMQ",
+      "title": "Travis Scott - YOSEMITE (Official Video)",
+      "channel": "Travis Scott",
+      "duration_s": 272,
+      "view_count": 88207103,
+      "is_art_track": false,
+      "description": "ASTROWORLD OUT NOW http://travisscott.com Directed by Nabil Produced by Ivan Herrera and Kathleen Heffernan for Operator ..."
+    },
+    {
+      "video_id": "_VRyoaNF9sk",
+      "url": "https://www.youtube.com/watch?v=_VRyoaNF9sk",
+      "title": "Travis Scott feat. Young Thug & M.I.A. - FRANCHISE (Official Music Video)",
+      "channel": "Travis Scott",
+      "duration_s": 236,
+      "view_count": 180163771,
+      "is_art_track": false,
+      "description": "\"FRANCHISE\" available at: https://TravisScott.lnk.to/FRANCHISE Directed by Travis Scott Shot by White Trash Tyler & Jordan ..."
+    },
+    {
+      "video_id": "TvpoH0tnlzI",
+      "url": "https://www.youtube.com/watch?v=TvpoH0tnlzI",
+      "title": "Young Thug-Hop Off A Jet Ft. Travis Scott (Slowed)",
+      "channel": "Collinwantssummore",
+      "duration_s": 205,
+      "view_count": 12791,
+      "is_art_track": false,
+      "description": "No copyright intended."
+    },
+    {
+      "video_id": "leJNDpm_G10",
+      "url": "https://www.youtube.com/watch?v=leJNDpm_G10",
+      "title": "Young Thug - Hot ft. Gunna & Travis Scott [Official Music Video]",
+      "channel": "Young Thug",
+      "duration_s": 309,
+      "view_count": 281198026,
+      "is_art_track": false,
+      "description": "Young Thug - Hot ft. Gunna & Travis Scott [Official Video] Stream \"So Much Fun\" on all platforms: ..."
+    },
+    {
+      "video_id": "BDuvqbfLGhA",
+      "url": "https://www.youtube.com/watch?v=BDuvqbfLGhA",
+      "title": "Young Thug - Hop Off a Jet (ft.Travis Scott) [Beat Remake] Same Sounds + FLP in the Description",
+      "channel": "WRLDVIEW",
+      "duration_s": 304,
+      "view_count": 1372,
+      "is_art_track": false,
+      "description": "Brand new Young Thug - Hop Off a Jet (ft. Travis Scott) FL Studio remake tutorial. Let me know what you guys think in the ..."
+    },
+    {
+      "video_id": "ncUNOpXO40s",
+      "url": "https://www.youtube.com/watch?v=ncUNOpXO40s",
+      "title": "Young Thug - Hop Off a Jet (Clean) ft Travis Scott [Official] [KOTA]",
+      "channel": "KOTA",
+      "duration_s": 174,
+      "view_count": 2224,
+      "is_art_track": false,
+      "description": "Professional clean edits provided by www.drclean.com Need your own record cleaned, radio ready, DJ ready, or performance ..."
+    },
+    {
+      "video_id": "vxhGS8FShzU",
+      "url": "https://www.youtube.com/watch?v=vxhGS8FShzU",
+      "title": "Hop Off A Jet (Clean Version) - Young Thug, Travis Scott",
+      "channel": "Your Local Penguin",
+      "duration_s": 173,
+      "view_count": 282,
+      "is_art_track": false,
+      "description": ""
+    },
+    {
+      "video_id": "USzv49aPu40",
+      "url": "https://www.youtube.com/watch?v=USzv49aPu40",
+      "title": "Young Thug Ft. Travis Scott - Hop Off a Jet (Chopped & Screwed)",
+      "channel": "VVS Chopps",
+      "duration_s": 217,
+      "view_count": 7589,
+      "is_art_track": false,
+      "description": ""
+    }
+  ],
+  "scores": [
+    {
+      "video_id": "6E5VX5ZqJps",
+      "total": 8.494546739967895,
+      "breakdown": {
+        "duration_delta": 4.0,
+        "art_track": 0.0,
+        "title_similarity": 1.4716981132075473,
+        "artist_match": 2.0,
+        "negative_flags": 0.0,
+        "view_count": 1.0228486267603476
+      }
+    },
+    {
+      "video_id": "T76uB3cvsbw",
+      "total": 8.259943009918079,
+      "breakdown": {
+        "duration_delta": 4.0,
+        "art_track": 0.0,
+        "title_similarity": 1.4716981132075473,
+        "artist_match": 2.0,
+        "negative_flags": 0.0,
+        "view_count": 0.788244896710531
+      }
+    },
+    {
+      "video_id": "ncUNOpXO40s",
+      "total": 7.97379761550509,
+      "breakdown": {
+        "duration_delta": 4.0,
+        "art_track": 0.0,
+        "title_similarity": 1.4716981132075473,
+        "artist_match": 2.0,
+        "negative_flags": 0.0,
+        "view_count": 0.5020995022975425
+      }
+    },
+    {
+      "video_id": "vxhGS8FShzU",
+      "total": 7.927767965328644,
+      "breakdown": {
+        "duration_delta": 4.0,
+        "art_track": 0.0,
+        "title_similarity": 1.56,
+        "artist_match": 2.0,
+        "negative_flags": 0.0,
+        "view_count": 0.36776796532864353
+      }
+    },
+    {
+      "video_id": "leJNDpm_G10",
+      "total": 0.24694367711039367,
+      "breakdown": {
+        "duration_delta": -4.0,
+        "art_track": 0.0,
+        "title_similarity": 0.9795918367346939,
+        "artist_match": 2.0,
+        "negative_flags": 0.0,
+        "view_count": 1.2673518403756998
+      }
+    },
+    {
+      "video_id": "PJWHAiDARMQ",
+      "total": 0.07417847572134129,
+      "breakdown": {
+        "duration_delta": -4.0,
+        "art_track": 0.0,
+        "title_similarity": 0.8823529411764706,
+        "artist_match": 2.0,
+        "negative_flags": 0.0,
+        "view_count": 1.1918255345448707
+      }
+    },
+    {
+      "video_id": "USzv49aPu40",
+      "total": 0.05373437959186933,
+      "breakdown": {
+        "duration_delta": -4.0,
+        "art_track": 0.0,
+        "title_similarity": 1.4716981132075473,
+        "artist_match": 2.0,
+        "negative_flags": 0.0,
+        "view_count": 0.582036266384322
+      }
+    },
+    {
+      "video_id": "_VRyoaNF9sk",
+      "total": -0.13007093275022097,
+      "breakdown": {
+        "duration_delta": -4.0,
+        "art_track": 0.0,
+        "title_similarity": 0.631578947368421,
+        "artist_match": 2.0,
+        "negative_flags": 0.0,
+        "view_count": 1.238350119881358
+      }
+    },
+    {
+      "video_id": "BDuvqbfLGhA",
+      "total": -0.4460160860811535,
+      "breakdown": {
+        "duration_delta": -4.0,
+        "art_track": 0.0,
+        "title_similarity": 1.0833333333333333,
+        "artist_match": 2.0,
+        "negative_flags": 0.0,
+        "view_count": 0.47065058058551323
+      }
+    },
+    {
+      "video_id": "TvpoH0tnlzI",
+      "total": -2.412261119181726,
+      "breakdown": {
+        "duration_delta": -4.0,
+        "art_track": 0.0,
+        "title_similarity": 1.4716981132075473,
+        "artist_match": 2.0,
+        "negative_flags": -2.5,
+        "view_count": 0.6160407676107267
+      }
+    }
+  ],
+  "chosen_video_id": "6E5VX5ZqJps",
+  "timestamp": "2026-08-19T21:32:55.109485+00:00",
+  "weights_version": "2f40f5f26d141c5d"
+}

@@ -1,0 +1,240 @@
+{
+  "spotify": {
+    "id": "50C83RmXmziVgYGFcrS9wa",
+    "name": "Pipe Down (feat. Travis Scott)",
+    "artists": [
+      "Young Thug",
+      "Travis Scott"
+    ],
+    "album": "UY SCUTI",
+    "duration_ms": 210600,
+    "isrc": "USAT22507382"
+  },
+  "candidates": [
+    {
+      "video_id": "NY6L0COxCXo",
+      "url": "https://www.youtube.com/watch?v=NY6L0COxCXo",
+      "title": "Young Thug - Pipe Down (feat. Travis Scott) [Official Visualizer]",
+      "channel": "Young Thug",
+      "duration_s": 211,
+      "view_count": 1434946,
+      "is_art_track": false,
+      "description": "The official visualizer for Young Thug's \"Pipe Down\" featuring @TravisScottXX - Out Now! Stream 'UY SCUTI' on all platforms: ..."
+    },
+    {
+      "video_id": "0XODeyy5OQI",
+      "url": "https://www.youtube.com/watch?v=0XODeyy5OQI",
+      "title": "Young Thug - Pipe Down (Feat. Travis Scott) (Prod. AKIIRA)",
+      "channel": "AKIIRA",
+      "duration_s": 227,
+      "view_count": 12312,
+      "is_art_track": false,
+      "description": "Instagram: https://www.instagram.com/davidbachu_/ Join the Family : https://akiira.co/password AKIIRA 2.0 Tracksuit — coming ..."
+    },
+    {
+      "video_id": "N6akBxuPbZw",
+      "url": "https://www.youtube.com/watch?v=N6akBxuPbZw",
+      "title": "Pipe Down (feat. Travis Scott)",
+      "channel": "Young Thug",
+      "duration_s": 211,
+      "view_count": 14582,
+      "is_art_track": true,
+      "description": "Provided to YouTube by 300 Entertainment Pipe Down (feat. Travis Scott) · Young Thug · Travis Scott UY SCUTI ℗ A Young ..."
+    },
+    {
+      "video_id": "qAlF70MdfwU",
+      "url": "https://www.youtube.com/watch?v=qAlF70MdfwU",
+      "title": "JACKBOYS & Travis Scott feat. Young Thug - OUT WEST (Official Music Video)",
+      "channel": "Travis Scott",
+      "duration_s": 208,
+      "view_count": 92255465,
+      "is_art_track": false,
+      "description": "JACKBOYS OUT NOW: https://JACKBOYS.lnk.to/JACKBOYS OFFICIAL STORE: https://JACKBOYS.travisscott.com/ Directed by ..."
+    },
+    {
+      "video_id": "d3n0Wjvtcvo",
+      "url": "https://www.youtube.com/watch?v=d3n0Wjvtcvo",
+      "title": "Young Thug (feat. Travis Scott) - Pipe Down | Lyrics",
+      "channel": "Dark City Sounds",
+      "duration_s": 211,
+      "view_count": 19223,
+      "is_art_track": false,
+      "description": "Subscribe & Watch Today's Best Lyric Videos Daily On Dark City Sounds!"
+    },
+    {
+      "video_id": "_VRyoaNF9sk",
+      "url": "https://www.youtube.com/watch?v=_VRyoaNF9sk",
+      "title": "Travis Scott feat. Young Thug & M.I.A. - FRANCHISE (Official Music Video)",
+      "channel": "Travis Scott",
+      "duration_s": 236,
+      "view_count": 180163926,
+      "is_art_track": false,
+      "description": "\"FRANCHISE\" available at: https://TravisScott.lnk.to/FRANCHISE Directed by Travis Scott Shot by White Trash Tyler & Jordan ..."
+    },
+    {
+      "video_id": "T42AFWcKT44",
+      "url": "https://www.youtube.com/watch?v=T42AFWcKT44",
+      "title": "Pipe Down (Travis Scott Verse Only)",
+      "channel": "VoidRealm",
+      "duration_s": 73,
+      "view_count": 1824,
+      "is_art_track": false,
+      "description": "SONG NAME = PIPE DOWN (TRAVIS SCOTT VERSE ONLY) ARTIST = YOUNG THUG (FEAT. TRAVIS SCOTT) ALBUM = UY ..."
+    },
+    {
+      "video_id": "vB1KRomTnPk",
+      "url": "https://www.youtube.com/watch?v=vB1KRomTnPk",
+      "title": "Young Thug - Pipe Down ft.Travis Scott (But It’s Better) ",
+      "channel": "Dark Aether 2.0",
+      "duration_s": 235,
+      "view_count": 105,
+      "is_art_track": false,
+      "description": "Hope you guys enjoyed the lil mix, consider leaving a like or subscribing #youngthug #UYSCUTI #UYSCUTImixtape #thugger ..."
+    },
+    {
+      "video_id": "NOIhje5zZP0",
+      "url": "https://www.youtube.com/watch?v=NOIhje5zZP0",
+      "title": "PIPE DOWN- YOUNG THUG FT TRAVIS SCOTT (UY SCUTTI) ",
+      "channel": "yves🦥",
+      "duration_s": 213,
+      "view_count": 393,
+      "is_art_track": false,
+      "description": "travisscott #youngthug #yvesmusicvideos #pipedown #uyscuti."
+    },
+    {
+      "video_id": "i0i65ruekEc",
+      "url": "https://www.youtube.com/watch?v=i0i65ruekEc",
+      "title": "Young Thug - Pipe Down (feat. Travis Scott)",
+      "channel": "Modo 360",
+      "duration_s": 211,
+      "view_count": 22,
+      "is_art_track": false,
+      "description": "Pipe Down (feat. Travis Scott)”, de Young Thug, é uma faixa de trap com atmosfera sombria e minimalista. A produção mistura ..."
+    }
+  ],
+  "scores": [
+    {
+      "video_id": "N6akBxuPbZw",
+      "total": 15.62457703136913,
+      "breakdown": {
+        "duration_delta": 4.0,
+        "art_track": 6.0,
+        "title_similarity": 3.0,
+        "artist_match": 2.0,
+        "negative_flags": 0.0,
+        "view_count": 0.6245770313691307
+      }
+    },
+    {
+      "video_id": "NY6L0COxCXo",
+      "total": 8.785594344611615,
+      "breakdown": {
+        "duration_delta": 4.0,
+        "art_track": 0.0,
+        "title_similarity": 1.8620689655172415,
+        "artist_match": 2.0,
+        "negative_flags": 0.0,
+        "view_count": 0.9235253790943746
+      }
+    },
+    {
+      "video_id": "d3n0Wjvtcvo",
+      "total": 8.504645529186618,
+      "breakdown": {
+        "duration_delta": 4.0,
+        "art_track": 0.0,
+        "title_similarity": 1.8620689655172415,
+        "artist_match": 2.0,
+        "negative_flags": 0.0,
+        "view_count": 0.6425765636693765
+      }
+    },
+    {
+      "video_id": "i0i65ruekEc",
+      "total": 8.06632814091988,
+      "breakdown": {
+        "duration_delta": 4.0,
+        "art_track": 0.0,
+        "title_similarity": 1.8620689655172415,
+        "artist_match": 2.0,
+        "negative_flags": 0.0,
+        "view_count": 0.2042591754026389
+      }
+    },
+    {
+      "video_id": "qAlF70MdfwU",
+      "total": 7.37097259225871,
+      "breakdown": {
+        "duration_delta": 3.6307692307692343,
+        "art_track": 0.0,
+        "title_similarity": 0.5454545454545454,
+        "artist_match": 2.0,
+        "negative_flags": 0.0,
+        "view_count": 1.1947488160349298
+      }
+    },
+    {
+      "video_id": "NOIhje5zZP0",
+      "total": 7.343170587119986,
+      "breakdown": {
+        "duration_delta": 3.7538461538461503,
+        "art_track": 0.0,
+        "title_similarity": 1.2000000000000002,
+        "artist_match": 2.0,
+        "negative_flags": 0.0,
+        "view_count": 0.3893244332738361
+      }
+    },
+    {
+      "video_id": "T42AFWcKT44",
+      "total": 1.489189430318874,
+      "breakdown": {
+        "duration_delta": -4.0,
+        "art_track": 0.0,
+        "title_similarity": 3.0,
+        "artist_match": 2.0,
+        "negative_flags": 0.0,
+        "view_count": 0.48918943031887396
+      }
+    },
+    {
+      "video_id": "0XODeyy5OQI",
+      "total": 0.4756235474379993,
+      "breakdown": {
+        "duration_delta": -4.0,
+        "art_track": 0.0,
+        "title_similarity": 1.8620689655172415,
+        "artist_match": 2.0,
+        "negative_flags": 0.0,
+        "view_count": 0.6135545819207577
+      }
+    },
+    {
+      "video_id": "_VRyoaNF9sk",
+      "total": -0.1956120882242316,
+      "breakdown": {
+        "duration_delta": -4.0,
+        "art_track": 0.0,
+        "title_similarity": 0.5660377358490567,
+        "artist_match": 2.0,
+        "negative_flags": 0.0,
+        "view_count": 1.2383501759267117
+      }
+    },
+    {
+      "video_id": "vB1KRomTnPk",
+      "total": -0.49620412021028426,
+      "breakdown": {
+        "duration_delta": -4.0,
+        "art_track": 0.0,
+        "title_similarity": 1.2000000000000002,
+        "artist_match": 2.0,
+        "negative_flags": 0.0,
+        "view_count": 0.30379587978971556
+      }
+    }
+  ],
+  "chosen_video_id": "N6akBxuPbZw",
+  "timestamp": "2026-08-19T21:36:31.178412+00:00",
+  "weights_version": "2f40f5f26d141c5d"
+}

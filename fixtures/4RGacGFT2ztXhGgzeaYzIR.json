@@ -1,0 +1,241 @@
+{
+  "spotify": {
+    "id": "4RGacGFT2ztXhGgzeaYzIR",
+    "name": "Up To Something (feat. Travis Scott & Young Thug)",
+    "artists": [
+      "Metro Boomin",
+      "Travis Scott",
+      "Young Thug"
+    ],
+    "album": "NOT ALL HEROES WEAR CAPES (Deluxe)",
+    "duration_ms": 184360,
+    "isrc": "USUG11802538"
+  },
+  "candidates": [
+    {
+      "video_id": "H-Hwaouo5X4",
+      "url": "https://www.youtube.com/watch?v=H-Hwaouo5X4",
+      "title": "Up To Something",
+      "channel": "Metro Boomin",
+      "duration_s": 185,
+      "view_count": 3910894,
+      "is_art_track": true,
+      "description": "Provided to YouTube by Universal Music Group Up To Something · Metro Boomin · Travis Scott · Young Thug NOT ALL HEROES ..."
+    },
+    {
+      "video_id": "OR5gxflAGIg",
+      "url": "https://www.youtube.com/watch?v=OR5gxflAGIg",
+      "title": "Skyfall x Up To Something - Metro Boomin ft. Travis Scott & Young Thug (That Transition! #12)",
+      "channel": "TrapHouse Bob",
+      "duration_s": 496,
+      "view_count": 3796791,
+      "is_art_track": false,
+      "description": "4:50 Legendary transition beginning back in 2015 with the sequel in 2018 NEW MERCH LIVE: traphousebob.com Instagram: ..."
+    },
+    {
+      "video_id": "n5DZGJb0AV4",
+      "url": "https://www.youtube.com/watch?v=n5DZGJb0AV4",
+      "title": "Metro Boomin - Up to Something feat. Travis Scott & Young Thug [Not All Heroes Wear Capes]",
+      "channel": "RapFan",
+      "duration_s": 185,
+      "view_count": 158291,
+      "is_art_track": false,
+      "description": "Metro Boomin drops his New Mixtape \"Not All Heroes Wear Capes\" Itunes: ..."
+    },
+    {
+      "video_id": "Wp9z8gsvYb8",
+      "url": "https://www.youtube.com/watch?v=Wp9z8gsvYb8",
+      "title": "Metro Boomin - Up To Something  (feat. Travis Scott & Young Thug) [OFFICIAL AUDIO]",
+      "channel": "Metro Boomin",
+      "duration_s": 33,
+      "view_count": 300888,
+      "is_art_track": false,
+      "description": "NOT ALL HEROES WEAR CAPES available now. Stream/Download here: https://MetroBoomin.lnk.to/NAHWCYD Follow Metro ..."
+    },
+    {
+      "video_id": "be0Gowd5m-U",
+      "url": "https://www.youtube.com/watch?v=be0Gowd5m-U",
+      "title": "Metro Boomin - \"Up to Something\" (feat. Young Thug & Travis Scott)",
+      "channel": "Da Kid Gowie",
+      "duration_s": 238,
+      "view_count": 1666,
+      "is_art_track": false,
+      "description": "Song: \"Up to Something\" Artist: Young Thug; Da Kid Gowie Produced By: Allen Ritter, Metro Boomin & Southside *** DA KID ..."
+    },
+    {
+      "video_id": "UyEm2dwBwjk",
+      "url": "https://www.youtube.com/watch?v=UyEm2dwBwjk",
+      "title": "Metro Boomin ft. Young Thug & Travis Scott - Up to Something (LYRICS)",
+      "channel": "ZZG gang",
+      "duration_s": 186,
+      "view_count": 15148,
+      "is_art_track": false,
+      "description": "Produced by Allen Ritter, Southside & Metro Boomin Original uploaded by ZZG crew #MetroBoomin #UptoSomething ZZG gang ..."
+    },
+    {
+      "video_id": "LYLJA5OtW20",
+      "url": "https://www.youtube.com/watch?v=LYLJA5OtW20",
+      "title": "Up to Something",
+      "channel": "Young Thug",
+      "duration_s": 168,
+      "view_count": 1089488,
+      "is_art_track": true,
+      "description": "Provided to YouTube by ONErpm Up to Something · Young Thug · Young Thug Up to Something ℗ GsNoBeat Released on: ..."
+    },
+    {
+      "video_id": "TxUdlC0057s",
+      "url": "https://www.youtube.com/watch?v=TxUdlC0057s",
+      "title": "Metro Boomin, Travis Scott, Young Thug - Trance (Visualizer)",
+      "channel": "Metro Boomin",
+      "duration_s": 195,
+      "view_count": 96882973,
+      "is_art_track": false,
+      "description": "Download/stream 'Heroes & Villains' by Metro Boomin now: https://MetroBoomin.lnk.to/HeroesandVillains Connect with Metro ..."
+    },
+    {
+      "video_id": "9ueESmKNB1Q",
+      "url": "https://www.youtube.com/watch?v=9ueESmKNB1Q",
+      "title": "Metro Boomin feat. Young Thug, Travis Scott - Up To Something DRILL REMIX",
+      "channel": "Abel Productions",
+      "duration_s": 154,
+      "view_count": 5538,
+      "is_art_track": false,
+      "description": "Metro Boomin feat. Young Thug, Travis Scott - Up To Something DRILL REMIX Inspired by BNYX Follow me on instagram: ..."
+    },
+    {
+      "video_id": "GTaXtxpi8N0",
+      "url": "https://www.youtube.com/watch?v=GTaXtxpi8N0",
+      "title": "Metro Boomin' - Trance (Lyrics) Feat. Travis Scott & Young Thug",
+      "channel": "Lost Panda",
+      "duration_s": 195,
+      "view_count": 6388244,
+      "is_art_track": false,
+      "description": "Welcome to Lost Panda “Metro Boomin' - Trance Feat. Travis Scott & Young Thug” Lyrics / Lyric Video by Lost Panda ⏬ Stream ..."
+    }
+  ],
+  "scores": [
+    {
+      "video_id": "H-Hwaouo5X4",
+      "total": 15.988841423420713,
+      "breakdown": {
+        "duration_delta": 4.0,
+        "art_track": 6.0,
+        "title_similarity": 3.0,
+        "artist_match": 2.0,
+        "negative_flags": 0.0,
+        "view_count": 0.9888414234207122
+      }
+    },
+    {
+      "video_id": "n5DZGJb0AV4",
+      "total": 8.029918844958049,
+      "breakdown": {
+        "duration_delta": 4.0,
+        "art_track": 0.0,
+        "title_similarity": 1.25,
+        "artist_match": 2.0,
+        "negative_flags": 0.0,
+        "view_count": 0.779918844958049
+      }
+    },
+    {
+      "video_id": "UyEm2dwBwjk",
+      "total": 7.91277188055275,
+      "breakdown": {
+        "duration_delta": 4.0,
+        "art_track": 0.0,
+        "title_similarity": 1.2857142857142856,
+        "artist_match": 2.0,
+        "negative_flags": 0.0,
+        "view_count": 0.6270575948384646
+      }
+    },
+    {
+      "video_id": "LYLJA5OtW20",
+      "total": 7.905583427464062,
+      "breakdown": {
+        "duration_delta": -4.0,
+        "art_track": 6.0,
+        "title_similarity": 3.0,
+        "artist_match": 2.0,
+        "negative_flags": 0.0,
+        "view_count": 0.9055834274640621
+      }
+    },
+    {
+      "video_id": "TxUdlC0057s",
+      "total": 2.501703697519747,
+      "breakdown": {
+        "duration_delta": -1.3169230769230689,
+        "art_track": 0.0,
+        "title_similarity": 0.6206896551724138,
+        "artist_match": 2.0,
+        "negative_flags": 0.0,
+        "view_count": 1.1979371192704018
+      }
+    },
+    {
+      "video_id": "GTaXtxpi8N0",
+      "total": 2.2753127290625628,
+      "breakdown": {
+        "duration_delta": -1.3169230769230689,
+        "art_track": 0.0,
+        "title_similarity": 0.5714285714285714,
+        "artist_match": 2.0,
+        "negative_flags": 0.0,
+        "view_count": 1.0208072345570602
+      }
+    },
+    {
+      "video_id": "Wp9z8gsvYb8",
+      "total": 0.9147842024562101,
+      "breakdown": {
+        "duration_delta": -4.0,
+        "art_track": 0.0,
+        "title_similarity": 2.0930232558139537,
+        "artist_match": 2.0,
+        "negative_flags": 0.0,
+        "view_count": 0.8217609466422564
+      }
+    },
+    {
+      "video_id": "be0Gowd5m-U",
+      "total": 0.5763135957881544,
+      "breakdown": {
+        "duration_delta": -4.0,
+        "art_track": 0.0,
+        "title_similarity": 2.0930232558139537,
+        "artist_match": 2.0,
+        "negative_flags": 0.0,
+        "view_count": 0.4832903399742008
+      }
+    },
+    {
+      "video_id": "OR5gxflAGIg",
+      "total": 0.11191252086963066,
+      "breakdown": {
+        "duration_delta": -4.0,
+        "art_track": 0.0,
+        "title_similarity": 1.125,
+        "artist_match": 2.0,
+        "negative_flags": 0.0,
+        "view_count": 0.9869125208696307
+      }
+    },
+    {
+      "video_id": "9ueESmKNB1Q",
+      "total": -2.867056723799426,
+      "breakdown": {
+        "duration_delta": -4.0,
+        "art_track": 0.0,
+        "title_similarity": 1.0714285714285714,
+        "artist_match": 2.0,
+        "negative_flags": -2.5,
+        "view_count": 0.5615147047720025
+      }
+    }
+  ],
+  "chosen_video_id": "H-Hwaouo5X4",
+  "timestamp": "2026-08-19T21:35:44.387898+00:00",
+  "weights_version": "2f40f5f26d141c5d"
+}

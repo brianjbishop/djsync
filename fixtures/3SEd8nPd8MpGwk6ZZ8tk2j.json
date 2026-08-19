@@ -1,0 +1,241 @@
+{
+  "spotify": {
+    "id": "3SEd8nPd8MpGwk6ZZ8tk2j",
+    "name": "Mamacita (feat. Rich Homie Quan & Young Thug)",
+    "artists": [
+      "Travis Scott",
+      "Rich Homie Quan",
+      "Young Thug"
+    ],
+    "album": "Mamacita (feat. Rich Homie Quan & Young Thug)",
+    "duration_ms": 274320,
+    "isrc": "USSM11408300"
+  },
+  "candidates": [
+    {
+      "video_id": "RH9kl6XZixo",
+      "url": "https://www.youtube.com/watch?v=RH9kl6XZixo",
+      "title": "Travis Scott - Mamacita (Official Video) ft. Rich Homie Quan, Young Thug",
+      "channel": "Travis Scott",
+      "duration_s": 361,
+      "view_count": 145034317,
+      "is_art_track": false,
+      "description": "Travi$ Scott's official music video for 'Mamacita' ft. Rich Homie Quan & Young Thug. Listen to Travis Scott: ..."
+    },
+    {
+      "video_id": "hOMvQMJeRg8",
+      "url": "https://www.youtube.com/watch?v=hOMvQMJeRg8",
+      "title": "Travis Scott - Mamacita (Official Audio) ft. Rich Homie Quan, Young Thug",
+      "channel": "Travis Scott",
+      "duration_s": 275,
+      "view_count": 1525503,
+      "is_art_track": false,
+      "description": "Travis Scott feat. Rich Homie Quan & Young Thug - Mamacita (Official Audio) \"DAYS BEFORE RODEO\" available at: ..."
+    },
+    {
+      "video_id": "owK9EL3x7N0",
+      "url": "https://www.youtube.com/watch?v=owK9EL3x7N0",
+      "title": "Mamacita (feat. Travis Scott)",
+      "channel": "Rich Homie Quan",
+      "duration_s": 273,
+      "view_count": 1225452,
+      "is_art_track": true,
+      "description": "Provided to YouTube by Modulor Mamacita (feat. Travis Scott) · Rich Homie Quan · Young Thug R.G. ℗ Dundridge Entertainment ..."
+    },
+    {
+      "video_id": "YLUT57UadDI",
+      "url": "https://www.youtube.com/watch?v=YLUT57UadDI",
+      "title": "Travis Scott - Mamacita ft. Rich Homie Quan, Young Thug (Lyrics)",
+      "channel": "Hip Hop/R&B Lyrics",
+      "duration_s": 273,
+      "view_count": 89052,
+      "is_art_track": false,
+      "description": "Travis Scott - Mamacita ft. Rich Homie Quan, Young Thug (Lyrics) ▻ For all inquiries, please send an email to: ..."
+    },
+    {
+      "video_id": "uQ8bFVaR_Q8",
+      "url": "https://www.youtube.com/watch?v=uQ8bFVaR_Q8",
+      "title": "Mamacita (Clean) - Travis Scott (feat. Rich Homie Quan & Young Thug)",
+      "channel": "Anthony Lee 69",
+      "duration_s": 275,
+      "view_count": 30692,
+      "is_art_track": false,
+      "description": "I do not own this. All of this belongs to Travis Scott Like, Subscribe & Have a Nice Day (Here is the whole Days Before Rodeo ..."
+    },
+    {
+      "video_id": "cA0ItZ5KePw",
+      "url": "https://www.youtube.com/watch?v=cA0ItZ5KePw",
+      "title": "Travis Scott   Mamacita ft  Rich Homie Quan, Young Thug",
+      "channel": "Music and Pictures",
+      "duration_s": 13,
+      "view_count": 46,
+      "is_art_track": false,
+      "description": "shortvideo #short."
+    },
+    {
+      "video_id": "XU9W8S_eG-0",
+      "url": "https://www.youtube.com/watch?v=XU9W8S_eG-0",
+      "title": "Travis Scott - Mamacita [Lyrics] ft. Rich Homie Quan, Young Thug",
+      "channel": "Aquila",
+      "duration_s": 275,
+      "view_count": 3680,
+      "is_art_track": false,
+      "description": "Travis Scott - Mamacita (ft. Rich Homie Quan & Young Thug) Stream: https://travisscott.lnk.to/listenYD » Drill Playlist: ..."
+    },
+    {
+      "video_id": "lF-6cOBoIro",
+      "url": "https://www.youtube.com/watch?v=lF-6cOBoIro",
+      "title": "Rich Homie Quan - Get TF Out My Face ft. Young Thug (Official Video)",
+      "channel": "Rich Homie Quan",
+      "duration_s": 266,
+      "view_count": 63788652,
+      "is_art_track": false,
+      "description": "Check out the official music video for \"Get TF Out My Face\" by Rich Homie Quan ft. Young Thug From the album, \"I Promise I Will ..."
+    },
+    {
+      "video_id": "vztA7qRBOGc",
+      "url": "https://www.youtube.com/watch?v=vztA7qRBOGc",
+      "title": "Mamacita",
+      "channel": "Travis Scott",
+      "duration_s": 273,
+      "view_count": 132176,
+      "is_art_track": true,
+      "description": "Provided to YouTube by Cactus Jack/Epic Mamacita · Travis Scott · Rich Homie Quan · Young Thug DAYS BEFORE RODEO ..."
+    },
+    {
+      "video_id": "GkbohVXgxx8",
+      "url": "https://www.youtube.com/watch?v=GkbohVXgxx8",
+      "title": "Rich Gang - Tell Em ft. Young Thug, Rich Homie Quan",
+      "channel": "Rich Gang",
+      "duration_s": 240,
+      "view_count": 64882754,
+      "is_art_track": false,
+      "description": "Get the mixtape here: http://bit.ly/1njCkp1 Rich Gang feat. Young Thug & Rich Homie Quan - Tell Em."
+    }
+  ],
+  "scores": [
+    {
+      "video_id": "owK9EL3x7N0",
+      "total": 15.913244498900996,
+      "breakdown": {
+        "duration_delta": 4.0,
+        "art_track": 6.0,
+        "title_similarity": 3.0,
+        "artist_match": 2.0,
+        "negative_flags": 0.0,
+        "view_count": 0.9132444989009961
+      }
+    },
+    {
+      "video_id": "vztA7qRBOGc",
+      "total": 15.768173383580194,
+      "breakdown": {
+        "duration_delta": 4.0,
+        "art_track": 6.0,
+        "title_similarity": 3.0,
+        "artist_match": 2.0,
+        "negative_flags": 0.0,
+        "view_count": 0.7681733835801944
+      }
+    },
+    {
+      "video_id": "uQ8bFVaR_Q8",
+      "total": 8.328228314700938,
+      "breakdown": {
+        "duration_delta": 4.0,
+        "art_track": 0.0,
+        "title_similarity": 1.6551724137931034,
+        "artist_match": 2.0,
+        "negative_flags": 0.0,
+        "view_count": 0.6730559009078345
+      }
+    },
+    {
+      "video_id": "hOMvQMJeRg8",
+      "total": 7.741071324644394,
+      "breakdown": {
+        "duration_delta": 4.0,
+        "art_track": 0.0,
+        "title_similarity": 0.8135593220338984,
+        "artist_match": 2.0,
+        "negative_flags": 0.0,
+        "view_count": 0.9275120026104954
+      }
+    },
+    {
+      "video_id": "YLUT57UadDI",
+      "total": 7.556006605204854,
+      "breakdown": {
+        "duration_delta": 4.0,
+        "art_track": 0.0,
+        "title_similarity": 0.8135593220338984,
+        "artist_match": 2.0,
+        "negative_flags": 0.0,
+        "view_count": 0.7424472831709558
+      }
+    },
+    {
+      "video_id": "XU9W8S_eG-0",
+      "total": 7.348454194650898,
+      "breakdown": {
+        "duration_delta": 4.0,
+        "art_track": 0.0,
+        "title_similarity": 0.8135593220338984,
+        "artist_match": 2.0,
+        "negative_flags": 0.0,
+        "view_count": 0.534894872617
+      }
+    },
+    {
+      "video_id": "lF-6cOBoIro",
+      "total": 3.924337888339501,
+      "breakdown": {
+        "duration_delta": 0.11076923076923517,
+        "art_track": 0.0,
+        "title_similarity": 0.6428571428571428,
+        "artist_match": 2.0,
+        "negative_flags": 0.0,
+        "view_count": 1.1707115147131233
+      }
+    },
+    {
+      "video_id": "RH9kl6XZixo",
+      "total": 0.0377799385980262,
+      "breakdown": {
+        "duration_delta": -4.0,
+        "art_track": 0.0,
+        "title_similarity": 0.8135593220338984,
+        "artist_match": 2.0,
+        "negative_flags": 0.0,
+        "view_count": 1.2242206165641278
+      }
+    },
+    {
+      "video_id": "GkbohVXgxx8",
+      "total": -0.6099987894788962,
+      "breakdown": {
+        "duration_delta": -4.0,
+        "art_track": 0.0,
+        "title_similarity": 0.21818181818181817,
+        "artist_match": 2.0,
+        "negative_flags": 0.0,
+        "view_count": 1.1718193923392857
+      }
+    },
+    {
+      "video_id": "cA0ItZ5KePw",
+      "total": -0.9356259992757441,
+      "breakdown": {
+        "duration_delta": -4.0,
+        "art_track": 0.0,
+        "title_similarity": 0.8135593220338984,
+        "artist_match": 2.0,
+        "negative_flags": 0.0,
+        "view_count": 0.2508146786903576
+      }
+    }
+  ],
+  "chosen_video_id": "owK9EL3x7N0",
+  "timestamp": "2026-08-19T21:33:45.275863+00:00",
+  "weights_version": "2f40f5f26d141c5d"
+}

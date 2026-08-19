@@ -1,0 +1,13 @@
+#!/bin/sh
+# Deterministic entrypoint.
+#
+# uv's editable install writes a .pth into site-packages, and in this venv the
+# earliest-sorting .pth files are silently skipped by `site`, so `djsync` on
+# PATH breaks intermittently after any rebuild. Setting PYTHONPATH explicitly
+# sidesteps .pth entirely and always resolves the package.
+#
+# Deno must be on PATH: yt-dlp runs it to solve YouTube's JS challenges.
+HERE=$(cd "$(dirname "$0")" && pwd)
+PATH="/opt/homebrew/bin:$PATH" \
+PYTHONPATH="$HERE/src${PYTHONPATH:+:$PYTHONPATH}" \
+exec "$HERE/.venv/bin/python" -m djsync.cli "$@"

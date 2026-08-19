@@ -1,0 +1,240 @@
+{
+  "spotify": {
+    "id": "7p7pzSVr2zovan3m1m5hFm",
+    "name": "Sky Fall",
+    "artists": [
+      "Travis Scott",
+      "Young Thug"
+    ],
+    "album": "Trap Still Boomin' 3",
+    "duration_ms": 318093,
+    "isrc": "QM6MZ1480945"
+  },
+  "candidates": [
+    {
+      "video_id": "TGePZWBkmeE",
+      "url": "https://www.youtube.com/watch?v=TGePZWBkmeE",
+      "title": "Travis Scott - Skyfall (Official Audio) ft. Young Thug",
+      "channel": "Travis Scott",
+      "duration_s": 316,
+      "view_count": 1999085,
+      "is_art_track": false,
+      "description": "Travis Scott feat. Young Thug - Skyfall (Official Audio) \"DAYS BEFORE RODEO\" available at: ..."
+    },
+    {
+      "video_id": "tNswtRWp-ZE",
+      "url": "https://www.youtube.com/watch?v=tNswtRWp-ZE",
+      "title": "Travis Scott - Skyfall ft. Young Thug (Music Video)",
+      "channel": "Unidentified",
+      "duration_s": 317,
+      "view_count": 7599721,
+      "is_art_track": false,
+      "description": "BY JIMMY LEAN ⚡ Business inquiries: businessunidentified@gmail.com ⚡ https://www.instagram.com/jxmmylean/ ..."
+    },
+    {
+      "video_id": "xXNbt0yCfLQ",
+      "url": "https://www.youtube.com/watch?v=xXNbt0yCfLQ",
+      "title": "Metro Boomin & Travis Scott Working on \"Skyfall\"",
+      "channel": "Metro Boomin",
+      "duration_s": 279,
+      "view_count": 7050023,
+      "is_art_track": false,
+      "description": "Metro Boomin & Travis Scott In Studio Working on \"Skyfall.\" Documented by Cam Kirk. Purchase \"Chanel Vintage\" Ft. Future ..."
+    },
+    {
+      "video_id": "TiSEOQW2oSc",
+      "url": "https://www.youtube.com/watch?v=TiSEOQW2oSc",
+      "title": "Travis Scott, Young Thug & Metro Boomin Perform Skyfall",
+      "channel": "Cam Kirk",
+      "duration_s": 265,
+      "view_count": 274068,
+      "is_art_track": false,
+      "description": "TravisScottXX , @youngthug & @metroboomin Perform Skyfall For The First Time Ever In Atlanta, Ga for Fools Gold Day Off."
+    },
+    {
+      "video_id": "RyeekdarDCA",
+      "url": "https://www.youtube.com/watch?v=RyeekdarDCA",
+      "title": "Travis Scott - Skyfall (Lyrics) ft. Young Thug",
+      "channel": "Rap Fusion",
+      "duration_s": 322,
+      "view_count": 23493,
+      "is_art_track": false,
+      "description": "Hit subscribe and never miss a beat! Stay updated with our latest lyric videos   Connect with us on our other platforms: ..."
+    },
+    {
+      "video_id": "yL9bRzwk0Ds",
+      "url": "https://www.youtube.com/watch?v=yL9bRzwk0Ds",
+      "title": "Travis Scott - Skyfall ft. Young Thug",
+      "channel": "17Mercer",
+      "duration_s": 319,
+      "view_count": 20432783,
+      "is_art_track": false,
+      "description": "Travis Scott featuring Young Thug, 'Skyfall' Follow Travis Scott: Instagram: https://www.instagram.com/travisscott Twitter: ..."
+    },
+    {
+      "video_id": "s07r1yMO_aM",
+      "url": "https://www.youtube.com/watch?v=s07r1yMO_aM",
+      "title": "Travis Scott - Skyfall OG (feat. Young Thug) [Remaster]",
+      "channel": "Unreleased 2",
+      "duration_s": 185,
+      "view_count": 1177,
+      "is_art_track": true,
+      "description": "Provided to YouTube by Epic/Grand Hustle Skyfall · Travis Scott · Young Thug DAYS BEFORE RODEO ℗ 2014 Epic Records, ..."
+    },
+    {
+      "video_id": "0xtHA6pdJHA",
+      "url": "https://www.youtube.com/watch?v=0xtHA6pdJHA",
+      "title": "Metro Boomin – “Skyfall\" ft. Travis Scott & Young Thug LIVE | Red Bull Symphonic",
+      "channel": "Red Bull 1520",
+      "duration_s": 216,
+      "view_count": 301982,
+      "is_art_track": false,
+      "description": "For one night only, world famous producer Metro Boomin teamed up with Red Bull and Maestro Anthony Parnther to bring the ..."
+    },
+    {
+      "video_id": "AE4yeYwW8MI",
+      "url": "https://www.youtube.com/watch?v=AE4yeYwW8MI",
+      "title": "Travis Scott - Skyfall (Lyrics) ft. Young Thug",
+      "channel": "Rap City",
+      "duration_s": 315,
+      "view_count": 25040,
+      "is_art_track": false,
+      "description": "Travis Scott - Skyfall (Lyrics) ft. Young Thug Subscribe here: http://bit.ly/rapcitysub Follow us on Spotify: https://spoti.fi/2Oj93y1 ..."
+    },
+    {
+      "video_id": "asTYt9EH4qQ",
+      "url": "https://www.youtube.com/watch?v=asTYt9EH4qQ",
+      "title": "Travis Scott - Skyfall (Ft. Young Thug)",
+      "channel": "peppe_N's Channel",
+      "duration_s": 316,
+      "view_count": 17615,
+      "is_art_track": false,
+      "description": "[Produced by Metro Boomin & Travis Scott] [Intro: Travis Scott] Ooooh, ahhhh Oooh, oooh, ahhh Oooh, ahhhh Oooh, oooh, ahh ..."
+    }
+  ],
+  "scores": [
+    {
+      "video_id": "yL9bRzwk0Ds",
+      "total": 8.096549131598866,
+      "breakdown": {
+        "duration_delta": 4.0,
+        "art_track": 0.0,
+        "title_similarity": 1.0,
+        "artist_match": 2.0,
+        "negative_flags": 0.0,
+        "view_count": 1.0965491315988656
+      }
+    },
+    {
+      "video_id": "asTYt9EH4qQ",
+      "total": 8.079655326013372,
+      "breakdown": {
+        "duration_delta": 3.94276923076922,
+        "art_track": 0.0,
+        "title_similarity": 1.5,
+        "artist_match": 2.0,
+        "negative_flags": 0.0,
+        "view_count": 0.6368860952441514
+      }
+    },
+    {
+      "video_id": "tNswtRWp-ZE",
+      "total": 8.032119655893286,
+      "breakdown": {
+        "duration_delta": 4.0,
+        "art_track": 0.0,
+        "title_similarity": 1.0,
+        "artist_match": 2.0,
+        "negative_flags": 0.0,
+        "view_count": 1.0321196558932861
+      }
+    },
+    {
+      "video_id": "TGePZWBkmeE",
+      "total": 7.887893952427362,
+      "breakdown": {
+        "duration_delta": 3.94276923076922,
+        "art_track": 0.0,
+        "title_similarity": 1.0,
+        "artist_match": 2.0,
+        "negative_flags": 0.0,
+        "view_count": 0.9451247216581419
+      }
+    },
+    {
+      "video_id": "AE4yeYwW8MI",
+      "total": 6.98718236561774,
+      "breakdown": {
+        "duration_delta": 3.3273846153846045,
+        "art_track": 0.0,
+        "title_similarity": 1.0,
+        "artist_match": 2.0,
+        "negative_flags": 0.0,
+        "view_count": 0.6597977502331357
+      }
+    },
+    {
+      "video_id": "RyeekdarDCA",
+      "total": 6.482105083124018,
+      "breakdown": {
+        "duration_delta": 2.8264615384615492,
+        "art_track": 0.0,
+        "title_similarity": 1.0,
+        "artist_match": 2.0,
+        "negative_flags": 0.0,
+        "view_count": 0.6556435446624681
+      }
+    },
+    {
+      "video_id": "s07r1yMO_aM",
+      "total": 5.815510503245082,
+      "breakdown": {
+        "duration_delta": -4.0,
+        "art_track": 6.0,
+        "title_similarity": 1.3548387096774193,
+        "artist_match": 2.0,
+        "negative_flags": 0.0,
+        "view_count": 0.4606717935676624
+      }
+    },
+    {
+      "video_id": "xXNbt0yCfLQ",
+      "total": -0.16507910299196493,
+      "breakdown": {
+        "duration_delta": -4.0,
+        "art_track": 0.0,
+        "title_similarity": 0.8076923076923077,
+        "artist_match": 2.0,
+        "negative_flags": 0.0,
+        "view_count": 1.0272285893157274
+      }
+    },
+    {
+      "video_id": "TiSEOQW2oSc",
+      "total": -0.48432101272288,
+      "breakdown": {
+        "duration_delta": -4.0,
+        "art_track": 0.0,
+        "title_similarity": 0.7,
+        "artist_match": 2.0,
+        "negative_flags": 0.0,
+        "view_count": 0.8156789872771201
+      }
+    },
+    {
+      "video_id": "0xtHA6pdJHA",
+      "total": -3.1463570560954457,
+      "breakdown": {
+        "duration_delta": -4.0,
+        "art_track": 0.0,
+        "title_similarity": 0.5316455696202531,
+        "artist_match": 2.0,
+        "negative_flags": -2.5,
+        "view_count": 0.8219973742843011
+      }
+    }
+  ],
+  "chosen_video_id": "yL9bRzwk0Ds",
+  "timestamp": "2026-08-19T21:33:29.831785+00:00",
+  "weights_version": "2f40f5f26d141c5d"
+}
