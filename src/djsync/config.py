@@ -6,6 +6,7 @@ import os
 import shutil
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Literal
 
 from dotenv import load_dotenv
 
@@ -23,7 +24,10 @@ FIXTURES_DIR = PROJECT_ROOT / "fixtures"
 
 _DEFAULT_DRIVE = "/Volumes/BRIANB"
 _DEFAULT_LIBRARY_ROOT = "dj"
-_DEFAULT_COLLECTION = "playlists"
+_DEFAULT_PLAYLISTS_DIR = "playlists"
+_DEFAULT_ALBUMS_DIR = "albums"
+
+CollectionKind = Literal["playlists", "albums"]
 
 # --- YouTube access -------------------------------------------------------
 # YouTube blocks anonymous yt-dlp clients outright (HTTP 403), and gates the
@@ -48,11 +52,17 @@ class Destination:
 
     drive: Path
     library_root: str
-    collection: str
+    playlists_dir: str
+    albums_dir: str
 
     @property
     def path(self) -> Path:
-        return self.drive / self.library_root / self.collection
+        """Playlists collection path (backwards-compatible alias)."""
+        return self.path_for("playlists")
+
+    def path_for(self, kind: CollectionKind) -> Path:
+        subdir = self.playlists_dir if kind == "playlists" else self.albums_dir
+        return self.drive / self.library_root / subdir
 
     @property
     def mounted(self) -> bool:
@@ -76,8 +86,18 @@ def get_destination() -> Destination:
     load_dotenv()
     drive = Path(os.getenv("DJSYNC_DRIVE", _DEFAULT_DRIVE))
     library_root = os.getenv("DJSYNC_LIBRARY_ROOT", _DEFAULT_LIBRARY_ROOT)
-    collection = os.getenv("DJSYNC_COLLECTION", _DEFAULT_COLLECTION)
-    return Destination(drive=drive, library_root=library_root, collection=collection)
+    playlists_dir = os.getenv("DJSYNC_PLAYLISTS_DIR", _DEFAULT_PLAYLISTS_DIR)
+    albums_dir = os.getenv("DJSYNC_ALBUMS_DIR", _DEFAULT_ALBUMS_DIR)
+    # DJSYNC_COLLECTION is retired; honour it only when the new var is unset.
+    legacy = os.getenv("DJSYNC_COLLECTION")
+    if legacy and not os.getenv("DJSYNC_PLAYLISTS_DIR"):
+        playlists_dir = legacy
+    return Destination(
+        drive=drive,
+        library_root=library_root,
+        playlists_dir=playlists_dir,
+        albums_dir=albums_dir,
+    )
 
 
 def __getattr__(name: str) -> object:

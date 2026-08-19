@@ -126,3 +126,34 @@ def test_group_playlists_by_genre() -> None:
     headers = [r["group"] for r in rows if r["playlist"] is None]
     assert "House" in headers
     assert "(unknown)" in headers
+
+
+def test_album_status_computation() -> None:
+    assert compute_status(0, 10) == "none"
+    assert compute_status(4, 10) == "partial"
+    assert compute_status(10, 10) == "complete"
+    assert compute_status(0, 0) == "complete"
+
+
+def test_sort_albums_by_artist() -> None:
+    from djsync.web_helpers import sort_albums
+
+    albums = [
+        {"id": "a", "name": "Z Album", "artists": ["Zed"], "total_tracks": 1, "status": "none"},
+        {"id": "b", "name": "A Album", "artists": ["Alpha"], "total_tracks": 1, "status": "none"},
+    ]
+    names = [a["name"] for a in sort_albums(albums, "artist")]
+    assert names == ["A Album", "Z Album"]
+
+
+def test_group_albums_by_artist() -> None:
+    from djsync.web_helpers import group_albums
+
+    albums = [
+        {"id": "a", "name": "One", "artists": ["Shared"], "total_tracks": 1},
+        {"id": "b", "name": "Two", "artists": ["Solo"], "total_tracks": 1},
+    ]
+    rows = group_albums(albums, "artist")
+    headers = [r["group"] for r in rows if r["album"] is None]
+    assert "Shared" in headers
+    assert "Solo" in headers

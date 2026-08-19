@@ -1,4 +1,4 @@
-"""Spotify API client helpers for reading playlists and tracks."""
+"""Spotify API client helpers for reading playlists, albums, and tracks."""
 
 from __future__ import annotations
 
@@ -10,9 +10,20 @@ from spotipy.oauth2 import SpotifyOAuth
 from djsync import sigils
 from djsync.models import Track
 
-__all__ = ["Track", "Playlist", "get_client", "fetch_playlists", "fetch_tracks"]
+__all__ = [
+    "Track",
+    "Playlist",
+    "Album",
+    "get_client",
+    "fetch_playlists",
+    "fetch_tracks",
+    "fetch_saved_albums",
+    "fetch_album_tracks",
+]
 
-SCOPE = "playlist-read-private playlist-read-collaborative"
+SCOPE = (
+    "playlist-read-private playlist-read-collaborative user-library-read"
+)
 CACHE_PATH = ".cache"
 
 
@@ -22,6 +33,18 @@ class Playlist:
     name: str
     track_count: int
     sigils: frozenset[str]
+
+
+@dataclass(frozen=True)
+class Album:
+    id: str
+    name: str
+    artists: tuple[str, ...]
+    total_tracks: int
+    release_date: str
+    added_at: str
+    spotify_url: str
+    spotify_uri: str
 
 
 def get_client() -> spotipy.Spotify:
@@ -141,6 +164,114 @@ def fetch_tracks(client: spotipy.Spotify, playlist_id: str) -> list[Track]:
                     isrc=isrc,
                     added_at=added_at,
                     artist_ids=artist_ids,
+                )
+            )
+
+        if not page.get("next"):
+            break
+        offset += limit
+
+    return tracks
+
+
+def fetch_saved_albums(client: spotipy.Spotify) -> list[Album]:
+    """Return the user's saved albums, fully paginated and deduped by id."""
+    albums: list[Album] = []
+    seen_ids: set[str] = set()
+    offset = 0
+    limit = 50
+
+    while True:
+        page = client.current_user_saved_albums(limit=limit, offset=offset)
+        items = page.get("items") or []
+
+        for item in items:
+            if item is None:
+                continue
+            album_obj = item.get("album") or item.get("item")
+            if album_obj is None:
+                continue
+            album_id = album_obj.get("id")
+            if album_id is None or album_id in seen_ids:
+                continue
+            seen_ids.add(album_id)
+
+            artists = tuple(
+                artist["name"]
+                for artist in (album_obj.get("artists") or [])
+                if artist is not None and artist.get("name")
+            )
+            external_urls = album_obj.get("external_urls") or {}
+            spotify_url = external_urls.get("spotify") or (
+                f"https://open.spotify.com/album/{album_id}"
+            )
+            spotify_uri = album_obj.get("uri") or f"spotify:album:{album_id}"
+
+            albums.append(
+                Album(
+                    id=album_id,
+                    name=album_obj.get("name") or "",
+                    artists=artists,
+                    total_tracks=album_obj.get("total_tracks") or 0,
+                    release_date=album_obj.get("release_date") or "",
+                    added_at=item.get("added_at") or "",
+                    spotify_url=spotify_url,
+                    spotify_uri=spotify_uri,
+                )
+            )
+
+        if not page.get("next"):
+            break
+        offset += limit
+
+    return albums
+
+
+def fetch_album_tracks(
+    client: spotipy.Spotify,
+    album_id: str,
+    *,
+    album_name: str,
+) -> list[Track]:
+    """Return all tracks on an album, fully paginated."""
+    tracks: list[Track] = []
+    offset = 0
+    limit = 50
+
+    while True:
+        page = client.album_tracks(album_id, limit=limit, offset=offset)
+        items = page.get("items") or []
+
+        for track in items:
+            if track is None:
+                continue
+            track_id = track.get("id")
+            if track_id is None:
+                continue
+
+            artists = tuple(
+                artist["name"]
+                for artist in (track.get("artists") or [])
+                if artist is not None and artist.get("name")
+            )
+            artist_ids = tuple(
+                artist["id"]
+                for artist in (track.get("artists") or [])
+                if artist is not None and artist.get("id")
+            )
+            external_ids = track.get("external_ids") or {}
+            isrc = external_ids.get("isrc")
+
+            tracks.append(
+                Track(
+                    id=track_id,
+                    name=track.get("name") or "",
+                    artists=artists,
+                    album=album_name,
+                    duration_ms=track.get("duration_ms") or 0,
+                    isrc=isrc,
+                    track_number=track.get("track_number") or 1,
+                    disc_number=track.get("disc_number") or 1,
                 )
             )
 

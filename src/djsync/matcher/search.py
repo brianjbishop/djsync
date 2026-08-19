@@ -94,20 +94,30 @@ def _enrich_candidate(flat: Candidate) -> Candidate:
     return enriched if enriched is not None else flat
 
 
-def _query_for_track(track: Track, *, with_audio: bool = False) -> str:
+def _query_for_track(track: Track, *, with_audio: bool = False, with_album: bool = False) -> str:
     base = f"{' '.join(track.artists)} {track.name}".strip()
+    if with_album and track.album:
+        base = f"{base} {track.album}".strip()
     if with_audio:
         return f"{base} audio"
     return base
 
 
-def search_candidates(track: Track, limit: int = 10) -> list[Candidate]:
+def search_candidates(
+    track: Track,
+    limit: int = 10,
+    *,
+    album_search: bool = False,
+) -> list[Candidate]:
     """Search YouTube for likely audio matches to a Spotify track."""
     seen: set[str] = set()
     candidates: list[Candidate] = []
 
-    def add_from_query(with_audio: bool) -> None:
-        for entry in _search_query(_query_for_track(track, with_audio=with_audio), limit):
+    def add_from_query(*, with_audio: bool, with_album: bool = False) -> None:
+        for entry in _search_query(
+            _query_for_track(track, with_audio=with_audio, with_album=with_album),
+            limit,
+        ):
             video_id = entry.get("id")
             if not video_id or video_id in seen:
                 continue
@@ -118,7 +128,11 @@ def search_candidates(track: Track, limit: int = 10) -> list[Candidate]:
             candidates.append(_enrich_candidate(flat))
 
     add_from_query(with_audio=False)
+    if album_search and track.album:
+        add_from_query(with_audio=False, with_album=True)
     if len(candidates) < 3:
         add_from_query(with_audio=True)
+        if album_search and track.album:
+            add_from_query(with_audio=True, with_album=True)
 
     return candidates

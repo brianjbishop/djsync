@@ -1,4 +1,4 @@
-"""Local web UI for choosing and syncing playlists."""
+"""Local web UI for choosing and syncing playlists and albums."""
 
 from __future__ import annotations
 
@@ -7,7 +7,7 @@ import threading
 import webbrowser
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 import spotipy
 from flask import Flask, jsonify, request, send_from_directory
@@ -18,6 +18,8 @@ from djsync.web_helpers import format_size
 
 STATIC_DIR = Path(__file__).resolve().parent / "static"
 
+SyncKind = Literal["playlists", "albums"]
+
 
 def _destination_payload() -> dict[str, Any]:
     dest = get_destination()
@@ -25,8 +27,11 @@ def _destination_payload() -> dict[str, Any]:
     return {
         "drive": str(dest.drive),
         "library_root": dest.library_root,
-        "collection": dest.collection,
+        "playlists_dir": dest.playlists_dir,
+        "albums_dir": dest.albums_dir,
         "path": str(dest.path),
+        "playlists_path": str(dest.path_for("playlists")),
+        "albums_path": str(dest.path_for("albums")),
         "mounted": dest.mounted,
         "exists": dest.exists,
         "free_bytes": free,
@@ -37,7 +42,8 @@ def _destination_payload() -> dict[str, Any]:
 @dataclass
 class SyncJobState:
     running: bool = False
-    current_playlist: str | None = None
+    kind: SyncKind | None = None
+    current_item: str | None = None
     current_track: str | None = None
     done: int = 0
     total: int = 0
@@ -62,7 +68,7 @@ _genre_lock = threading.Lock()
 
 def _merge_playlists(cache_data: dict[str, Any]) -> list[dict[str, Any]]:
     """Attach selection and genre fields to cached playlist rows."""
-    selected = selection.load_selection()
+    selected = selection.load_selection("playlists")
     genre_map = genres.load_genres()
     rows: list[dict[str, Any]] = []
     for p in cache_data.get("playlists") or []:
@@ -71,6 +77,26 @@ def _merge_playlists(cache_data: dict[str, Any]) -> list[dict[str, Any]]:
         row["genre"] = genre_map.get(row["id"])
         rows.append(row)
     return rows
+
+
+def _merge_albums(cache_data: dict[str, Any]) -> list[dict[str, Any]]:
+    """Attach selection fields to cached album rows."""
+    selected = selection.load_selection("albums")
+    rows: list[dict[str, Any]] = []
+    for album in cache_data.get("albums") or []:
+        row = dict(album)
+        row["selected"] = row["id"] in selected
+        rows.append(row)
+    return rows
+
+
+def _cache_response(data: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "timestamp": data.get("timestamp"),
+        "playlists": _merge_playlists(data),
+        "albums": _merge_albums(data),
+        "destination": _destination_payload(),
+    }
 
 
 def create_app() -> Flask:
@@ -94,11 +120,29 @@ def create_app() -> Flask:
             data = cache.get_or_build_cache(client, refresh=refresh)
         except RuntimeError as exc:
             return jsonify({"error": str(exc)}), 500
+        payload = _cache_response(data)
         return jsonify(
             {
-                "timestamp": data.get("timestamp"),
-                "playlists": _merge_playlists(data),
-                "destination": _destination_payload(),
+                "timestamp": payload["timestamp"],
+                "playlists": payload["playlists"],
+                "destination": payload["destination"],
+            }
+        )
+
+    @app.get("/api/albums")
+    def api_albums() -> Any:
+        refresh = request.args.get("refresh") == "1"
+        try:
+            client = spotify.get_client()
+            data = cache.get_or_build_cache(client, refresh=refresh)
+        except RuntimeError as exc:
+            return jsonify({"error": str(exc)}), 500
+        payload = _cache_response(data)
+        return jsonify(
+            {
+                "timestamp": payload["timestamp"],
+                "albums": payload["albums"],
+                "destination": payload["destination"],
             }
         )
 
@@ -110,13 +154,7 @@ def create_app() -> Flask:
             cache.save_cache(data)
         except RuntimeError as exc:
             return jsonify({"error": str(exc)}), 500
-        return jsonify(
-            {
-                "timestamp": data.get("timestamp"),
-                "playlists": _merge_playlists(data),
-                "destination": _destination_payload(),
-            }
-        )
+        return jsonify(_cache_response(data))
 
     @app.post("/api/selection")
     def api_selection() -> Any:
@@ -124,8 +162,12 @@ def create_app() -> Flask:
         ids = body.get("selected")
         if not isinstance(ids, list):
             return jsonify({"error": "expected {selected: [...]}"}), 400
-        selection.save_selection({str(i) for i in ids})
-        return jsonify({"ok": True, "count": len(ids)})
+        kind_raw = body.get("kind", "playlists")
+        if kind_raw not in ("playlists", "albums"):
+            return jsonify({"error": "kind must be playlists or albums"}), 400
+        kind: SyncKind = kind_raw
+        selection.save_selection({str(i) for i in ids}, kind=kind)
+        return jsonify({"ok": True, "count": len(ids), "kind": kind})
 
     @app.post("/api/genres")
     def api_genres() -> Any:
@@ -195,44 +237,84 @@ def create_app() -> Flask:
             ), 409
 
         body = request.get_json(silent=True) or {}
-        playlist_ids = body.get("playlist_ids")
-        if not isinstance(playlist_ids, list) or not playlist_ids:
-            return jsonify({"error": "expected non-empty playlist_ids"}), 400
+        kind_raw = body.get("kind", "playlists")
+        if kind_raw not in ("playlists", "albums"):
+            return jsonify({"error": "kind must be playlists or albums"}), 400
+        kind: SyncKind = kind_raw
+
+        if kind == "albums":
+            item_ids = body.get("album_ids")
+            if not isinstance(item_ids, list) or not item_ids:
+                return jsonify({"error": "expected non-empty album_ids"}), 400
+        else:
+            item_ids = body.get("playlist_ids")
+            if not isinstance(item_ids, list) or not item_ids:
+                return jsonify({"error": "expected non-empty playlist_ids"}), 400
 
         cached = cache.load_cache()
         if cached is None:
-            return jsonify({"error": "no cache; refresh playlists first"}), 400
+            return jsonify({"error": "no cache; refresh first"}), 400
 
-        by_id = {p["id"]: p for p in cached.get("playlists") or []}
-        targets = []
-        for pid in playlist_ids:
-            entry = by_id.get(str(pid))
-            if entry is None:
-                continue
-            targets.append(
-                spotify.Playlist(
-                    id=entry["id"],
-                    name=entry["name"],
-                    track_count=entry["track_count"],
-                    sigils=frozenset(entry.get("sigils") or []),
+        if kind == "albums":
+            by_id = {a["id"]: a for a in cached.get("albums") or []}
+            targets: list[Any] = []
+            for aid in item_ids:
+                entry = by_id.get(str(aid))
+                if entry is None:
+                    continue
+                targets.append(
+                    spotify.Album(
+                        id=entry["id"],
+                        name=entry["name"],
+                        artists=tuple(entry.get("artists") or []),
+                        total_tracks=entry["total_tracks"],
+                        release_date=entry.get("release_date") or "",
+                        added_at=entry.get("added_at") or "",
+                        spotify_url=entry.get("spotify_url")
+                        or f"https://open.spotify.com/album/{entry['id']}",
+                        spotify_uri=entry.get("spotify_uri")
+                        or f"spotify:album:{entry['id']}",
+                    )
                 )
-            )
+            count_key = "total_tracks"
+        else:
+            by_id = {p["id"]: p for p in cached.get("playlists") or []}
+            targets = []
+            for pid in item_ids:
+                entry = by_id.get(str(pid))
+                if entry is None:
+                    continue
+                targets.append(
+                    spotify.Playlist(
+                        id=entry["id"],
+                        name=entry["name"],
+                        track_count=entry["track_count"],
+                        sigils=frozenset(entry.get("sigils") or []),
+                    )
+                )
+            count_key = "track_count"
 
         if not targets:
-            return jsonify({"error": "no matching playlists"}), 400
+            label = "albums" if kind == "albums" else "playlists"
+            return jsonify({"error": f"no matching {label}"}), 400
 
         job_id = "sync"
 
         def run_sync() -> None:
             with _job_lock:
                 _job.running = True
-                _job.current_playlist = None
+                _job.kind = kind
+                _job.current_item = None
                 _job.current_track = None
                 _job.done = 0
                 _job.total = sum(
-                    max(0, by_id[str(pid)]["track_count"] - by_id[str(pid)]["downloaded_count"])
-                    for pid in playlist_ids
-                    if str(pid) in by_id
+                    max(
+                        0,
+                        by_id[str(iid)][count_key]
+                        - by_id[str(iid)]["downloaded_count"],
+                    )
+                    for iid in item_ids
+                    if str(iid) in by_id
                 )
                 _job.downloaded = 0
                 _job.skipped = 0
@@ -241,9 +323,10 @@ def create_app() -> Flask:
 
             try:
                 client = spotify.get_client()
-                for pl in targets:
+                for target in targets:
+                    name = target.name if kind == "playlists" else target.name
                     with _job_lock:
-                        _job.current_playlist = pl.name
+                        _job.current_item = name
 
                     def on_log(msg: str) -> None:
                         with _job_lock:
@@ -251,21 +334,30 @@ def create_app() -> Flask:
                             if len(_job.log) > 200:
                                 _job.log = _job.log[-200:]
 
-                    def on_track(name: str) -> None:
+                    def on_track(track_name: str) -> None:
                         with _job_lock:
-                            _job.current_track = name
+                            _job.current_track = track_name
 
                     def on_progress() -> None:
                         with _job_lock:
                             _job.done += 1
 
-                    result = sync.sync_playlist(
-                        client,
-                        pl,
-                        on_log=on_log,
-                        on_track=on_track,
-                        on_progress=on_progress,
-                    )
+                    if kind == "albums":
+                        result = sync.sync_album(
+                            client,
+                            target,
+                            on_log=on_log,
+                            on_track=on_track,
+                            on_progress=on_progress,
+                        )
+                    else:
+                        result = sync.sync_playlist(
+                            client,
+                            target,
+                            on_log=on_log,
+                            on_track=on_track,
+                            on_progress=on_progress,
+                        )
                     with _job_lock:
                         _job.downloaded += result.downloaded
                         _job.skipped += result.skipped
@@ -276,11 +368,12 @@ def create_app() -> Flask:
             finally:
                 with _job_lock:
                     _job.running = False
-                    _job.current_playlist = None
+                    _job.kind = None
+                    _job.current_item = None
                     _job.current_track = None
 
         threading.Thread(target=run_sync, daemon=True).start()
-        return jsonify({"job_id": job_id})
+        return jsonify({"job_id": job_id, "kind": kind})
 
     @app.get("/api/status")
     def api_status() -> Any:
@@ -288,7 +381,9 @@ def create_app() -> Flask:
             return jsonify(
                 {
                     "running": _job.running,
-                    "current_playlist": _job.current_playlist,
+                    "kind": _job.kind,
+                    "current_playlist": _job.current_item,
+                    "current_item": _job.current_item,
                     "current_track": _job.current_track,
                     "done": _job.done,
                     "total": _job.total,

@@ -1,4 +1,4 @@
-"""Build and load the playlist scan cache."""
+"""Build and load the playlist/album scan cache."""
 
 from __future__ import annotations
 
@@ -11,7 +11,7 @@ import spotipy
 
 from djsync import spotify
 from djsync.config import PROJECT_ROOT, get_destination
-from djsync.library import existing_spotify_ids, playlist_folder
+from djsync.library import album_folder, existing_spotify_ids, playlist_folder
 from djsync.web_helpers import compute_status
 
 CACHE_PATH = PROJECT_ROOT / ".djsync_cache.json"
@@ -43,19 +43,51 @@ def _playlist_entry(
     }
 
 
+def _album_entry(
+    album: spotify.Album,
+    tracks: list,
+) -> dict[str, Any]:
+    """Build one cache entry for a saved album."""
+    folder = album_folder(
+        album.artists, album.name, get_destination().path_for("albums")
+    )
+    local_ids = existing_spotify_ids(folder)
+    track_ids = {t.id for t in tracks}
+    downloaded_count = len(local_ids & track_ids)
+
+    return {
+        "id": album.id,
+        "name": album.name,
+        "artists": list(album.artists),
+        "total_tracks": album.total_tracks,
+        "spotify_url": album.spotify_url,
+        "spotify_uri": album.spotify_uri,
+        "downloaded_count": downloaded_count,
+        "status": compute_status(downloaded_count, album.total_tracks),
+        "added_at": album.added_at,
+        "release_date": album.release_date,
+    }
+
+
 def build_cache(client: spotipy.Spotify) -> dict[str, Any]:
     """Scan Spotify + drive and return cache payload."""
     all_playlists = spotify.fetch_playlists(client)
     marked_d = [p for p in all_playlists if "d" in p.sigils]
 
-    entries: list[dict[str, Any]] = []
+    playlist_entries: list[dict[str, Any]] = []
     for playlist in marked_d:
         tracks = spotify.fetch_tracks(client, playlist.id)
-        entries.append(_playlist_entry(playlist, tracks))
+        playlist_entries.append(_playlist_entry(playlist, tracks))
+
+    album_entries: list[dict[str, Any]] = []
+    for album in spotify.fetch_saved_albums(client):
+        tracks = spotify.fetch_album_tracks(client, album.id, album_name=album.name)
+        album_entries.append(_album_entry(album, tracks))
 
     return {
         "timestamp": datetime.now(UTC).isoformat(),
-        "playlists": entries,
+        "playlists": playlist_entries,
+        "albums": album_entries,
     }
 
 
@@ -74,6 +106,8 @@ def load_cache() -> dict[str, Any] | None:
         return None
     if not isinstance(data.get("playlists"), list):
         return None
+    if "albums" not in data:
+        data["albums"] = []
     return data
 
 

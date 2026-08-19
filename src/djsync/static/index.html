@@ -86,6 +86,49 @@ a:hover { text-decoration: underline; }
   margin-right: 4px;
 }
 
+.tab-bar {
+  display: flex;
+  gap: 2px;
+  background: var(--bg-muted);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 2px;
+}
+
+.tab-btn {
+  padding: 5px 12px;
+  border-radius: 3px;
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  color: var(--text-muted);
+  transition: background 0.12s, color 0.12s;
+}
+
+.tab-btn:hover {
+  color: var(--text);
+}
+
+.tab-btn.active {
+  background: var(--bg-elevated);
+  color: var(--text);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.album-title {
+  display: block;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.album-artist {
+  display: block;
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .toolbar .meta {
   font-size: var(--fs-sm);
   color: var(--text-muted);
@@ -697,6 +740,10 @@ tr.group-header:first-child td {
 <div id="app">
   <header class="toolbar">
     <h1>djsync</h1>
+    <div class="tab-bar" role="tablist">
+      <button type="button" class="tab-btn active" id="tabPlaylists" role="tab" aria-selected="true">Playlists</button>
+      <button type="button" class="tab-btn" id="tabAlbums" role="tab" aria-selected="false">Albums</button>
+    </div>
     <span class="destination" id="destinationInfo" title=""></span>
     <span class="meta" id="generatedAt">Loading…</span>
     <div class="toolbar-spacer"></div>
@@ -730,8 +777,8 @@ tr.group-header:first-child td {
 
   <main class="main">
     <div class="table-wrap">
-      <table id="playlistTable">
-        <colgroup>
+      <table id="dataTable">
+        <colgroup id="tableCols">
           <col class="col-check">
           <col class="col-name">
           <col class="col-tracks">
@@ -740,7 +787,7 @@ tr.group-header:first-child td {
           <col class="col-date">
           <col class="col-spotify">
         </colgroup>
-        <thead>
+        <thead id="tableHead">
           <tr>
             <th class="col-check"><span class="sr-only">Select</span></th>
             <th class="col-name sortable" data-sort="name">Name <span class="arrow">▲</span></th>
@@ -754,15 +801,15 @@ tr.group-header:first-child td {
         <tbody id="tableBody"></tbody>
       </table>
       <div class="empty-state hidden" id="emptyState">
-        <strong>No playlists</strong>
-        <p>Click Refresh to scan your Spotify library.</p>
+        <strong id="emptyTitle">No playlists</strong>
+        <p id="emptyHint">Click Refresh to scan your Spotify library.</p>
       </div>
     </div>
   </main>
 
   <footer class="summary-bar">
     <div class="summary-stats">
-      <div class="stat"><strong id="sumPlaylists">0</strong> <span>playlists selected</span></div>
+      <div class="stat"><strong id="sumItems">0</strong> <span id="sumItemsLabel">playlists selected</span></div>
       <div class="stat"><strong id="sumTracks">0</strong> <span>tracks total</span></div>
       <div class="stat"><strong id="sumSize">0 MB</strong> <span>estimated (~9.5 MB/track)</span></div>
     </div>
@@ -775,8 +822,8 @@ tr.group-header:first-child td {
 <div class="overlay hidden" id="confirmOverlay">
   <div class="modal">
     <div class="modal-header">
-      <h2>Confirm download</h2>
-      <p>The following playlists will be synced to your drive.</p>
+      <h2 id="confirmTitle">Confirm download</h2>
+      <p id="confirmSubtitle">The following playlists will be synced to your drive.</p>
     </div>
     <div class="modal-body">
       <ul class="confirm-list" id="confirmList"></ul>
@@ -799,13 +846,36 @@ tr.group-header:first-child td {
   const BYTES_PER_TRACK = 9.5 * 1024 * 1024;
   const STATUS_ORDER = { none: 0, partial: 1, complete: 2 };
 
+  const PLAYLIST_HEADERS = [
+    { cls: "col-check", sort: null, label: '<span class="sr-only">Select</span>' },
+    { cls: "col-name", sort: "name", label: "Name" },
+    { cls: "col-tracks", sort: "track_count", label: "Tracks" },
+    { cls: "col-dl", sort: "status", label: "Downloaded" },
+    { cls: "col-sigils", sort: null, label: "Sigils" },
+    { cls: "col-date", sort: "last_added", label: "Last added" },
+    { cls: "col-spotify", sort: null, label: '<span class="sr-only">Spotify</span>' },
+  ];
+
+  const ALBUM_HEADERS = [
+    { cls: "col-check", sort: null, label: '<span class="sr-only">Select</span>' },
+    { cls: "col-name", sort: "name", label: "Album" },
+    { cls: "col-tracks", sort: "total_tracks", label: "Tracks" },
+    { cls: "col-dl", sort: "status", label: "Downloaded" },
+    { cls: "col-date", sort: "release_date", label: "Released" },
+    { cls: "col-date", sort: "added_at", label: "Added" },
+    { cls: "col-spotify", sort: null, label: '<span class="sr-only">Spotify</span>' },
+  ];
+
   const state = {
+    activeTab: "playlists",
     playlists: [],
+    albums: [],
     timestamp: null,
     destination: null,
-    sortKey: "name",
-    sortReverse: false,
-    groupBy: "none",
+    playlistSort: { key: "name", reverse: false },
+    albumSort: { key: "name", reverse: false },
+    playlistGroupBy: "none",
+    albumGroupBy: "none",
     collapsedGroups: new Set(),
     syncing: false,
     selectionTimer: null,
@@ -817,6 +887,8 @@ tr.group-header:first-child td {
   const $ = (id) => document.getElementById(id);
 
   const els = {
+    tabPlaylists: $("tabPlaylists"),
+    tabAlbums: $("tabAlbums"),
     destinationInfo: $("destinationInfo"),
     generatedAt: $("generatedAt"),
     groupBy: $("groupBy"),
@@ -831,18 +903,48 @@ tr.group-header:first-child td {
     progressBar: $("progressBar"),
     progressStats: $("progressStats"),
     logBox: $("logBox"),
+    tableHead: $("tableHead"),
     tableBody: $("tableBody"),
     emptyState: $("emptyState"),
-    sumPlaylists: $("sumPlaylists"),
+    emptyTitle: $("emptyTitle"),
+    emptyHint: $("emptyHint"),
+    sumItems: $("sumItems"),
+    sumItemsLabel: $("sumItemsLabel"),
     sumTracks: $("sumTracks"),
     sumSize: $("sumSize"),
     btnDownload: $("btnDownload"),
     confirmOverlay: $("confirmOverlay"),
+    confirmTitle: $("confirmTitle"),
+    confirmSubtitle: $("confirmSubtitle"),
     confirmList: $("confirmList"),
     confirmTotal: $("confirmTotal"),
     btnConfirmCancel: $("btnConfirmCancel"),
     btnConfirmOk: $("btnConfirmOk"),
   };
+
+  function isPlaylists() {
+    return state.activeTab === "playlists";
+  }
+
+  function activeItems() {
+    return isPlaylists() ? state.playlists : state.albums;
+  }
+
+  function activeSort() {
+    return isPlaylists() ? state.playlistSort : state.albumSort;
+  }
+
+  function trackCount(item) {
+    return isPlaylists() ? item.track_count : item.total_tracks;
+  }
+
+  function activeDestinationPath() {
+    const d = state.destination;
+    if (!d) return "";
+    return isPlaylists()
+      ? (d.playlists_path || d.path)
+      : (d.albums_path || d.path);
+  }
 
   function showError(msg) {
     els.errorAlert.textContent = msg;
@@ -874,7 +976,7 @@ tr.group-header:first-child td {
     if (!iso) return "—";
     try {
       const d = new Date(iso);
-      if (isNaN(d.getTime())) return "—";
+      if (isNaN(d.getTime())) return iso.length === 4 ? iso : "—";
       return d.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
     } catch (_) {
       return "—";
@@ -901,25 +1003,30 @@ tr.group-header:first-child td {
   }
 
   function selectedIds() {
-    return state.playlists.filter((p) => p.selected).map((p) => p.id);
+    return activeItems().filter((item) => item.selected).map((item) => item.id);
   }
 
-  function sortPlaylists(list) {
-    const key = state.sortKey;
-    const rev = state.sortReverse;
+  function sortItems(list) {
+    const { key, reverse } = activeSort();
     const sorted = list.slice();
     sorted.sort((a, b) => {
       let cmp = 0;
       if (key === "name") {
         cmp = a.name.toLowerCase().localeCompare(b.name.toLowerCase());
-      } else if (key === "track_count") {
-        cmp = a.track_count - b.track_count;
-      } else if (key === "last_added") {
-        cmp = (a.last_added || "").localeCompare(b.last_added || "");
+      } else if (key === "artist") {
+        const aa = (a.artists || []).join(", ").toLowerCase();
+        const bb = (b.artists || []).join(", ").toLowerCase();
+        cmp = aa.localeCompare(bb);
+      } else if (key === "track_count" || key === "total_tracks") {
+        cmp = trackCount(a) - trackCount(b);
+      } else if (key === "last_added" || key === "added_at") {
+        cmp = (a.last_added || a.added_at || "").localeCompare(b.last_added || b.added_at || "");
+      } else if (key === "release_date") {
+        cmp = (a.release_date || "").localeCompare(b.release_date || "");
       } else if (key === "status") {
         cmp = (STATUS_ORDER[a.status] || 0) - (STATUS_ORDER[b.status] || 0);
       }
-      return rev ? -cmp : cmp;
+      return reverse ? -cmp : cmp;
     });
     return sorted;
   }
@@ -951,9 +1058,10 @@ tr.group-header:first-child td {
     return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>';
   }
 
-  function buildGroupedRows(sorted) {
-    if (state.groupBy === "none") {
-      return sorted.map((p) => ({ type: "row", playlist: p }));
+  function buildGroupedPlaylistRows(sorted) {
+    const groupBy = state.playlistGroupBy;
+    if (groupBy === "none") {
+      return sorted.map((p) => ({ type: "row", item: p }));
     }
 
     const groups = {};
@@ -970,27 +1078,122 @@ tr.group-header:first-child td {
     const labels = Object.keys(groups).sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
     for (const label of labels) {
       const items = groups[label];
-      rows.push({ type: "group", label, count: items.length, ids: items.map((p) => p.id) });
+      rows.push({ type: "group", label, count: items.length, ids: items.map((p) => p.id), unit: "playlist" });
       if (!state.collapsedGroups.has(label)) {
-        for (const p of items) {
-          rows.push({ type: "row", playlist: p });
-        }
+        for (const p of items) rows.push({ type: "row", item: p });
       }
     }
     return rows;
   }
 
+  function buildGroupedAlbumRows(sorted) {
+    const groupBy = state.albumGroupBy;
+    if (groupBy === "none") {
+      return sorted.map((a) => ({ type: "row", item: a }));
+    }
+
+    const groups = {};
+    for (const album of sorted) {
+      const artists = album.artists || [];
+      const keys = artists.length ? artists : ["(unknown artist)"];
+      for (const key of keys) {
+        if (!groups[key]) groups[key] = [];
+        groups[key].push(album);
+      }
+    }
+
+    const rows = [];
+    const labels = Object.keys(groups).sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
+    for (const label of labels) {
+      const items = groups[label];
+      rows.push({ type: "group", label, count: items.length, ids: items.map((a) => a.id), unit: "album" });
+      if (!state.collapsedGroups.has(label)) {
+        for (const a of items) rows.push({ type: "row", item: a });
+      }
+    }
+    return rows;
+  }
+
+  function renderTableHead() {
+    const headers = isPlaylists() ? PLAYLIST_HEADERS : ALBUM_HEADERS;
+    const sort = activeSort();
+    let html = "<tr>";
+    for (const h of headers) {
+      const sortable = h.sort ? " sortable" : "";
+      const sorted = h.sort === sort.key ? " sorted" : "";
+      const arrow = h.sort ? ' <span class="arrow">' + (sort.reverse ? "▼" : "▲") + "</span>" : "";
+      const dataSort = h.sort ? ' data-sort="' + h.sort + '"' : "";
+      html += '<th class="' + h.cls + sortable + sorted + '"' + dataSort + ">" + h.label + arrow + "</th>";
+    }
+    html += "</tr>";
+    els.tableHead.innerHTML = html;
+
+    els.tableHead.querySelectorAll("th.sortable").forEach((th) => {
+      th.addEventListener("click", () => {
+        const key = th.dataset.sort;
+        const s = activeSort();
+        if (s.key === key) {
+          s.reverse = !s.reverse;
+        } else {
+          s.key = key;
+          s.reverse = key === "name" ? false : (key === "last_added" || key === "added_at");
+        }
+        renderTable();
+      });
+    });
+  }
+
+  function renderPlaylistRow(p) {
+    const dl = p.downloaded_count + "/" + p.track_count;
+    const statusClass = "status-" + (p.status || "none");
+    let html = '<tr class="data-row ' + statusClass + (p.selected ? " selected" : "") + '" data-id="' + escapeHtml(p.id) + '">';
+    html += '<td class="col-check"><input type="checkbox" class="row-check" data-id="' + escapeHtml(p.id) + '"' + (p.selected ? " checked" : "") + "></td>";
+    html += '<td class="col-name" title="' + escapeHtml(p.name) + '">' + escapeHtml(p.name) + "</td>";
+    html += '<td class="col-tracks">' + p.track_count + "</td>";
+    html += '<td class="col-dl"><span class="dl-badge ' + escapeHtml(p.status || "none") + '">' + dl + "</span></td>";
+    html += '<td class="col-sigils"><div class="sigils">' + renderSigils(p.sigils) + "</div></td>";
+    html += '<td class="col-date">' + formatDate(p.last_added) + "</td>";
+    html += '<td class="col-spotify"><a class="btn-spotify" href="' + escapeHtml(p.spotify_uri) + '" title="Open in Spotify" data-no-toggle="1">' + spotifyIcon() + "</a></td>";
+    html += "</tr>";
+    return html;
+  }
+
+  function renderAlbumRow(a) {
+    const dl = a.downloaded_count + "/" + a.total_tracks;
+    const statusClass = "status-" + (a.status || "none");
+    const artists = (a.artists || []).join(", ");
+    let html = '<tr class="data-row ' + statusClass + (a.selected ? " selected" : "") + '" data-id="' + escapeHtml(a.id) + '">';
+    html += '<td class="col-check"><input type="checkbox" class="row-check" data-id="' + escapeHtml(a.id) + '"' + (a.selected ? " checked" : "") + "></td>";
+    html += '<td class="col-name" title="' + escapeHtml(a.name) + " — " + escapeHtml(artists) + '">';
+    html += '<span class="album-title">' + escapeHtml(a.name) + "</span>";
+    html += '<span class="album-artist">' + escapeHtml(artists) + "</span></td>";
+    html += '<td class="col-tracks">' + a.total_tracks + "</td>";
+    html += '<td class="col-dl"><span class="dl-badge ' + escapeHtml(a.status || "none") + '">' + dl + "</span></td>";
+    html += '<td class="col-date">' + formatDate(a.release_date) + "</td>";
+    html += '<td class="col-date">' + formatDate(a.added_at) + "</td>";
+    html += '<td class="col-spotify"><a class="btn-spotify" href="' + escapeHtml(a.spotify_uri) + '" title="Open in Spotify" data-no-toggle="1">' + spotifyIcon() + "</a></td>";
+    html += "</tr>";
+    return html;
+  }
+
   function renderTable() {
-    const sorted = sortPlaylists(state.playlists);
-    const rows = buildGroupedRows(sorted);
+    renderTableHead();
+    updateGroupByOptions();
+
+    const items = activeItems();
+    const sorted = sortItems(items);
+    const rows = isPlaylists() ? buildGroupedPlaylistRows(sorted) : buildGroupedAlbumRows(sorted);
+    const colCount = isPlaylists() ? 7 : 7;
 
     if (!sorted.length && !state.loading) {
       els.tableBody.innerHTML = "";
       els.emptyState.classList.remove("hidden");
-      document.getElementById("playlistTable").classList.add("hidden");
+      document.getElementById("dataTable").classList.add("hidden");
+      els.emptyTitle.textContent = isPlaylists() ? "No playlists" : "No albums";
+      els.emptyHint.textContent = "Click Refresh to scan your Spotify library.";
     } else {
       els.emptyState.classList.add("hidden");
-      document.getElementById("playlistTable").classList.remove("hidden");
+      document.getElementById("dataTable").classList.remove("hidden");
     }
 
     let html = "";
@@ -998,36 +1201,25 @@ tr.group-header:first-child td {
       if (row.type === "group") {
         const collapsed = state.collapsedGroups.has(row.label);
         const allSelected = row.ids.every((id) => {
-          const p = state.playlists.find((x) => x.id === id);
-          return p && p.selected;
+          const item = items.find((x) => x.id === id);
+          return item && item.selected;
         });
         const someSelected = !allSelected && row.ids.some((id) => {
-          const p = state.playlists.find((x) => x.id === id);
-          return p && p.selected;
+          const item = items.find((x) => x.id === id);
+          return item && item.selected;
         });
         html += '<tr class="group-header" data-group="' + escapeHtml(row.label) + '">';
-        html += '<td colspan="7">';
+        html += '<td colspan="' + colCount + '">';
         html += '<div class="group-label">';
         html += '<span class="group-toggle' + (collapsed ? " collapsed" : "") + '">▼</span>';
         html += '<input type="checkbox" class="group-check" data-group="' + escapeHtml(row.label) + '"' +
           (allSelected ? " checked" : "") +
           (someSelected ? ' data-indeterminate="1"' : "") + ">";
-        html += "<span>" + escapeHtml(row.label) + '</span>';
-        html += '<span class="count">' + row.count + " playlist" + (row.count !== 1 ? "s" : "") + "</span>";
+        html += "<span>" + escapeHtml(row.label) + "</span>";
+        html += '<span class="count">' + row.count + " " + row.unit + (row.count !== 1 ? "s" : "") + "</span>";
         html += "</div></td></tr>";
       } else {
-        const p = row.playlist;
-        const dl = p.downloaded_count + "/" + p.track_count;
-        const statusClass = "status-" + (p.status || "none");
-        html += '<tr class="data-row ' + statusClass + (p.selected ? " selected" : "") + '" data-id="' + escapeHtml(p.id) + '">';
-        html += '<td class="col-check"><input type="checkbox" class="row-check" data-id="' + escapeHtml(p.id) + '"' + (p.selected ? " checked" : "") + "></td>";
-        html += '<td class="col-name" title="' + escapeHtml(p.name) + '">' + escapeHtml(p.name) + "</td>";
-        html += '<td class="col-tracks">' + p.track_count + "</td>";
-        html += '<td class="col-dl"><span class="dl-badge ' + escapeHtml(p.status || "none") + '">' + dl + "</span></td>";
-        html += '<td class="col-sigils"><div class="sigils">' + renderSigils(p.sigils) + "</div></td>";
-        html += '<td class="col-date">' + formatDate(p.last_added) + "</td>";
-        html += '<td class="col-spotify"><a class="btn-spotify" href="' + escapeHtml(p.spotify_uri) + '" title="Open in Spotify" data-no-toggle="1">' + spotifyIcon() + "</a></td>";
-        html += "</tr>";
+        html += isPlaylists() ? renderPlaylistRow(row.item) : renderAlbumRow(row.item);
       }
     }
     els.tableBody.innerHTML = html;
@@ -1036,19 +1228,25 @@ tr.group-header:first-child td {
       cb.indeterminate = true;
     });
 
-    document.querySelectorAll("thead th.sortable").forEach((th) => {
-      th.classList.toggle("sorted", th.dataset.sort === state.sortKey);
-      const arrow = th.querySelector(".arrow");
-      if (arrow) {
-        arrow.textContent = state.sortReverse ? "▼" : "▲";
-      }
-    });
-
     updateSummary();
+  }
+
+  function updateGroupByOptions() {
+    const current = isPlaylists() ? state.playlistGroupBy : state.albumGroupBy;
+    els.groupBy.innerHTML = "";
+    if (isPlaylists()) {
+      els.groupBy.innerHTML =
+        '<option value="none">None</option><option value="sigil">Sigil</option>';
+    } else {
+      els.groupBy.innerHTML =
+        '<option value="none">None</option><option value="artist">Artist</option>';
+    }
+    els.groupBy.value = current;
   }
 
   function renderDestination() {
     const d = state.destination;
+    const path = activeDestinationPath();
     if (!d) {
       els.destinationInfo.textContent = "";
       els.destinationInfo.className = "destination";
@@ -1057,22 +1255,23 @@ tr.group-header:first-child td {
     }
     if (!d.mounted) {
       els.destinationInfo.className = "destination disconnected";
-      els.destinationInfo.textContent = "Drive not connected — " + d.path;
+      els.destinationInfo.textContent = "Drive not connected — " + path;
       els.destinationInfo.title = "Connect the drive to download tracks";
     } else {
       els.destinationInfo.className = "destination";
       const free = d.free_human ? " · " + d.free_human + " free" : "";
-      els.destinationInfo.textContent = d.path + free;
-      els.destinationInfo.title = "Download destination";
+      els.destinationInfo.textContent = path + free;
+      els.destinationInfo.title = "Download destination for " + (isPlaylists() ? "playlists" : "albums");
     }
   }
 
   function updateSummary() {
-    const selected = state.playlists.filter((p) => p.selected);
-    const trackTotal = selected.reduce((s, p) => s + p.track_count, 0);
+    const selected = activeItems().filter((item) => item.selected);
+    const trackTotal = selected.reduce((s, item) => s + trackCount(item), 0);
     const sizeBytes = trackTotal * BYTES_PER_TRACK;
 
-    els.sumPlaylists.textContent = String(selected.length);
+    els.sumItems.textContent = String(selected.length);
+    els.sumItemsLabel.textContent = (isPlaylists() ? "playlists" : "albums") + " selected";
     els.sumTracks.textContent = String(trackTotal);
     els.sumSize.textContent = formatSize(sizeBytes);
 
@@ -1084,8 +1283,8 @@ tr.group-header:first-child td {
     } else {
       els.btnDownload.title = "";
     }
-    els.btnSelectAll.disabled = state.syncing || !state.playlists.length;
-    els.btnClearAll.disabled = state.syncing || !state.playlists.length;
+    els.btnSelectAll.disabled = state.syncing || !activeItems().length;
+    els.btnClearAll.disabled = state.syncing || !activeItems().length;
     els.btnRefresh.disabled = state.refreshing || state.syncing;
   }
 
@@ -1101,8 +1300,20 @@ tr.group-header:first-child td {
     }
   }
 
-  function setPlaylists(data) {
+  function setTab(tab) {
+    state.activeTab = tab;
+    state.collapsedGroups.clear();
+    els.tabPlaylists.classList.toggle("active", tab === "playlists");
+    els.tabAlbums.classList.toggle("active", tab === "albums");
+    els.tabPlaylists.setAttribute("aria-selected", tab === "playlists" ? "true" : "false");
+    els.tabAlbums.setAttribute("aria-selected", tab === "albums" ? "true" : "false");
+    renderDestination();
+    renderTable();
+  }
+
+  function applyCacheData(data) {
     state.playlists = data.playlists || [];
+    state.albums = data.albums || [];
     state.timestamp = data.timestamp || null;
     state.destination = data.destination || state.destination;
     state.loading = false;
@@ -1125,14 +1336,22 @@ tr.group-header:first-child td {
     return body;
   }
 
-  async function loadPlaylists() {
+  async function loadData() {
     clearError();
     try {
-      const data = await apiFetch("/api/playlists");
-      setPlaylists(data);
+      const [plData, alData] = await Promise.all([
+        apiFetch("/api/playlists"),
+        apiFetch("/api/albums"),
+      ]);
+      applyCacheData({
+        timestamp: plData.timestamp || alData.timestamp,
+        playlists: plData.playlists,
+        albums: alData.albums,
+        destination: plData.destination || alData.destination,
+      });
     } catch (err) {
       state.loading = false;
-      showError("Failed to load playlists: " + err.message);
+      showError("Failed to load library: " + err.message);
       renderTable();
     }
   }
@@ -1148,58 +1367,76 @@ tr.group-header:first-child td {
       await apiFetch("/api/selection", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ selected: ids }),
+        body: JSON.stringify({ kind: state.activeTab, selected: ids }),
       });
     } catch (err) {
       showError("Failed to save selection: " + err.message);
     }
   }
 
-  function togglePlaylist(id) {
+  function toggleItem(id) {
     if (state.syncing) return;
-    const p = state.playlists.find((x) => x.id === id);
-    if (!p) return;
-    p.selected = !p.selected;
+    const item = activeItems().find((x) => x.id === id);
+    if (!item) return;
+    item.selected = !item.selected;
     renderTable();
     scheduleSelectionSave();
   }
 
   function setAllSelected(selected) {
     if (state.syncing) return;
-    for (const p of state.playlists) p.selected = selected;
+    for (const item of activeItems()) item.selected = selected;
     renderTable();
     scheduleSelectionSave();
   }
 
   function setGroupSelected(groupLabel, selected) {
     if (state.syncing) return;
-    const sorted = sortPlaylists(state.playlists);
-    const groups = {};
-    for (const p of sorted) {
-      const sigils = visibleSigils(p.sigils);
-      const keys = sigils.length ? sigils.map((s) => "$" + s) : ["(no sigil)"];
-      for (const key of keys) {
-        if (!groups[key]) groups[key] = [];
-        groups[key].push(p);
+    const sorted = sortItems(activeItems());
+    let ids = [];
+
+    if (isPlaylists()) {
+      const groups = {};
+      for (const p of sorted) {
+        const sigils = visibleSigils(p.sigils);
+        const keys = sigils.length ? sigils.map((s) => "$" + s) : ["(no sigil)"];
+        for (const key of keys) {
+          if (!groups[key]) groups[key] = [];
+          groups[key].push(p);
+        }
       }
+      ids = (groups[groupLabel] || []).map((p) => p.id);
+    } else {
+      const groups = {};
+      for (const album of sorted) {
+        const artists = album.artists || [];
+        const keys = artists.length ? artists : ["(unknown artist)"];
+        for (const key of keys) {
+          if (!groups[key]) groups[key] = [];
+          groups[key].push(album);
+        }
+      }
+      ids = (groups[groupLabel] || []).map((a) => a.id);
     }
-    const items = groups[groupLabel] || [];
-    for (const p of items) p.selected = selected;
+
+    for (const item of activeItems()) {
+      if (ids.includes(item.id)) item.selected = selected;
+    }
     renderTable();
     scheduleSelectionSave();
   }
 
-  async function refreshPlaylists() {
+  async function refreshLibrary() {
     if (state.refreshing || state.syncing) return;
     state.refreshing = true;
     els.refreshSpinner.classList.remove("hidden");
     clearError();
-    showInfo("Refreshing playlist cache — this scans Spotify and may take a minute…");
+    showInfo("Refreshing library cache — this scans Spotify and may take a minute…");
     updateSummary();
     try {
       const data = await apiFetch("/api/refresh", { method: "POST" });
       clearInfo();
-      setPlaylists(data);
+      applyCacheData(data);
     } catch (err) {
       clearInfo();
       showError("Refresh failed: " + err.message);
@@ -1211,21 +1448,31 @@ tr.group-header:first-child td {
   }
 
   function openConfirm() {
-    const selected = state.playlists.filter((p) => p.selected);
+    const selected = activeItems().filter((item) => item.selected);
     if (!selected.length) return;
+
+    const kindLabel = isPlaylists() ? "playlists" : "albums";
+    els.confirmTitle.textContent = "Confirm download";
+    els.confirmSubtitle.textContent =
+      "The following " + kindLabel + " will be synced to your drive.";
 
     let totalTracks = 0;
     let missingTracks = 0;
-    els.confirmList.innerHTML = selected.map((p) => {
-      totalTracks += p.track_count;
-      const missing = Math.max(0, p.track_count - (p.downloaded_count || 0));
+    els.confirmList.innerHTML = selected.map((item) => {
+      const count = trackCount(item);
+      totalTracks += count;
+      const missing = Math.max(0, count - (item.downloaded_count || 0));
       missingTracks += missing;
-      return '<li><span class="pl-name">' + escapeHtml(p.name) + '</span><span class="pl-tracks">' +
-        p.track_count + " tracks</span></li>";
+      const label = isPlaylists()
+        ? item.name
+        : item.name + " — " + (item.artists || []).join(", ");
+      return '<li><span class="pl-name">' + escapeHtml(label) + '</span><span class="pl-tracks">' +
+        count + " tracks</span></li>";
     }).join("");
 
     const estSize = formatSize(missingTracks * BYTES_PER_TRACK);
-    els.confirmTotal.innerHTML = "<strong>" + selected.length + "</strong> playlists · " +
+    const unit = isPlaylists() ? "playlists" : "albums";
+    els.confirmTotal.innerHTML = "<strong>" + selected.length + "</strong> " + unit + " · " +
       "<strong>" + totalTracks + "</strong> tracks total · " +
       "up to <strong>" + missingTracks + "</strong> to download (~" + estSize + ")";
     els.confirmOverlay.classList.remove("hidden");
@@ -1240,11 +1487,17 @@ tr.group-header:first-child td {
     const ids = selectedIds();
     if (!ids.length) return;
     clearError();
+    const body = { kind: state.activeTab };
+    if (isPlaylists()) {
+      body.playlist_ids = ids;
+    } else {
+      body.album_ids = ids;
+    }
     try {
       await apiFetch("/api/sync", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ playlist_ids: ids }),
+        body: JSON.stringify(body),
       });
       state.syncing = true;
       els.progressPanel.classList.remove("hidden");
@@ -1260,8 +1513,9 @@ tr.group-header:first-child td {
     els.progressBar.style.width = pct.toFixed(1) + "%";
 
     let current = "";
-    if (st.current_playlist) {
-      current += "<strong>" + escapeHtml(st.current_playlist) + "</strong>";
+    const itemName = st.current_item || st.current_playlist;
+    if (itemName) {
+      current += "<strong>" + escapeHtml(itemName) + "</strong>";
       if (st.current_track) {
         current += " — " + escapeHtml(st.current_track);
       }
@@ -1293,9 +1547,9 @@ tr.group-header:first-child td {
           state.syncing = false;
           clearInterval(state.statusTimer);
           state.statusTimer = null;
-          showInfo("Sync finished. Refreshing playlist data…");
+          showInfo("Sync finished. Refreshing library data…");
           updateSummary();
-          await loadPlaylists();
+          await loadData();
           clearInfo();
         }
       } catch (err) {
@@ -1317,31 +1571,22 @@ tr.group-header:first-child td {
     } catch (_) { /* ignore initial status failure */ }
   }
 
-
-
-
-  document.querySelectorAll("thead th.sortable").forEach((th) => {
-    th.addEventListener("click", () => {
-      const key = th.dataset.sort;
-      if (state.sortKey === key) {
-        state.sortReverse = !state.sortReverse;
-      } else {
-        state.sortKey = key;
-        state.sortReverse = key === "name" ? false : key === "last_added";
-      }
-      renderTable();
-    });
-  });
+  els.tabPlaylists.addEventListener("click", () => setTab("playlists"));
+  els.tabAlbums.addEventListener("click", () => setTab("albums"));
 
   els.groupBy.addEventListener("change", () => {
-    state.groupBy = els.groupBy.value;
+    if (isPlaylists()) {
+      state.playlistGroupBy = els.groupBy.value;
+    } else {
+      state.albumGroupBy = els.groupBy.value;
+    }
     state.collapsedGroups.clear();
     renderTable();
   });
 
   els.btnSelectAll.addEventListener("click", () => setAllSelected(true));
   els.btnClearAll.addEventListener("click", () => setAllSelected(false));
-  els.btnRefresh.addEventListener("click", refreshPlaylists);
+  els.btnRefresh.addEventListener("click", refreshLibrary);
   els.btnDownload.addEventListener("click", openConfirm);
   els.btnConfirmCancel.addEventListener("click", closeConfirm);
   els.btnConfirmOk.addEventListener("click", startSync);
@@ -1384,11 +1629,11 @@ tr.group-header:first-child td {
 
     if (target.classList.contains("row-check")) {
       e.stopPropagation();
-      togglePlaylist(row.dataset.id);
+      toggleItem(row.dataset.id);
       return;
     }
 
-    togglePlaylist(row.dataset.id);
+    toggleItem(row.dataset.id);
   });
 
   document.addEventListener("keydown", (e) => {
@@ -1397,7 +1642,7 @@ tr.group-header:first-child td {
     }
   });
 
-  loadPlaylists();
+  loadData();
   pollStatus();
 })();
 </script>

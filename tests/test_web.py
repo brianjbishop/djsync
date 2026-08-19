@@ -17,7 +17,8 @@ def client(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     dest = Destination(
         drive=tmp_path / "drive",
         library_root="dj",
-        collection="playlists",
+        playlists_dir="playlists",
+        albums_dir="albums",
     )
     with patch("djsync.web.get_destination", return_value=dest):
         app = create_app()
