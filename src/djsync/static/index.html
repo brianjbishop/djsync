@@ -223,14 +223,15 @@ table {
 colgroup .col-check { width: 36px; }
 colgroup .col-name { width: auto; }
 colgroup .col-tracks { width: 56px; }
-colgroup .col-dl { width: 72px; }
+colgroup .col-dl { width: 96px; }
 colgroup .col-sigils { width: 140px; }
-colgroup .col-date { width: 88px; }
+colgroup .col-date { width: 104px; }
 colgroup .col-spotify { width: 40px; }
 
 thead th {
   position: sticky;
-  top: var(--toolbar-h);
+  /* .main is the scroll container; offset from it, not the viewport. */
+  top: 0;
   z-index: 10;
   background: var(--bg);
   padding: 8px 6px;
@@ -1268,6 +1269,9 @@ tr.group-header:first-child td {
       }
     } catch (_) { /* ignore initial status failure */ }
   }
+
+
+
 
   document.querySelectorAll("thead th.sortable").forEach((th) => {
     th.addEventListener("click", () => {
