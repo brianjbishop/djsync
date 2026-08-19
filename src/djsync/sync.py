@@ -11,7 +11,7 @@ from pathlib import Path
 import spotipy
 
 from djsync import config, spotify
-from djsync.config import FIXTURES_DIR, PLAYLISTS_DIR, WEIGHTS
+from djsync.config import FIXTURES_DIR, WEIGHTS, get_destination
 from djsync.download import DownloadError, download, sanitize_filename
 from djsync.fixtures import record_match
 from djsync.library import existing_spotify_ids, playlist_folder
@@ -50,8 +50,10 @@ def sync_playlist(
             on_log(msg)
 
     tracks = spotify.fetch_tracks(client, playlist.id)
-    folder = playlist_folder(playlist.name, PLAYLISTS_DIR)
-    folder.mkdir(parents=True, exist_ok=True)
+    dest = get_destination()
+    folder = playlist_folder(playlist.name, dest.path)
+    if dest.mounted:
+        folder.mkdir(parents=True, exist_ok=True)
 
     local_ids = existing_spotify_ids(folder)
     spotify_ids = {t.id for t in tracks}

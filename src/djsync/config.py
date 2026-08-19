@@ -3,13 +3,11 @@
 from __future__ import annotations
 
 import os
+import shutil
+from dataclasses import dataclass
 from pathlib import Path
 
 from dotenv import load_dotenv
-
-DRIVE_NAME = "BRIANB"
-DRIVE_PATH = Path("/Volumes/BRIANB")
-PLAYLISTS_DIR = DRIVE_PATH / "dj" / "playlists"
 
 WEIGHTS: dict[str, float] = {
     "duration_delta": 4.0,
@@ -22,6 +20,10 @@ WEIGHTS: dict[str, float] = {
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 FIXTURES_DIR = PROJECT_ROOT / "fixtures"
+
+_DEFAULT_DRIVE = "/Volumes/BRIANB"
+_DEFAULT_LIBRARY_ROOT = "dj"
+_DEFAULT_COLLECTION = "playlists"
 
 # --- YouTube access -------------------------------------------------------
 # YouTube blocks anonymous yt-dlp clients outright (HTTP 403), and gates the
@@ -38,6 +40,56 @@ REMOTE_COMPONENTS = ["ejs:github"]
 # hundreds of requests are the pattern that gets accounts rate-limited; a few
 # seconds between tracks costs little and looks nothing like a scraper.
 SLEEP_BETWEEN_DOWNLOADS = (3, 8)  # random delay range, seconds
+
+
+@dataclass(frozen=True)
+class Destination:
+    """Resolved sync destination on an external drive."""
+
+    drive: Path
+    library_root: str
+    collection: str
+
+    @property
+    def path(self) -> Path:
+        return self.drive / self.library_root / self.collection
+
+    @property
+    def mounted(self) -> bool:
+        return self.drive.is_dir() and os.path.ismount(self.drive)
+
+    @property
+    def exists(self) -> bool:
+        return self.path.is_dir()
+
+    def free_bytes(self) -> int | None:
+        if not self.mounted:
+            return None
+        try:
+            return shutil.disk_usage(self.drive).free
+        except OSError:
+            return None
+
+
+def get_destination() -> Destination:
+    """Build the sync destination from environment variables."""
+    load_dotenv()
+    drive = Path(os.getenv("DJSYNC_DRIVE", _DEFAULT_DRIVE))
+    library_root = os.getenv("DJSYNC_LIBRARY_ROOT", _DEFAULT_LIBRARY_ROOT)
+    collection = os.getenv("DJSYNC_COLLECTION", _DEFAULT_COLLECTION)
+    return Destination(drive=drive, library_root=library_root, collection=collection)
+
+
+def __getattr__(name: str) -> object:
+    """Backwards-compatible drive path aliases."""
+    dest = get_destination()
+    if name == "PLAYLISTS_DIR":
+        return dest.path
+    if name == "DRIVE_PATH":
+        return dest.drive
+    if name == "DRIVE_NAME":
+        return dest.drive.name
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 
 def youtube_opts() -> dict:

@@ -10,7 +10,7 @@ from typing import Any
 import spotipy
 
 from djsync import spotify
-from djsync.config import PLAYLISTS_DIR, PROJECT_ROOT
+from djsync.config import PROJECT_ROOT, get_destination
 from djsync.library import existing_spotify_ids, playlist_folder
 from djsync.web_helpers import compute_status
 
@@ -22,7 +22,7 @@ def _playlist_entry(
     tracks: list,
 ) -> dict[str, Any]:
     """Build one cache entry for a $d playlist."""
-    folder = playlist_folder(playlist.name, PLAYLISTS_DIR)
+    folder = playlist_folder(playlist.name, get_destination().path)
     local_ids = existing_spotify_ids(folder)
     track_ids = {t.id for t in tracks}
     downloaded_count = len(local_ids & track_ids)

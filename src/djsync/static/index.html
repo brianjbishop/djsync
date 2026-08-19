@@ -93,6 +93,22 @@ a:hover { text-decoration: underline; }
 
 .toolbar .meta.stale { color: var(--warn); }
 
+.destination {
+  font-size: var(--fs-sm);
+  font-family: var(--mono);
+  color: var(--text-muted);
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.destination.disconnected {
+  color: var(--warn);
+  font-weight: 600;
+  font-family: var(--font);
+}
+
 .toolbar-spacer { flex: 1; }
 
 .toolbar label {
@@ -681,6 +697,7 @@ tr.group-header:first-child td {
 <div id="app">
   <header class="toolbar">
     <h1>djsync</h1>
+    <span class="destination" id="destinationInfo" title=""></span>
     <span class="meta" id="generatedAt">Loading…</span>
     <div class="toolbar-spacer"></div>
     <label>
@@ -785,6 +802,7 @@ tr.group-header:first-child td {
   const state = {
     playlists: [],
     timestamp: null,
+    destination: null,
     sortKey: "name",
     sortReverse: false,
     groupBy: "none",
@@ -799,6 +817,7 @@ tr.group-header:first-child td {
   const $ = (id) => document.getElementById(id);
 
   const els = {
+    destinationInfo: $("destinationInfo"),
     generatedAt: $("generatedAt"),
     groupBy: $("groupBy"),
     btnSelectAll: $("btnSelectAll"),
@@ -1028,6 +1047,26 @@ tr.group-header:first-child td {
     updateSummary();
   }
 
+  function renderDestination() {
+    const d = state.destination;
+    if (!d) {
+      els.destinationInfo.textContent = "";
+      els.destinationInfo.className = "destination";
+      els.destinationInfo.title = "";
+      return;
+    }
+    if (!d.mounted) {
+      els.destinationInfo.className = "destination disconnected";
+      els.destinationInfo.textContent = "Drive not connected — " + d.path;
+      els.destinationInfo.title = "Connect the drive to download tracks";
+    } else {
+      els.destinationInfo.className = "destination";
+      const free = d.free_human ? " · " + d.free_human + " free" : "";
+      els.destinationInfo.textContent = d.path + free;
+      els.destinationInfo.title = "Download destination";
+    }
+  }
+
   function updateSummary() {
     const selected = state.playlists.filter((p) => p.selected);
     const trackTotal = selected.reduce((s, p) => s + p.track_count, 0);
@@ -1037,8 +1076,14 @@ tr.group-header:first-child td {
     els.sumTracks.textContent = String(trackTotal);
     els.sumSize.textContent = formatSize(sizeBytes);
 
-    const disabled = selected.length === 0 || state.syncing;
+    const driveOk = state.destination && state.destination.mounted;
+    const disabled = selected.length === 0 || state.syncing || !driveOk;
     els.btnDownload.disabled = disabled;
+    if (!driveOk && selected.length > 0 && !state.syncing) {
+      els.btnDownload.title = "Drive not connected — connect " + (state.destination ? state.destination.drive : "the drive") + " to download";
+    } else {
+      els.btnDownload.title = "";
+    }
     els.btnSelectAll.disabled = state.syncing || !state.playlists.length;
     els.btnClearAll.disabled = state.syncing || !state.playlists.length;
     els.btnRefresh.disabled = state.refreshing || state.syncing;
@@ -1059,8 +1104,10 @@ tr.group-header:first-child td {
   function setPlaylists(data) {
     state.playlists = data.playlists || [];
     state.timestamp = data.timestamp || null;
+    state.destination = data.destination || state.destination;
     state.loading = false;
     updateGeneratedAt();
+    renderDestination();
     renderTable();
   }
 

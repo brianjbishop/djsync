@@ -13,9 +13,25 @@ import spotipy
 from flask import Flask, jsonify, request, send_from_directory
 
 from djsync import cache, genres, selection, spotify, sync
-from djsync.config import PROJECT_ROOT
+from djsync.config import PROJECT_ROOT, get_destination
+from djsync.web_helpers import format_size
 
 STATIC_DIR = Path(__file__).resolve().parent / "static"
+
+
+def _destination_payload() -> dict[str, Any]:
+    dest = get_destination()
+    free = dest.free_bytes()
+    return {
+        "drive": str(dest.drive),
+        "library_root": dest.library_root,
+        "collection": dest.collection,
+        "path": str(dest.path),
+        "mounted": dest.mounted,
+        "exists": dest.exists,
+        "free_bytes": free,
+        "free_human": format_size(free) if free is not None else None,
+    }
 
 
 @dataclass
@@ -62,7 +78,13 @@ def create_app() -> Flask:
 
     @app.get("/")
     def index() -> Any:
-        return send_from_directory(STATIC_DIR, "index.html")
+        response = send_from_directory(STATIC_DIR, "index.html")
+        response.headers["Cache-Control"] = "no-store"
+        return response
+
+    @app.get("/api/destination")
+    def api_destination() -> Any:
+        return jsonify(_destination_payload())
 
     @app.get("/api/playlists")
     def api_playlists() -> Any:
@@ -76,6 +98,7 @@ def create_app() -> Flask:
             {
                 "timestamp": data.get("timestamp"),
                 "playlists": _merge_playlists(data),
+                "destination": _destination_payload(),
             }
         )
 
@@ -91,6 +114,7 @@ def create_app() -> Flask:
             {
                 "timestamp": data.get("timestamp"),
                 "playlists": _merge_playlists(data),
+                "destination": _destination_payload(),
             }
         )
 
@@ -163,6 +187,12 @@ def create_app() -> Flask:
         with _job_lock:
             if _job.running:
                 return jsonify({"error": "sync already running"}), 409
+
+        dest = get_destination()
+        if not dest.mounted:
+            return jsonify(
+                {"error": f"Drive not connected: {dest.drive}"}
+            ), 409
 
         body = request.get_json(silent=True) or {}
         playlist_ids = body.get("playlist_ids")
