@@ -105,6 +105,14 @@ def sync_cmd(playlist: str, dry_run: bool, limit: int | None) -> None:
         f"failed={result.failed}"
         + (" (dry-run)" if dry_run else "")
     )
+    if result.unverified_explicit:
+        click.echo(
+            "\nExplicit tracks — verify version (may be clean):"
+        )
+        for entry in result.unverified_explicit:
+            artists = ", ".join(entry["artists"])
+            click.echo(f"  {artists} — {entry['name']}")
+            click.echo(f"       -> {entry['chosen_title']}")
 
 
 @main.command("ui")

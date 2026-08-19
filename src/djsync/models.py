@@ -17,3 +17,4 @@ class Track:
     artist_ids: tuple[str, ...] = ()
     track_number: int = 0
     disc_number: int = 0
+    explicit: bool = False

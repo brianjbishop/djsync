@@ -51,6 +51,7 @@ class SyncJobState:
     skipped: int = 0
     failed: int = 0
     log: list[str] = field(default_factory=list)
+    unverified_explicit: list[dict[str, str | list[str]]] = field(default_factory=list)
 
 
 @dataclass
@@ -320,6 +321,7 @@ def create_app() -> Flask:
                 _job.skipped = 0
                 _job.failed = 0
                 _job.log = []
+                _job.unverified_explicit = []
 
             try:
                 client = spotify.get_client()
@@ -362,6 +364,7 @@ def create_app() -> Flask:
                         _job.downloaded += result.downloaded
                         _job.skipped += result.skipped
                         _job.failed += result.failed
+                        _job.unverified_explicit.extend(result.unverified_explicit)
             except RuntimeError as exc:
                 with _job_lock:
                     _job.log.append(f"ERROR: {exc}")
@@ -391,6 +394,7 @@ def create_app() -> Flask:
                     "skipped": _job.skipped,
                     "failed": _job.failed,
                     "log": list(_job.log),
+                    "unverified_explicit": list(_job.unverified_explicit),
                 }
             )
 

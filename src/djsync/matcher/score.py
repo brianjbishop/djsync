@@ -41,6 +41,22 @@ _JUNK_TERMS = re.compile(
 )
 _NON_ALNUM = re.compile(r"[^\w\s]+", re.UNICODE)
 _WS = re.compile(r"\s+")
+_EXPLICIT_MARKER = re.compile(
+    r"\b(explicit|dirty|uncensored|unedited)\b", re.IGNORECASE
+)
+_CLEAN_MARKER = re.compile(
+    r"\b(clean|censored|radio edit|no cursing)\b", re.IGNORECASE
+)
+
+
+def content_marker(cand: Candidate) -> str | None:
+    """Return ``explicit``, ``clean``, or None from a candidate's title/description."""
+    text = f"{cand.title} {cand.description}"
+    if _CLEAN_MARKER.search(text):
+        return "clean"
+    if _EXPLICIT_MARKER.search(text):
+        return "explicit"
+    return None
 
 
 def normalize_title(text: str) -> str:
@@ -97,6 +113,25 @@ def _view_count_score(view_count: int, weight: float) -> float:
     return math.log10(view_count + 1) * weight
 
 
+def _explicit_match(track: Track, cand: Candidate, weight: float) -> float:
+    if not track.explicit:
+        return 0.0
+    marker = content_marker(cand)
+    if marker == "explicit":
+        return weight
+    if marker == "clean":
+        return -weight
+    return 0.0
+
+
+def _clean_mismatch(track: Track, cand: Candidate, weight: float) -> float:
+    if track.explicit:
+        return 0.0
+    if content_marker(cand) == "explicit":
+        return -weight
+    return 0.0
+
+
 def score_candidate(
     track: Track,
     cand: Candidate,
@@ -112,6 +147,8 @@ def score_candidate(
         "artist_match": _artist_match(track, cand, weights["artist_match"]),
         "negative_flags": _negative_flags(track, cand, weights["negative_flags"]),
         "view_count": _view_count_score(cand.view_count, weights["view_count"]),
+        "explicit_match": _explicit_match(track, cand, weights["explicit_match"]),
+        "clean_mismatch": _clean_mismatch(track, cand, weights["clean_mismatch"]),
     }
     total = sum(breakdown.values())
     return total, breakdown

@@ -39,6 +39,7 @@ def _track_payload(track: Track) -> dict[str, Any]:
         "album": track.album,
         "duration_ms": track.duration_ms,
         "isrc": track.isrc,
+        "explicit": track.explicit,
     }
 
 

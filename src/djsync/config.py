@@ -17,6 +17,8 @@ WEIGHTS: dict[str, float] = {
     "artist_match": 2.0,
     "negative_flags": -2.5,
     "view_count": 0.15,
+    "explicit_match": 0.75,
+    "clean_mismatch": 0.4,
 }
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent

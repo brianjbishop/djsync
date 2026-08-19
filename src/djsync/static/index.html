@@ -729,6 +729,56 @@ tr.group-header:first-child td {
   word-break: break-word;
 }
 
+.unverified-panel {
+  margin-top: 12px;
+  padding: 10px 12px;
+  background: var(--bg-muted);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+}
+
+.unverified-panel.hidden { display: none; }
+
+.unverified-panel h4 {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+}
+
+.unverified-panel p {
+  font-size: var(--fs-xs);
+  color: var(--text-dim);
+  margin-bottom: 8px;
+  line-height: 1.45;
+}
+
+.unverified-list {
+  list-style: none;
+  font-size: var(--fs-sm);
+}
+
+.unverified-list li {
+  padding: 6px 0;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.unverified-list li:first-child {
+  border-top: none;
+  padding-top: 0;
+}
+
+.unverified-list .track-name {
+  font-weight: 500;
+}
+
+.unverified-list .chosen-title {
+  display: block;
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
 @media (max-width: 1200px) {
   colgroup .col-sigils { width: 100px; }
   colgroup .col-date { width: 76px; }
@@ -772,6 +822,11 @@ tr.group-header:first-child td {
       <div class="progress-bar" id="progressBar"></div>
     </div>
     <div class="progress-stats" id="progressStats"></div>
+    <div class="unverified-panel hidden" id="unverifiedPanel">
+      <h4>Explicit tracks — worth checking</h4>
+      <p>Spotify marked these as explicit, but the chosen upload had no explicit label. They may be clean versions.</p>
+      <ul class="unverified-list" id="unverifiedList"></ul>
+    </div>
     <div class="log-box" id="logBox"></div>
   </div>
 
@@ -902,6 +957,8 @@ tr.group-header:first-child td {
     progressCurrent: $("progressCurrent"),
     progressBar: $("progressBar"),
     progressStats: $("progressStats"),
+    unverifiedPanel: $("unverifiedPanel"),
+    unverifiedList: $("unverifiedList"),
     logBox: $("logBox"),
     tableHead: $("tableHead"),
     tableBody: $("tableBody"),
@@ -1535,6 +1592,27 @@ tr.group-header:first-child td {
       '<div class="log-line">' + escapeHtml(line) + "</div>"
     ).join("");
     els.logBox.scrollTop = els.logBox.scrollHeight;
+
+    const unverified = st.unverified_explicit || [];
+    if (unverified.length > 0) {
+      els.unverifiedPanel.classList.remove("hidden");
+      els.unverifiedList.innerHTML = unverified.map((entry) => {
+        const artists = (entry.artists || []).join(", ");
+        const label = artists ? artists + " — " + entry.name : entry.name;
+        const title = entry.chosen_title || "";
+        const url = entry.chosen_url || "";
+        const titleHtml = url
+          ? '<a href="' + escapeHtml(url) + '" target="_blank" rel="noopener">' + escapeHtml(title) + "</a>"
+          : escapeHtml(title);
+        return (
+          '<li><span class="track-name">' + escapeHtml(label) + '</span>' +
+          '<span class="chosen-title">→ ' + titleHtml + "</span></li>"
+        );
+      }).join("");
+    } else if (!st.running) {
+      els.unverifiedPanel.classList.add("hidden");
+      els.unverifiedList.innerHTML = "";
+    }
   }
 
   async function pollStatus() {
@@ -1547,6 +1625,9 @@ tr.group-header:first-child td {
           state.syncing = false;
           clearInterval(state.statusTimer);
           state.statusTimer = null;
+          if ((st.unverified_explicit || []).length > 0) {
+            els.progressPanel.classList.remove("hidden");
+          }
           showInfo("Sync finished. Refreshing library data…");
           updateSummary();
           await loadData();
@@ -1566,7 +1647,9 @@ tr.group-header:first-child td {
         updateSummary();
       } else if (!st.running && state.syncing) {
         state.syncing = false;
-        els.progressPanel.classList.add("hidden");
+        if ((st.unverified_explicit || []).length === 0) {
+          els.progressPanel.classList.add("hidden");
+        }
       }
     } catch (_) { /* ignore initial status failure */ }
   }

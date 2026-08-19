@@ -5,7 +5,7 @@ from __future__ import annotations
 import random
 import time
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 import spotipy
@@ -22,6 +22,7 @@ from djsync.library import (
 )
 from djsync.matcher.candidate import Candidate
 from djsync.matcher import search, score
+from djsync.matcher.score import content_marker
 from djsync.tagging import write_tags
 
 
@@ -30,6 +31,32 @@ class SyncResult:
     downloaded: int = 0
     skipped: int = 0
     failed: int = 0
+    unverified_explicit: list[dict[str, str | list[str]]] = field(default_factory=list)
+
+
+def _unverified_explicit_entry(
+    track: spotify.Track,
+    chosen: Candidate,
+) -> dict[str, str | list[str]]:
+    return {
+        "track_id": track.id,
+        "name": track.name,
+        "artists": list(track.artists),
+        "chosen_title": chosen.title,
+        "chosen_url": chosen.url,
+    }
+
+
+def _note_unverified_explicit(
+    result: SyncResult,
+    track: spotify.Track,
+    chosen: Candidate | None,
+) -> None:
+    if not track.explicit or chosen is None:
+        return
+    if content_marker(chosen) == "explicit":
+        return
+    result.unverified_explicit.append(_unverified_explicit_entry(track, chosen))
 
 
 LogCallback = Callable[[str], None]
@@ -85,6 +112,8 @@ def sync_playlist(
                 log(f"FAIL  {track.name} — no candidates found")
                 result.failed += 1
                 continue
+
+            _note_unverified_explicit(result, track, chosen)
 
             delta_s = abs(chosen.duration_s - track.duration_ms / 1000)
             total = ranked[0][1]
@@ -169,6 +198,8 @@ def sync_album(
                 log(f"FAIL  {track.name} — no candidates found")
                 result.failed += 1
                 continue
+
+            _note_unverified_explicit(result, track, chosen)
 
             delta_s = abs(chosen.duration_s - track.duration_ms / 1000)
             total = ranked[0][1]

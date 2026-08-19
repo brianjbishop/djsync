@@ -164,6 +164,7 @@ def fetch_tracks(client: spotipy.Spotify, playlist_id: str) -> list[Track]:
                     isrc=isrc,
                     added_at=added_at,
                     artist_ids=artist_ids,
+                    explicit=bool(track.get("explicit")),
                 )
             )
 
@@ -272,6 +273,7 @@ def fetch_album_tracks(
                     isrc=isrc,
                     track_number=track.get("track_number") or 1,
                     disc_number=track.get("disc_number") or 1,
+                    explicit=bool(track.get("explicit")),
                 )
             )
 
