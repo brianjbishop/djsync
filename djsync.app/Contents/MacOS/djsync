@@ -1,0 +1,36 @@
+#!/bin/sh
+# Finder launcher for djsync.
+#
+# The project may live under ~/Documents, which macOS protects with TCC. An
+# ad-hoc-signed script bundle is denied access there outright (and is never
+# offered a prompt), so this cannot exec the project directly. Terminal
+# already holds that permission, so hand the command to Terminal instead.
+#
+# Granting djsync.app Full Disk Access in System Settings would allow a
+# direct, Terminal-free launch; this path works without that.
+#
+# The bundle is expected to sit in the project root, so the repo is three
+# levels up from this script. Keep it there, or make an alias to it.
+REPO=$(cd "$(dirname "$0")/../../.." && pwd)
+STATE="$HOME/.djsync"; mkdir -p "$STATE"
+URLFILE="$STATE/url"
+
+if [ ! -x "$REPO/djsync-run" ]; then
+  osascript -e 'display alert "djsync" message "Could not find djsync-run. Keep djsync.app inside the project folder, or use an alias instead of moving it."'
+  exit 1
+fi
+
+# Already running? Reopen the UI rather than starting a second server.
+if pgrep -f "djsync.cli ui" >/dev/null 2>&1 && [ -s "$URLFILE" ]; then
+  open "$(cat "$URLFILE")"
+  exit 0
+fi
+
+rm -f "$URLFILE"
+osascript >/dev/null 2>&1 <<OSA
+tell application "Terminal"
+  activate
+  do script "cd '$REPO' && ./djsync-run ui"
+end tell
+OSA
+exit 0

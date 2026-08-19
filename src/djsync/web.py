@@ -315,6 +315,15 @@ def run_server(*, open_browser: bool = True) -> None:
     app = create_app()
     if open_browser:
         threading.Timer(0.5, lambda: webbrowser.open(url)).start()
+    # Record the URL so the Finder launcher can reopen a running instance
+    # instead of starting a second server.
+    try:
+        state = Path.home() / ".djsync"
+        state.mkdir(parents=True, exist_ok=True)
+        (state / "url").write_text(url)
+    except OSError:
+        pass
+
     print(f"djsync UI at {url}")
     print(f"Project root: {PROJECT_ROOT}")
     app.run(host="127.0.0.1", port=port, threaded=True, use_reloader=False)
