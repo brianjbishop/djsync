@@ -24,6 +24,17 @@ WEIGHTS: dict[str, float] = {
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 FIXTURES_DIR = PROJECT_ROOT / "fixtures"
 
+
+def fixtures_dir() -> Path:
+    """Where match fixtures are written.
+
+    Resolved at call time, not import time, so the test suite can redirect it.
+    The fixture corpus is the basis for offline matcher replay - synthetic test
+    records written into it would silently skew any match-rate analysis.
+    """
+    override = os.getenv("DJSYNC_FIXTURES_DIR")
+    return Path(override) if override else FIXTURES_DIR
+
 _DEFAULT_DRIVE = "/Volumes/BRIANB"
 _DEFAULT_LIBRARY_ROOT = "dj"
 _DEFAULT_PLAYLISTS_DIR = "playlists"
@@ -39,7 +50,12 @@ CollectionKind = Literal["playlists", "albums"]
 #   2. REMOTE_COMPONENTS - yt-dlp's official EJS solver, run under Deno, which
 #      computes YouTube's signature / "n" parameter values.
 # Set COOKIES_FROM_BROWSER to None to attempt anonymous downloads.
-COOKIES_FROM_BROWSER: str | None = "chrome"
+# Downloads authenticate as a logged-in YouTube session. Value is
+# "browser" or "browser:Profile Name" - keep this pointed at a profile whose
+# account you would not mind losing, since bulk downloading risks a ban.
+COOKIES_FROM_BROWSER: str | None = os.getenv(
+    "DJSYNC_COOKIES_FROM_BROWSER", "chrome:Profile 2"
+)
 REMOTE_COMPONENTS = ["ejs:github"]
 
 # Downloading runs against a real logged-in account, so pace it. Bursts of
@@ -50,6 +66,11 @@ SLEEP_BETWEEN_DOWNLOADS = (3, 8)  # random delay range, seconds
 # Spotify API usage budgets (local ledger; Spotify publishes no quota endpoint).
 DAILY_REQUEST_BUDGET = int(os.getenv("DJSYNC_DAILY_REQUEST_BUDGET", "1000"))
 BURST_PER_30S = int(os.getenv("DJSYNC_BURST_PER_30S", "100"))
+
+# YouTube download cap (rolling 24h) and unattended-agent knobs.
+DAILY_DOWNLOAD_CAP = int(os.getenv("DJSYNC_DAILY_DOWNLOAD_CAP", "800"))
+STALE_AFTER_HOURS = float(os.getenv("DJSYNC_STALE_AFTER_HOURS", "12"))
+CIRCUIT_BREAKER_FAILURES = int(os.getenv("DJSYNC_CIRCUIT_BREAKER_FAILURES", "5"))
 
 
 @dataclass(frozen=True)
@@ -122,7 +143,8 @@ def youtube_opts() -> dict:
     """Return the shared yt-dlp options for reaching YouTube."""
     opts: dict = {"remote_components": list(REMOTE_COMPONENTS)}
     if COOKIES_FROM_BROWSER:
-        opts["cookiesfrombrowser"] = (COOKIES_FROM_BROWSER,)
+        browser, _, profile = COOKIES_FROM_BROWSER.partition(":")
+        opts["cookiesfrombrowser"] = (browser, profile or None, None, None)
     return opts
 
 _REQUIRED_VARS = (

@@ -188,6 +188,33 @@ def sync_cmd(playlist: str, dry_run: bool, limit: int | None, refresh: bool) -> 
             click.echo(f"       -> {entry['chosen_title']}")
 
 
+@main.command("agent")
+@click.option("--dry-run", is_flag=True, help="Plan only; do not download.")
+@click.option(
+    "--max",
+    "max_downloads",
+    type=int,
+    default=None,
+    help="Override this run's download allowance (still capped by the 24h ledger).",
+)
+def agent_cmd(dry_run: bool, max_downloads: int | None) -> None:
+    """Unattended one-shot sync. Quiet when the drive is missing or locked out."""
+    import logging
+
+    from djsync.agent import run_agent
+
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s %(levelname)s %(message)s",
+    )
+    try:
+        code = run_agent(dry_run=dry_run, max_downloads=max_downloads)
+    except Exception:
+        logging.getLogger("djsync.agent").exception("agent failed")
+        sys.exit(1)
+    sys.exit(code)
+
+
 @main.command("ui")
 def ui_cmd() -> None:
     """Launch the local web UI for choosing playlists to sync."""

@@ -12,7 +12,7 @@ import spotipy
 
 from djsync.models import Track
 from djsync import cache, config, spotify
-from djsync.config import FIXTURES_DIR, WEIGHTS, get_destination
+from djsync.config import WEIGHTS, fixtures_dir, get_destination
 from djsync.download import DownloadError, download, sanitize_filename
 from djsync.fixtures import record_match
 from djsync.library import (
@@ -151,7 +151,7 @@ def sync_playlist(
             log(f"FAIL  {track.name} — {exc}")
             result.failed += 1
         finally:
-            record_match(track, candidates, chosen, ranked, FIXTURES_DIR)
+            record_match(track, candidates, chosen, ranked, fixtures_dir())
             if on_progress:
                 on_progress()
 
@@ -246,7 +246,7 @@ def sync_album(
             log(f"FAIL  {track.name} — {exc}")
             result.failed += 1
         finally:
-            record_match(track, candidates, chosen, ranked, FIXTURES_DIR)
+            record_match(track, candidates, chosen, ranked, fixtures_dir())
             if on_progress:
                 on_progress()
 
