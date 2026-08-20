@@ -1,5 +1,5 @@
 #!/bin/sh
-# Install or remove the djsync LaunchAgent (idempotent).
+# Install or remove the djsync LaunchAgents (idempotent).
 #
 # Usage:
 #   ./scripts/install-agent.sh
@@ -8,38 +8,71 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-LABEL="com.brianjbishop.djsync.agent"
-TEMPLATE="$ROOT/scripts/${LABEL}.plist"
-DEST="${HOME}/Library/LaunchAgents/${LABEL}.plist"
-LOG="${HOME}/Library/Logs/djsync-agent.log"
+AGENT_LABEL="com.brianjbishop.djsync.agent"
+REPORT_LABEL="com.brianjbishop.djsync.report"
+AGENT_TEMPLATE="$ROOT/scripts/${AGENT_LABEL}.plist"
+REPORT_TEMPLATE="$ROOT/scripts/${REPORT_LABEL}.plist"
+AGENT_DEST="${HOME}/Library/LaunchAgents/${AGENT_LABEL}.plist"
+REPORT_DEST="${HOME}/Library/LaunchAgents/${REPORT_LABEL}.plist"
+AGENT_LOG="${HOME}/Library/Logs/djsync-agent.log"
+REPORT_LOG="${HOME}/Library/Logs/djsync-report.log"
 UID_NUM="$(id -u)"
-DOMAIN="gui/${UID_NUM}/${LABEL}"
+AGENT_DOMAIN="gui/${UID_NUM}/${AGENT_LABEL}"
+REPORT_DOMAIN="gui/${UID_NUM}/${REPORT_LABEL}"
 
 is_loaded() {
-  launchctl print "$DOMAIN" >/dev/null 2>&1
+  launchctl print "$1" >/dev/null 2>&1
 }
 
 unload_if_present() {
-  if is_loaded; then
-    launchctl bootout "gui/${UID_NUM}" "$DEST" 2>/dev/null \
-      || launchctl bootout "$DOMAIN" 2>/dev/null \
+  domain="$1"
+  dest="$2"
+  if is_loaded "$domain"; then
+    launchctl bootout "gui/${UID_NUM}" "$dest" 2>/dev/null \
+      || launchctl bootout "$domain" 2>/dev/null \
       || true
-    echo "Unloaded LaunchAgent: ${DOMAIN}"
+    echo "Unloaded LaunchAgent: ${domain}"
   else
-    echo "LaunchAgent not loaded: ${DOMAIN}"
+    echo "LaunchAgent not loaded: ${domain}"
   fi
 }
 
-uninstall() {
-  unload_if_present
-  if [ -f "$DEST" ]; then
-    rm -f "$DEST"
-    echo "Removed ${DEST}"
+uninstall_one() {
+  label="$1"
+  dest="$2"
+  domain="$3"
+  log="$4"
+  unload_if_present "$domain" "$dest"
+  if [ -f "$dest" ]; then
+    rm -f "$dest"
+    echo "Removed ${dest}"
   else
-    echo "No plist to remove at ${DEST}"
+    echo "No plist to remove at ${dest}"
   fi
-  echo "Uninstall complete for ${LABEL}."
-  echo "Log file left in place: ${LOG}"
+  echo "Log file left in place: ${log}"
+}
+
+install_one() {
+  label="$1"
+  template="$2"
+  dest="$3"
+  domain="$4"
+  log="$5"
+  sed_args="-e s|__ROOT__|${ROOT}|g -e s|__LOG__|${AGENT_LOG}|g -e s|__REPORT_LOG__|${REPORT_LOG}|g"
+  tmp="$(mktemp)"
+  # shellcheck disable=SC2086
+  sed $sed_args "$template" > "$tmp"
+  mv "$tmp" "$dest"
+  echo "Wrote ${dest}"
+  unload_if_present "$domain" "$dest"
+  launchctl bootstrap "gui/${UID_NUM}" "$dest"
+  echo "Loaded LaunchAgent: ${domain}"
+}
+
+uninstall() {
+  uninstall_one "$AGENT_LABEL" "$AGENT_DEST" "$AGENT_DOMAIN" "$AGENT_LOG"
+  uninstall_one "$REPORT_LABEL" "$REPORT_DEST" "$REPORT_DOMAIN" "$REPORT_LOG"
+  echo "Uninstall complete for ${AGENT_LABEL} and ${REPORT_LABEL}."
 }
 
 install() {
@@ -47,29 +80,33 @@ install() {
     echo "error: ${ROOT}/djsync-run is missing or not executable" >&2
     exit 1
   fi
-  if [ ! -f "$TEMPLATE" ]; then
-    echo "error: missing template ${TEMPLATE}" >&2
+  if [ ! -f "$AGENT_TEMPLATE" ]; then
+    echo "error: missing template ${AGENT_TEMPLATE}" >&2
+    exit 1
+  fi
+  if [ ! -f "$REPORT_TEMPLATE" ]; then
+    echo "error: missing template ${REPORT_TEMPLATE}" >&2
     exit 1
   fi
 
   mkdir -p "${HOME}/Library/LaunchAgents"
   mkdir -p "${HOME}/Library/Logs"
-  touch "$LOG"
+  touch "$AGENT_LOG" "$REPORT_LOG"
 
-  tmp="$(mktemp)"
-  sed -e "s|__ROOT__|${ROOT}|g" -e "s|__LOG__|${LOG}|g" "$TEMPLATE" > "$tmp"
-  mv "$tmp" "$DEST"
-  echo "Wrote ${DEST}"
-
-  unload_if_present
-  launchctl bootstrap "gui/${UID_NUM}" "$DEST"
-  echo "Loaded LaunchAgent: ${DOMAIN}"
+  install_one "$AGENT_LABEL" "$AGENT_TEMPLATE" "$AGENT_DEST" "$AGENT_DOMAIN" "$AGENT_LOG"
   echo "Program: ${ROOT}/djsync-run agent"
   echo "StartInterval: 7200 seconds (2 hours)"
   echo "RunAtLoad: true"
   echo "WatchPaths: /Volumes"
-  echo "Logs: ${LOG}"
-  echo "Install complete for ${LABEL}."
+  echo "Logs: ${AGENT_LOG}"
+  echo "Install complete for ${AGENT_LABEL}."
+  echo ""
+
+  install_one "$REPORT_LABEL" "$REPORT_TEMPLATE" "$REPORT_DEST" "$REPORT_DOMAIN" "$REPORT_LOG"
+  echo "Program: ${ROOT}/djsync-run report --beeper"
+  echo "StartCalendarInterval: daily at 08:00 local"
+  echo "Logs: ${REPORT_LOG}"
+  echo "Install complete for ${REPORT_LABEL}."
 }
 
 case "${1:-}" in

@@ -188,6 +188,37 @@ def sync_cmd(playlist: str, dry_run: bool, limit: int | None, refresh: bool) -> 
             click.echo(f"       -> {entry['chosen_title']}")
 
 
+@main.command("report")
+@click.option(
+    "--beeper",
+    is_flag=True,
+    help="Post the report to Discord via Beeper Desktop (default for the scheduled job).",
+)
+@click.option(
+    "--email",
+    is_flag=True,
+    help="Send the report via Mail.app instead of printing to stdout.",
+)
+def report_cmd(beeper: bool, email: bool) -> None:
+    """Daily progress summary from cache and local ledgers."""
+    from djsync.report import run_report
+
+    sys.exit(run_report(beeper_post=beeper, email=email))
+
+
+@main.command("beeper-auth")
+def beeper_auth_cmd() -> None:
+    """Authorize djsync against local Beeper Desktop and print the token for .env."""
+    from djsync.beeper_auth import print_token_instructions, run_beeper_auth
+
+    try:
+        token = run_beeper_auth()
+    except RuntimeError as exc:
+        click.echo(str(exc), err=True)
+        sys.exit(1)
+    print_token_instructions(token)
+
+
 @main.command("agent")
 @click.option("--dry-run", is_flag=True, help="Plan only; do not download.")
 @click.option(

@@ -69,9 +69,22 @@ def used_last_24h(*, now: datetime | None = None) -> int:
     return len(_prune_downloads(data, now=now))
 
 
+def effective_daily_cap() -> int:
+    """Daily download cap, including any Beeper ``cap`` command override."""
+    from djsync import agent
+
+    override = agent.load_state().get("daily_cap_override")
+    if override is not None:
+        try:
+            return int(override)
+        except (TypeError, ValueError):
+            pass
+    return DAILY_DOWNLOAD_CAP
+
+
 def remaining_today(*, now: datetime | None = None) -> int:
     used = used_last_24h(now=now)
-    return max(0, DAILY_DOWNLOAD_CAP - used)
+    return max(0, effective_daily_cap() - used)
 
 
 def can_download(n: int, *, now: datetime | None = None) -> bool:

@@ -9,5 +9,6 @@ __pycache__/
 
 # Generated local state (rebuildable; not source)
 .djsync_cache.json
+.djsync_*.json
 selection.json
 genres.json

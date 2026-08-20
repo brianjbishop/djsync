@@ -16,7 +16,7 @@ from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any, Iterator, Literal
 
-from djsync import cache, config, downloads, quota, spotify
+from djsync import beeper, cache, config, downloads, events, quota, spotify
 from djsync.config import (
     CIRCUIT_BREAKER_FAILURES,
     DAILY_DOWNLOAD_CAP,
@@ -34,6 +34,26 @@ STATE_PATH = PROJECT_ROOT / ".djsync_agent.json"
 LOCK_PATH = PROJECT_ROOT / ".djsync_agent.lock"
 
 NotifyFn = Callable[[str], None]
+
+CaffeinatePopen = Callable[..., subprocess.Popen[Any]]
+_caffeinate_popen: CaffeinatePopen = subprocess.Popen
+
+
+@contextmanager
+def prevent_sleep() -> Iterator[subprocess.Popen[Any] | None]:
+    """Hold ``caffeinate -i`` while downloads run; always terminate on exit."""
+    proc: subprocess.Popen[Any] | None = None
+    try:
+        proc = _caffeinate_popen(["caffeinate", "-i"])
+        yield proc
+    finally:
+        if proc is not None:
+            proc.terminate()
+            try:
+                proc.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                proc.kill()
+                proc.wait()
 
 
 @dataclass(frozen=True)
@@ -60,16 +80,56 @@ def _parse_ts(raw: str) -> datetime | None:
 def load_state() -> dict[str, Any]:
     """Return persisted agent status, or an empty shell."""
     if not STATE_PATH.is_file():
-        return {"last_run": None, "last_error": None, "last_success": None}
+        return {
+            "last_run": None,
+            "last_error": None,
+            "last_success": None,
+            "discord_announced": [],
+            "beeper_announced": [],
+            "drive_unmounted_since": None,
+            "paused": False,
+            "skip_list": [],
+            "sync_priority": None,
+            "beeper_last_message_id": None,
+        }
     try:
         data = json.loads(STATE_PATH.read_text(encoding="utf-8"))
     except (json.JSONDecodeError, OSError):
-        return {"last_run": None, "last_error": None, "last_success": None}
+        return {
+            "last_run": None,
+            "last_error": None,
+            "last_success": None,
+            "discord_announced": [],
+            "beeper_announced": [],
+            "drive_unmounted_since": None,
+            "paused": False,
+            "skip_list": [],
+            "sync_priority": None,
+            "beeper_last_message_id": None,
+        }
     if not isinstance(data, dict):
-        return {"last_run": None, "last_error": None, "last_success": None}
+        return {
+            "last_run": None,
+            "last_error": None,
+            "last_success": None,
+            "discord_announced": [],
+            "beeper_announced": [],
+            "drive_unmounted_since": None,
+            "paused": False,
+            "skip_list": [],
+            "sync_priority": None,
+            "beeper_last_message_id": None,
+        }
     data.setdefault("last_run", None)
     data.setdefault("last_error", None)
     data.setdefault("last_success", None)
+    data.setdefault("discord_announced", [])
+    data.setdefault("beeper_announced", [])
+    data.setdefault("drive_unmounted_since", None)
+    data.setdefault("paused", False)
+    data.setdefault("skip_list", [])
+    data.setdefault("sync_priority", None)
+    data.setdefault("beeper_last_message_id", None)
     return data
 
 
@@ -180,9 +240,12 @@ def format_status_line(data: dict[str, Any] | None, *, now: datetime | None = No
     have, total = library_progress(data)
     hours = hours_until_refresh(data, now=now)
     refresh = "now" if hours == 0 else f"{hours}h"
+    cap = downloads.effective_daily_cap()
+    state = load_state()
+    paused = " · paused" if state.get("paused") else ""
     return (
         f"djsync — {have:,} of {total:,} tracks · "
-        f"{DAILY_DOWNLOAD_CAP}/day · next refresh in {refresh}"
+        f"{cap}/day · next refresh in {refresh}{paused}"
     )
 
 
@@ -209,11 +272,21 @@ def apply_local_progress(data: dict[str, Any], dest: Destination) -> None:
             entry["downloaded_count"] = len(local & ids)
 
 
-def build_work_queue(data: dict[str, Any]) -> list[WorkItem]:
+def build_work_queue(
+    data: dict[str, Any],
+    *,
+    skip_list: list[str] | None = None,
+    sync_priority: str | None = None,
+) -> list[WorkItem]:
     """$d playlists and saved albums with missing tracks, partial then smaller."""
+    skip_fold = {str(s).casefold() for s in (skip_list or [])}
+    sync_fold = sync_priority.casefold() if sync_priority else None
     items: list[WorkItem] = []
     for entry in data.get("playlists") or []:
         if "d" not in (entry.get("sigils") or []):
+            continue
+        name = str(entry.get("name") or "")
+        if name.casefold() in skip_fold:
             continue
         total = int(entry.get("track_count") or 0)
         downloaded = int(entry.get("downloaded_count") or 0)
@@ -224,13 +297,16 @@ def build_work_queue(data: dict[str, Any]) -> list[WorkItem]:
             WorkItem(
                 kind="playlist",
                 id=str(entry["id"]),
-                name=str(entry.get("name") or ""),
+                name=name,
                 missing=missing,
                 downloaded=downloaded,
                 total=total,
             )
         )
     for entry in data.get("albums") or []:
+        name = str(entry.get("name") or "")
+        if name.casefold() in skip_fold:
+            continue
         total = int(entry.get("total_tracks") or 0)
         downloaded = int(entry.get("downloaded_count") or 0)
         missing = max(0, total - downloaded)
@@ -240,7 +316,7 @@ def build_work_queue(data: dict[str, Any]) -> list[WorkItem]:
             WorkItem(
                 kind="album",
                 id=str(entry["id"]),
-                name=str(entry.get("name") or ""),
+                name=name,
                 missing=missing,
                 downloaded=downloaded,
                 total=total,
@@ -254,6 +330,10 @@ def build_work_queue(data: dict[str, Any]) -> list[WorkItem]:
             item.name.casefold(),
         )
     )
+    if sync_fold:
+        priority = [item for item in items if item.name.casefold() == sync_fold]
+        rest = [item for item in items if item.name.casefold() != sync_fold]
+        items = priority + rest
     return items
 
 
@@ -393,7 +473,17 @@ def _run_locked(
     now: datetime,
 ) -> int:
     if not dest.mounted:
+        state = load_state()
+        if not state.get("drive_unmounted_since"):
+            save_state({"drive_unmounted_since": now.isoformat()}, now=now)
         logger.info("drive not mounted; exiting")
+        return 0
+
+    save_state({"drive_unmounted_since": None}, now=now)
+
+    beeper.process_incoming_commands(now=now)
+    if load_state().get("paused"):
+        logger.info("agent paused via Beeper; exiting")
         return 0
 
     lockout = quota.get_lockout(now=now)
@@ -401,6 +491,7 @@ def _run_locked(
         reason = str(lockout.get("reason") or "Spotify lockout")
         save_state({"last_error": reason, "stop_reason": "lockout"}, now=now)
         notify(f"djsync — Spotify lockout ({reason})")
+        beeper.check_and_announce_events(data=cache.load_cache(), lockout=lockout, now=now)
         return 0
 
     data = cache.load_cache()
@@ -409,6 +500,8 @@ def _run_locked(
     except spotify.RateLimitedError as exc:
         save_state({"last_error": str(exc), "stop_reason": "lockout"}, now=now)
         notify("djsync — Spotify lockout detected")
+        lockout = quota.get_lockout(now=now)
+        beeper.check_and_announce_events(data=data, lockout=lockout, now=now)
         return 0
     except Exception as exc:
         logger.exception("refresh failed; continuing with existing cache")
@@ -420,7 +513,17 @@ def _run_locked(
         return 0
 
     apply_local_progress(data, dest)
-    queue = build_work_queue(data)
+    state = load_state()
+    queue = build_work_queue(
+        data,
+        skip_list=list(state.get("skip_list") or []),
+        sync_priority=state.get("sync_priority"),
+    )
+    if state.get("sync_priority") and not any(
+        item.name.casefold() == str(state.get("sync_priority")).casefold()
+        for item in queue
+    ):
+        save_state({"sync_priority": None}, now=now)
 
     if dry_run:
         for item in queue:
@@ -448,61 +551,75 @@ def _run_locked(
     stop_reason: str | None = None
     last_error: str | None = None
 
-    for item in queue:
-        if remaining <= 0:
-            stop_reason = "daily_cap"
-            break
-        if consecutive_failures >= CIRCUIT_BREAKER_FAILURES:
-            break
-        while item.missing > 0 and remaining > 0:
-            if not dest.mounted:
-                stop_reason = "drive_unmounted"
-                last_error = None
-                break
-            if consecutive_failures >= CIRCUIT_BREAKER_FAILURES:
-                break
-            result = _sync_one_track(data, item, dry_run=False)
-            if result.downloaded > 0:
-                took = min(result.downloaded, remaining)
-                for _ in range(took):
-                    downloads.record_download(now=now)
-                downloaded_this_run += took
-                remaining -= took
-                item = WorkItem(
-                    kind=item.kind,
-                    id=item.id,
-                    name=item.name,
-                    missing=max(0, item.missing - took),
-                    downloaded=item.downloaded + took,
-                    total=item.total,
-                )
-                consecutive_failures = 0
-                last_error = None
-            elif result.failed > 0:
-                consecutive_failures += result.failed
-                last_error = (
-                    f"circuit breaker: {CIRCUIT_BREAKER_FAILURES} consecutive "
-                    "download failures"
-                    if consecutive_failures >= CIRCUIT_BREAKER_FAILURES
-                    else f"{result.failed} download failure(s)"
-                )
-                if consecutive_failures >= CIRCUIT_BREAKER_FAILURES:
-                    stop_reason = "circuit_breaker"
+    if queue and remaining > 0:
+        with prevent_sleep():
+            for item in queue:
+                if remaining <= 0:
+                    stop_reason = "daily_cap"
                     break
-            else:
-                item = WorkItem(
-                    kind=item.kind,
-                    id=item.id,
-                    name=item.name,
-                    missing=0,
-                    downloaded=item.downloaded,
-                    total=item.total,
-                )
-                break
-            if item.missing > 0 and remaining > 0:
-                _sleep_between_downloads()
-        if stop_reason in ("drive_unmounted", "circuit_breaker"):
-            break
+                if consecutive_failures >= CIRCUIT_BREAKER_FAILURES:
+                    break
+                while item.missing > 0 and remaining > 0:
+                    if not dest.mounted:
+                        stop_reason = "drive_unmounted"
+                        last_error = None
+                        break
+                    if consecutive_failures >= CIRCUIT_BREAKER_FAILURES:
+                        break
+                    result = _sync_one_track(data, item, dry_run=False)
+                    if result.downloaded > 0:
+                        took = min(result.downloaded, remaining)
+                        for _ in range(took):
+                            downloads.record_download(now=now)
+                        downloaded_this_run += took
+                        remaining -= took
+                        item = WorkItem(
+                            kind=item.kind,
+                            id=item.id,
+                            name=item.name,
+                            missing=max(0, item.missing - took),
+                            downloaded=item.downloaded + took,
+                            total=item.total,
+                        )
+                        consecutive_failures = 0
+                        last_error = None
+                        for entry in result.unverified_explicit:
+                            events.record_unverified_explicit(entry, now=now)
+                        if item.missing == 0:
+                            events.record_completion(
+                                item.kind,
+                                item.id,
+                                item.name,
+                                now=now,
+                            )
+                    elif result.failed > 0:
+                        consecutive_failures += result.failed
+                        failure_reason = f"{result.failed} download failure(s)"
+                        events.record_failure(failure_reason, now=now)
+                        last_error = (
+                            f"circuit breaker: {CIRCUIT_BREAKER_FAILURES} consecutive "
+                            "download failures"
+                            if consecutive_failures >= CIRCUIT_BREAKER_FAILURES
+                            else failure_reason
+                        )
+                        if consecutive_failures >= CIRCUIT_BREAKER_FAILURES:
+                            events.record_failure(last_error, circuit_breaker=True, now=now)
+                            stop_reason = "circuit_breaker"
+                            break
+                    else:
+                        item = WorkItem(
+                            kind=item.kind,
+                            id=item.id,
+                            name=item.name,
+                            missing=0,
+                            downloaded=item.downloaded,
+                            total=item.total,
+                        )
+                        break
+                    if item.missing > 0 and remaining > 0:
+                        _sleep_between_downloads()
+                if stop_reason in ("drive_unmounted", "circuit_breaker"):
+                    break
 
     apply_local_progress(data, dest)
 
@@ -516,6 +633,7 @@ def _run_locked(
             now=now,
         )
         notify(f"djsync — {last_error}")
+        beeper.check_and_announce_events(data=data, lockout=None, now=now)
         return 0
 
     success_at = now.isoformat() if downloaded_this_run else load_state().get("last_success")
@@ -535,4 +653,5 @@ def _run_locked(
             f"djsync — downloaded {downloaded_this_run} tracks · "
             f"{have:,} of {total:,} · {left} left today"
         )
+    beeper.check_and_announce_events(data=data, lockout=None, now=now)
     return 0

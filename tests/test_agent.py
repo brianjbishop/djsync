@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import os
 import subprocess
 import sys
@@ -12,7 +13,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from djsync import agent, cache, downloads, quota
+from djsync import agent, beeper, cache, downloads, events, quota
 from djsync.config import Destination
 from djsync.sync import SyncResult
 
@@ -21,6 +22,7 @@ from djsync.sync import SyncResult
 def isolated_state(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     monkeypatch.setattr(quota, "LEDGER_PATH", tmp_path / "quota.json")
     monkeypatch.setattr(downloads, "LEDGER_PATH", tmp_path / "downloads.json")
+    monkeypatch.setattr(events, "EVENTS_PATH", tmp_path / "events.json")
     monkeypatch.setattr(cache, "CACHE_PATH", tmp_path / "cache.json")
     monkeypatch.setattr(agent, "STATE_PATH", tmp_path / "agent.json")
     monkeypatch.setattr(agent, "LOCK_PATH", tmp_path / "agent.lock")
@@ -461,3 +463,218 @@ def test_stale_cache_skips_refresh_when_quota_cannot_cover_cost(
     assert code == 0
     refresh.assert_not_called()
     assert downloads.used_last_24h() == 2
+
+
+class _FakeCaffeinateProc:
+    def __init__(self) -> None:
+        self.terminated = False
+        self.killed = False
+
+    def terminate(self) -> None:
+        self.terminated = True
+
+    def wait(self, timeout: float | None = None) -> int:
+        return 0
+
+    def kill(self) -> None:
+        self.killed = True
+
+
+def test_caffeinate_starts_during_download_and_terminates_after(
+    isolated_state: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    dest = _dest(isolated_state, mounted=True)
+    _mount(monkeypatch, dest, True)
+    cache.save_cache(
+        _cache_payload(
+            [
+                _playlist_entry(
+                    playlist_id="p1", name="$d Work", downloaded=0, total=4
+                )
+            ],
+            timestamp=datetime.now(UTC).isoformat(),
+        )
+    )
+    procs: list[_FakeCaffeinateProc] = []
+
+    def fake_popen(args: list[str], **_kwargs: object) -> _FakeCaffeinateProc:
+        assert args == ["caffeinate", "-i"]
+        proc = _FakeCaffeinateProc()
+        procs.append(proc)
+        return proc
+
+    monkeypatch.setattr(agent, "_caffeinate_popen", fake_popen)
+    monkeypatch.setattr(
+        agent, "sync_playlist", lambda *_a, **_k: SyncResult(downloaded=1)
+    )
+
+    code = agent.run_agent(dest=dest, notify=lambda _msg: None)
+
+    assert code == 0
+    assert len(procs) == 1
+    assert procs[0].terminated is True
+
+
+def test_caffeinate_not_started_when_nothing_to_download(
+    isolated_state: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    dest = _dest(isolated_state, mounted=True)
+    _mount(monkeypatch, dest, True)
+    cache.save_cache(
+        _cache_payload(
+            [
+                _playlist_entry(
+                    playlist_id="p1", name="$d Work", downloaded=3, total=3
+                )
+            ],
+            timestamp=datetime.now(UTC).isoformat(),
+        )
+    )
+    popen = MagicMock()
+    monkeypatch.setattr(agent, "_caffeinate_popen", popen)
+    # apply_local_progress rescans the real drive and would overwrite the
+    # cached counts with 0 for this temp dir, re-queueing a complete playlist.
+    # This test is about caffeinate, not progress scanning.
+    monkeypatch.setattr(agent, "apply_local_progress", lambda *a, **k: None)
+
+    code = agent.run_agent(dest=dest, notify=lambda _msg: None)
+
+    assert code == 0
+    popen.assert_not_called()
+
+
+def test_caffeinate_terminated_when_download_raises(
+    isolated_state: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    dest = _dest(isolated_state, mounted=True)
+    _mount(monkeypatch, dest, True)
+    cache.save_cache(
+        _cache_payload(
+            [
+                _playlist_entry(
+                    playlist_id="p1", name="$d Work", downloaded=0, total=4
+                )
+            ],
+            timestamp=datetime.now(UTC).isoformat(),
+        )
+    )
+    procs: list[_FakeCaffeinateProc] = []
+
+    def fake_popen(args: list[str], **_kwargs: object) -> _FakeCaffeinateProc:
+        proc = _FakeCaffeinateProc()
+        procs.append(proc)
+        return proc
+
+    monkeypatch.setattr(agent, "_caffeinate_popen", fake_popen)
+
+    def boom(*_args: object, **_kwargs: object) -> SyncResult:
+        raise RuntimeError("download exploded")
+
+    monkeypatch.setattr(agent, "sync_playlist", boom)
+
+    code = agent.run_agent(dest=dest, notify=lambda _msg: None)
+
+    assert code == 1
+    assert len(procs) == 1
+    assert procs[0].terminated is True
+
+
+def test_beeper_events_deduplicated_across_runs(
+    isolated_state: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # Fixed: prior webhook tests patched config after notify_discord imported the
+    # URL at module load time, so delivery never ran. Beeper reads settings at runtime.
+    monkeypatch.setenv("DJSYNC_BEEPER_TOKEN", "test-token")
+    posts: list[dict[str, object]] = []
+
+    def fake_urlopen(req: object, **_kwargs: object) -> MagicMock:
+        url = getattr(req, "full_url", None) or getattr(req, "url", "")
+        resp = MagicMock()
+        resp.status = 200
+        resp.__enter__ = MagicMock(return_value=resp)
+        resp.__exit__ = MagicMock(return_value=False)
+        if "/v1/info" in str(url):
+            resp.read = MagicMock(return_value=b"{}")
+            return resp
+        body = getattr(req, "data", b"")
+        posts.append(json.loads(body.decode()))
+        return resp
+
+    now = datetime(2026, 8, 19, 12, 0, 0, tzinfo=UTC)
+    agent.save_state(
+        {
+            "stop_reason": "circuit_breaker",
+            "last_error": "5 consecutive download failures",
+        },
+        now=now,
+    )
+    data = _cache_payload([_playlist_entry(playlist_id="p1", name="House", downloaded=1, total=4)])
+
+    beeper.check_and_announce_events(
+        data=data,
+        lockout=None,
+        now=now,
+        urlopen=fake_urlopen,
+    )
+    beeper.check_and_announce_events(
+        data=data,
+        lockout=None,
+        now=now,
+        urlopen=fake_urlopen,
+    )
+
+    assert len(posts) == 1
+    assert "Circuit breaker" in str(posts[0].get("text", ""))
+
+
+def test_beeper_lockout_reannounces_after_clear(
+    isolated_state: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("DJSYNC_BEEPER_TOKEN", "test-token")
+    posts: list[dict[str, object]] = []
+
+    def fake_urlopen(req: object, **_kwargs: object) -> MagicMock:
+        url = getattr(req, "full_url", None) or getattr(req, "url", "")
+        resp = MagicMock()
+        resp.status = 200
+        resp.__enter__ = MagicMock(return_value=resp)
+        resp.__exit__ = MagicMock(return_value=False)
+        if "/v1/info" in str(url):
+            resp.read = MagicMock(return_value=b"{}")
+            return resp
+        body = getattr(req, "data", b"")
+        posts.append(json.loads(body.decode()))
+        return resp
+
+    now = datetime(2026, 8, 19, 12, 0, 0, tzinfo=UTC)
+    reset1 = (now + timedelta(hours=1)).isoformat()
+    lockout1 = {"reason": "QUOTA", "reset_at": reset1, "retry_after_seconds": 3600}
+
+    beeper.check_and_announce_events(
+        data=None,
+        lockout=lockout1,
+        now=now,
+        urlopen=fake_urlopen,
+    )
+    beeper.check_and_announce_events(
+        data=None,
+        lockout=lockout1,
+        now=now,
+        urlopen=fake_urlopen,
+    )
+    assert len(posts) == 1
+
+    reset2 = (now + timedelta(hours=2)).isoformat()
+    lockout2 = {"reason": "QUOTA", "reset_at": reset2, "retry_after_seconds": 7200}
+    beeper.check_and_announce_events(
+        data=None,
+        lockout=lockout2,
+        now=now + timedelta(hours=3),
+        urlopen=fake_urlopen,
+    )
+    assert len(posts) == 2

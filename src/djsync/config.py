@@ -72,6 +72,18 @@ DAILY_DOWNLOAD_CAP = int(os.getenv("DJSYNC_DAILY_DOWNLOAD_CAP", "800"))
 STALE_AFTER_HOURS = float(os.getenv("DJSYNC_STALE_AFTER_HOURS", "12"))
 CIRCUIT_BREAKER_FAILURES = int(os.getenv("DJSYNC_CIRCUIT_BREAKER_FAILURES", "5"))
 
+DJSYNC_REPORT_EMAIL = os.getenv("DJSYNC_REPORT_EMAIL", "brian.rio11@gmail.com")
+
+
+def get_beeper_settings() -> tuple[str, str, str]:
+    """Return (base_url, chat_id, token) from the environment."""
+    load_dotenv()
+    return (
+        os.getenv("DJSYNC_BEEPER_URL", "http://127.0.0.1:23373"),
+        os.getenv("DJSYNC_BEEPER_CHAT_ID", "33169"),
+        os.getenv("DJSYNC_BEEPER_TOKEN", ""),
+    )
+
 
 @dataclass(frozen=True)
 class Destination:
