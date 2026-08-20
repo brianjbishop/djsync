@@ -932,6 +932,10 @@ tr.group-header:first-child td {
     activeTab: "playlists",
     playlists: [],
     albums: [],
+    playlistStatus: "never_fetched",
+    albumStatus: "never_fetched",
+    playlistRateLimit: null,
+    albumRateLimit: null,
     timestamp: null,
     destination: null,
     playlistSort: { key: "name", reverse: false },
@@ -988,6 +992,57 @@ tr.group-header:first-child td {
 
   function isPlaylists() {
     return state.activeTab === "playlists";
+  }
+  function activeCollectionStatus() {
+    return isPlaylists() ? state.playlistStatus : state.albumStatus;
+  }
+
+  function activeRateLimit() {
+    return isPlaylists() ? state.playlistRateLimit : state.albumRateLimit;
+  }
+
+  function applyCollectionMeta(data, kind) {
+    const status = data.status || "ok";
+    const rate = (status === "rate_limited") ? {
+      retry_after_seconds: data.retry_after_seconds,
+      reset_at: data.reset_at,
+      error: data.error,
+    } : null;
+    if (kind === "playlists") {
+      state.playlistStatus = status;
+      state.playlistRateLimit = rate;
+    } else {
+      state.albumStatus = status;
+      state.albumRateLimit = rate;
+    }
+  }
+
+  function renderCollectionBanner() {
+    const status = activeCollectionStatus();
+    const rate = activeRateLimit();
+    clearError();
+    clearInfo();
+
+    if (status === "rate_limited" && rate) {
+      let resetText = "soon";
+      if (rate.reset_at) {
+        try {
+          resetText = new Date(rate.reset_at).toLocaleString();
+        } catch (_) {
+          resetText = rate.reset_at;
+        }
+      }
+      const msg =
+        (rate.error || "Spotify rate limit reached for this application.") +
+        " Quota resets around " + resetText + ". Refresh is disabled until then.";
+      showError(msg);
+      return;
+    }
+
+    if (status === "never_fetched" && !state.loading) {
+      const label = isPlaylists() ? "Playlists" : "Albums";
+      showInfo(label + " have not been fetched yet — click Refresh to scan Spotify.");
+    }
   }
 
   function activeItems() {
@@ -1258,8 +1313,21 @@ tr.group-header:first-child td {
       els.tableBody.innerHTML = "";
       els.emptyState.classList.remove("hidden");
       document.getElementById("dataTable").classList.add("hidden");
-      els.emptyTitle.textContent = isPlaylists() ? "No playlists" : "No albums";
-      els.emptyHint.textContent = "Click Refresh to scan your Spotify library.";
+      const status = activeCollectionStatus();
+      if (status === "never_fetched") {
+        els.emptyTitle.textContent = isPlaylists() ? "Playlists not loaded" : "Albums not loaded";
+        els.emptyHint.textContent = isPlaylists()
+          ? "Playlists have not been fetched yet — click Refresh to scan Spotify."
+          : "Albums have not been fetched yet — click Refresh to scan Spotify.";
+      } else if (status === "rate_limited") {
+        els.emptyTitle.textContent = isPlaylists() ? "Playlists unavailable" : "Albums unavailable";
+        els.emptyHint.textContent = "Spotify rate limit is active — see the banner above for when refresh is available again.";
+      } else {
+        els.emptyTitle.textContent = isPlaylists() ? "No playlists" : "No saved albums";
+        els.emptyHint.textContent = isPlaylists()
+          ? "No $d playlists are in the cache."
+          : "You have no saved albums in the cache.";
+      }
     } else {
       els.emptyState.classList.add("hidden");
       document.getElementById("dataTable").classList.remove("hidden");
@@ -1354,7 +1422,7 @@ tr.group-header:first-child td {
     }
     els.btnSelectAll.disabled = state.syncing || !activeItems().length;
     els.btnClearAll.disabled = state.syncing || !activeItems().length;
-    els.btnRefresh.disabled = state.refreshing || state.syncing;
+    els.btnRefresh.disabled = state.refreshing || state.syncing || activeCollectionStatus() === "rate_limited";
   }
 
   function updateGeneratedAt() {
@@ -1378,6 +1446,7 @@ tr.group-header:first-child td {
     els.tabAlbums.setAttribute("aria-selected", tab === "albums" ? "true" : "false");
     renderDestination();
     renderTable();
+    renderCollectionBanner();
   }
 
   function applyCacheData(data) {
@@ -1412,12 +1481,15 @@ tr.group-header:first-child td {
         apiFetch("/api/playlists"),
         apiFetch("/api/albums"),
       ]);
+      applyCollectionMeta(plData, "playlists");
+      applyCollectionMeta(alData, "albums");
       applyCacheData({
         timestamp: plData.timestamp || alData.timestamp,
         playlists: plData.playlists,
         albums: alData.albums,
         destination: plData.destination || alData.destination,
       });
+      renderCollectionBanner();
     } catch (err) {
       state.loading = false;
       showError("Failed to load library: " + err.message);
@@ -1505,7 +1577,10 @@ tr.group-header:first-child td {
     try {
       const data = await apiFetch("/api/refresh", { method: "POST" });
       clearInfo();
+      if (data.playlists) applyCollectionMeta({ ...data, status: data.status || "ok" }, "playlists");
+      if (data.albums) applyCollectionMeta({ ...data, status: data.status || "ok" }, "albums");
       applyCacheData(data);
+      renderCollectionBanner();
     } catch (err) {
       clearInfo();
       showError("Refresh failed: " + err.message);

@@ -29,8 +29,10 @@ class FakeSpotifyClient:
         self._album_tracks = album_tracks or {}
         self.playlist_tracks_calls: list[str] = []
         self.album_tracks_calls: list[str] = []
+        self.current_user_playlists_calls: list[tuple[int, int]] = []
 
     def current_user_playlists(self, *, limit: int = 50, offset: int = 0) -> dict[str, Any]:
+        self.current_user_playlists_calls.append((limit, offset))
         page = self._playlists[offset : offset + limit]
         has_more = offset + limit < len(self._playlists)
         return {

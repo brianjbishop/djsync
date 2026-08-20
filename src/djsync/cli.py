@@ -15,7 +15,7 @@ def _exit_on_spotify_error(exc: BaseException) -> None:
     if isinstance(exc, spotify.RateLimitedError):
         click.echo(str(exc), err=True)
         sys.exit(1)
-    if isinstance(exc, RuntimeError):
+    if isinstance(exc, (RuntimeError, cache.CacheDataError)):
         click.echo(str(exc), err=True)
         sys.exit(1)
     raise exc
@@ -39,11 +39,16 @@ def _playlist_list_from_cache(*, refresh: bool) -> list[spotify.Playlist]:
     if cached and cached.get("playlist_catalog"):
         return cache.playlists_from_catalog(cached)
 
-    try:
-        data = cache.get_or_build_cache(client)
-        return cache.playlists_from_catalog(data)
-    except spotify.RateLimitedError as exc:
-        _exit_on_spotify_error(exc)
+    if cached and cached.get("playlists"):
+        return [
+            cache.playlist_from_entry(entry)
+            for entry in cached["playlists"]
+            if "d" in (entry.get("sigils") or [])
+        ]
+
+    raise cache.CacheDataError(
+        "No cached playlist catalog. Run `djsync refresh` first."
+    )
 
 
 @click.group()
@@ -62,6 +67,8 @@ def playlists_cmd(as_json: bool, refresh: bool) -> None:
     """List all Spotify playlists with parsed sigils."""
     try:
         playlist_list = _playlist_list_from_cache(refresh=refresh)
+    except cache.CacheDataError as exc:
+        _exit_on_spotify_error(exc)
     except RuntimeError as exc:
         _exit_on_spotify_error(exc)
 
@@ -124,34 +131,31 @@ def refresh_cmd(max_playlists: int | None) -> None:
 )
 @click.option("--dry-run", is_flag=True, help="Search and rank only; do not download.")
 @click.option("--limit", type=int, default=None, help="Process at most N missing tracks.")
-def sync_cmd(playlist: str, dry_run: bool, limit: int | None) -> None:
+@click.option(
+    "--refresh",
+    is_flag=True,
+    help="Fetch playlist metadata and tracks from Spotify instead of using cache.",
+)
+def sync_cmd(playlist: str, dry_run: bool, limit: int | None, refresh: bool) -> None:
     """Match, download, and tag tracks for a $d playlist."""
     try:
-        playlist_list = _playlist_list_from_cache(refresh=False)
         client = spotify.get_client()
+        cached = cache.load_cache()
+        target, tracks = cache.resolve_playlist_for_sync(
+            client,
+            playlist,
+            refresh=refresh,
+            cached=cached,
+        )
+    except cache.CacheDataError as exc:
+        _exit_on_spotify_error(exc)
+    except ValueError as exc:
+        click.echo(str(exc), err=True)
+        sys.exit(1)
     except RuntimeError as exc:
         _exit_on_spotify_error(exc)
     except spotify.RateLimitedError as exc:
         _exit_on_spotify_error(exc)
-
-    marked = [p for p in playlist_list if "d" in p.sigils]
-    matches = [p for p in marked if p.name == playlist]
-    if not matches:
-        click.echo(
-            f'No $d playlist named "{playlist}" found.\n'
-            f"Use `djsync playlists` to list available names.",
-            err=True,
-        )
-        sys.exit(1)
-    if len(matches) > 1:
-        ids = ", ".join(p.id for p in matches)
-        click.echo(
-            f'Ambiguous playlist name "{playlist}" ({len(matches)} matches: {ids}).',
-            err=True,
-        )
-        sys.exit(1)
-
-    target = matches[0]
 
     def on_log(msg: str) -> None:
         click.echo(msg, err=msg.startswith("FAIL"))
@@ -162,6 +166,7 @@ def sync_cmd(playlist: str, dry_run: bool, limit: int | None) -> None:
             target,
             dry_run=dry_run,
             limit=limit,
+            tracks=tracks,
             on_log=on_log,
             on_track=lambda name: None,
         )

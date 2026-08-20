@@ -1,0 +1,18 @@
+{
+  "spotify": {
+    "id": "t1",
+    "name": "Cached Track",
+    "artists": [
+      "Artist"
+    ],
+    "album": "Album",
+    "duration_ms": 180000,
+    "isrc": null,
+    "explicit": false
+  },
+  "candidates": [],
+  "scores": [],
+  "chosen_video_id": null,
+  "timestamp": "2026-08-20T00:09:11.776434+00:00",
+  "weights_version": "323231e3cf828071"
+}

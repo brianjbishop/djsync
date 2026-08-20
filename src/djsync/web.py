@@ -100,6 +100,12 @@ def _cache_response(data: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def _collection_json(data: dict[str, Any], collection: SyncKind) -> dict[str, Any]:
+    payload = _cache_response(data)
+    payload.update(cache.collection_api_fields(data, collection))
+    return payload
+
+
 def create_app() -> Flask:
     app = Flask(__name__, static_folder=str(STATIC_DIR))
 
@@ -130,15 +136,22 @@ def create_app() -> Flask:
         refresh = request.args.get("refresh") == "1"
         try:
             client = spotify.get_client()
-            data = cache.get_or_build_cache(client, refresh=refresh)
+            if refresh:
+                data = cache.get_or_build_cache(client, refresh=True)
+            else:
+                data = cache.load_cache_or_empty()
         except spotify.RateLimitedError as exc:
             return _rate_limit_response(exc)
         except RuntimeError as exc:
             return jsonify({"error": str(exc)}), 500
-        payload = _cache_response(data)
+        payload = _collection_json(data, "playlists")
         return jsonify(
             {
                 "timestamp": payload["timestamp"],
+                "status": payload["status"],
+                "retry_after_seconds": payload.get("retry_after_seconds"),
+                "reset_at": payload.get("reset_at"),
+                "error": payload.get("error"),
                 "playlists": payload["playlists"],
                 "destination": payload["destination"],
             }
@@ -149,15 +162,22 @@ def create_app() -> Flask:
         refresh = request.args.get("refresh") == "1"
         try:
             client = spotify.get_client()
-            data = cache.get_or_build_cache(client, refresh=refresh)
+            if refresh:
+                data = cache.get_or_build_cache(client, refresh=True)
+            else:
+                data = cache.load_cache_or_empty()
         except spotify.RateLimitedError as exc:
             return _rate_limit_response(exc)
         except RuntimeError as exc:
             return jsonify({"error": str(exc)}), 500
-        payload = _cache_response(data)
+        payload = _collection_json(data, "albums")
         return jsonify(
             {
                 "timestamp": payload["timestamp"],
+                "status": payload["status"],
+                "retry_after_seconds": payload.get("retry_after_seconds"),
+                "reset_at": payload.get("reset_at"),
+                "error": payload.get("error"),
                 "albums": payload["albums"],
                 "destination": payload["destination"],
             }
@@ -171,7 +191,7 @@ def create_app() -> Flask:
             return jsonify({"error": "max_playlists must be an integer"}), 400
         try:
             client = spotify.get_client()
-            prior = cache.load_cache()
+            prior = cache.load_cache() or cache.load_cache_or_empty()
             data = cache.build_cache(
                 client,
                 max_playlists=max_playlists,
@@ -179,6 +199,18 @@ def create_app() -> Flask:
             )
             cache.save_cache(data)
         except spotify.RateLimitedError as exc:
+            saved = cache.load_cache()
+            if saved is not None:
+                resp = _cache_response(saved)
+                resp["rate_limited"] = True
+                for name in ("playlists", "albums"):
+                    fields = cache.collection_api_fields(saved, name)
+                    if fields.get("status") == "rate_limited":
+                        resp.update(fields)
+                        break
+                else:
+                    resp.update(cache.collection_api_fields(saved, "playlists"))
+                return jsonify(resp), 429
             return _rate_limit_response(exc)
         except RuntimeError as exc:
             return jsonify({"error": str(exc)}), 500
@@ -286,40 +318,44 @@ def create_app() -> Flask:
         if kind == "albums":
             by_id = {a["id"]: a for a in cached.get("albums") or []}
             targets: list[Any] = []
+            album_tracks: dict[str, list[Any]] = {}
             for aid in item_ids:
                 entry = by_id.get(str(aid))
                 if entry is None:
                     continue
-                targets.append(
-                    spotify.Album(
-                        id=entry["id"],
-                        name=entry["name"],
-                        artists=tuple(entry.get("artists") or []),
-                        total_tracks=entry["total_tracks"],
-                        release_date=entry.get("release_date") or "",
-                        added_at=entry.get("added_at") or "",
-                        spotify_url=entry.get("spotify_url")
-                        or f"https://open.spotify.com/album/{entry['id']}",
-                        spotify_uri=entry.get("spotify_uri")
-                        or f"spotify:album:{entry['id']}",
-                    )
-                )
+                targets.append(cache.album_from_entry(entry))
+                tracks = cache.cached_album_tracks(cached, entry["id"], album_name=entry["name"])
+                if tracks is None:
+                    return jsonify(
+                        {
+                            "error": (
+                                f'No cached tracks for album "{entry["name"]}". '
+                                "Refresh the library first."
+                            )
+                        }
+                    ), 400
+                album_tracks[entry["id"]] = tracks
             count_key = "total_tracks"
         else:
             by_id = {p["id"]: p for p in cached.get("playlists") or []}
             targets = []
+            playlist_tracks: dict[str, list[Any]] = {}
             for pid in item_ids:
                 entry = by_id.get(str(pid))
                 if entry is None:
                     continue
-                targets.append(
-                    spotify.Playlist(
-                        id=entry["id"],
-                        name=entry["name"],
-                        track_count=entry["track_count"],
-                        sigils=frozenset(entry.get("sigils") or []),
-                    )
-                )
+                targets.append(cache.playlist_from_entry(entry))
+                tracks = cache.cached_playlist_tracks(entry)
+                if tracks is None:
+                    return jsonify(
+                        {
+                            "error": (
+                                f'No cached tracks for playlist "{entry["name"]}". '
+                                "Refresh the library first."
+                            )
+                        }
+                    ), 400
+                playlist_tracks[entry["id"]] = tracks
             count_key = "track_count"
 
         if not targets:
@@ -375,6 +411,8 @@ def create_app() -> Flask:
                         result = sync.sync_album(
                             client,
                             target,
+                            tracks=album_tracks[target.id],
+                            cached=cached,
                             on_log=on_log,
                             on_track=on_track,
                             on_progress=on_progress,
@@ -383,6 +421,8 @@ def create_app() -> Flask:
                         result = sync.sync_playlist(
                             client,
                             target,
+                            tracks=playlist_tracks[target.id],
+                            cached=cached,
                             on_log=on_log,
                             on_track=on_track,
                             on_progress=on_progress,

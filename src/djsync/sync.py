@@ -6,11 +6,12 @@ import random
 import time
 from collections.abc import Callable
 from dataclasses import dataclass, field
-from pathlib import Path
+from typing import Any
 
 import spotipy
 
-from djsync import config, spotify
+from djsync.models import Track
+from djsync import cache, config, spotify
 from djsync.config import FIXTURES_DIR, WEIGHTS, get_destination
 from djsync.download import DownloadError, download, sanitize_filename
 from djsync.fixtures import record_match
@@ -70,6 +71,9 @@ def sync_playlist(
     *,
     dry_run: bool = False,
     limit: int | None = None,
+    tracks: list[Track] | None = None,
+    refresh: bool = False,
+    cached: dict[str, Any] | None = None,
     on_log: LogCallback | None = None,
     on_track: TrackCallback | None = None,
     on_progress: ProgressCallback | None = None,
@@ -81,7 +85,13 @@ def sync_playlist(
         if on_log:
             on_log(msg)
 
-    tracks = spotify.fetch_tracks(client, playlist.id)
+    if tracks is None:
+        tracks = cache.resolve_playlist_for_sync(
+            client,
+            playlist.name,
+            refresh=refresh,
+            cached=cached,
+        )[1]
     dest = get_destination()
     folder = playlist_folder(playlist.name, dest.path)
     if dest.mounted:
@@ -154,6 +164,9 @@ def sync_album(
     *,
     dry_run: bool = False,
     limit: int | None = None,
+    tracks: list[Track] | None = None,
+    refresh: bool = False,
+    cached: dict[str, Any] | None = None,
     on_log: LogCallback | None = None,
     on_track: TrackCallback | None = None,
     on_progress: ProgressCallback | None = None,
@@ -165,7 +178,13 @@ def sync_album(
         if on_log:
             on_log(msg)
 
-    tracks = spotify.fetch_album_tracks(client, album.id, album_name=album.name)
+    if tracks is None:
+        tracks = cache.resolve_album_for_sync(
+            client,
+            album,
+            refresh=refresh,
+            cached=cached,
+        )
     dest = get_destination()
     folder = album_folder(album.artists, album.name, dest.path_for("albums"))
     if dest.mounted:
