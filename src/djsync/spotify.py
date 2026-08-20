@@ -74,14 +74,35 @@ def call_spotify(fn: Callable[..., T], /, *args: Any, **kwargs: Any) -> T:
     return _spotify_call(fn, *args, **kwargs)
 
 
+def _parse_429_reason(exc: SpotifyException) -> str:
+    """Best-effort parse of Spotify's 429 reason (e.g. QUOTA_EXCEEDED)."""
+    for candidate in (getattr(exc, "msg", None), str(exc)):
+        if not candidate:
+            continue
+        text = str(candidate)
+        if "QUOTA_EXCEEDED" in text:
+            return "QUOTA_EXCEEDED"
+        if "RATE_LIMIT" in text.upper():
+            return "RATE_LIMITED"
+    return "QUOTA_EXCEEDED"
+
+
 def _spotify_call(fn: Callable[..., T], /, *args: Any, **kwargs: Any) -> T:
-    """Call a Spotipy method and translate HTTP 429 into RateLimitedError."""
+    """Call a Spotipy method through the quota ledger."""
+    from djsync import quota
+
+    quota.check_can_spend(1)
     try:
-        return fn(*args, **kwargs)
+        result = fn(*args, **kwargs)
     except SpotifyException as exc:
         if exc.http_status == 429:
-            raise RateLimitedError(_parse_retry_after(exc.headers)) from exc
+            retry_after = _parse_retry_after(exc.headers)
+            reason = _parse_429_reason(exc)
+            quota.record_429(reason, retry_after)
+            raise RateLimitedError(retry_after) from exc
         raise
+    quota.record_request()
+    return result
 
 
 @dataclass(frozen=True)

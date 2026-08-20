@@ -1,0 +1,10 @@
+{
+  "requests": [
+    "2026-08-20T00:24:50.686147+00:00"
+  ],
+  "lockout": {
+    "reason": "QUOTA_EXCEEDED",
+    "retry_after_seconds": 74000,
+    "reset_at": "2026-08-20T20:58:10.686147+00:00"
+  }
+}

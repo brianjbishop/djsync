@@ -7,7 +7,7 @@ from typing import Any
 
 import pytest
 
-from djsync import cache, spotify, sync
+from djsync import cache, quota, spotify, sync
 from djsync.config import Destination
 from djsync.models import Track
 from tests.test_cache import (
@@ -15,6 +15,11 @@ from tests.test_cache import (
     _playlist_item,
     _playlist_track_item,
 )
+
+
+@pytest.fixture(autouse=True)
+def _isolated_quota_ledger(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(quota, "LEDGER_PATH", tmp_path / "quota.json")
 
 
 @pytest.fixture

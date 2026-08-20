@@ -232,6 +232,99 @@ def cached_playlist_tracks(entry: dict[str, Any]) -> list[Track] | None:
     return _deserialize_tracks(raw)
 
 
+def playlist_entry_by_id(
+    data: dict[str, Any],
+    playlist_id: str,
+) -> dict[str, Any] | None:
+    """Return a playlist row from scanned cache or catalog metadata."""
+    for entry in data.get("playlists") or []:
+        if entry.get("id") == playlist_id:
+            return entry
+    for entry in data.get("playlist_catalog") or []:
+        if entry.get("id") == playlist_id:
+            return _catalog_only_row(entry)
+    return None
+
+
+def _catalog_only_row(catalog_entry: dict[str, Any]) -> dict[str, Any]:
+    playlist_id = catalog_entry["id"]
+    return {
+        "id": playlist_id,
+        "name": catalog_entry["name"],
+        "sigils": list(catalog_entry.get("sigils") or []),
+        "track_count": catalog_entry.get("track_count", 0),
+        "snapshot_id": catalog_entry.get("snapshot_id") or "",
+        "spotify_url": f"https://open.spotify.com/playlist/{playlist_id}",
+        "spotify_uri": f"spotify:playlist:{playlist_id}",
+        "downloaded_count": None,
+        "status": "not_scanned",
+        "last_added": None,
+        "scanned": False,
+    }
+
+
+def catalog_playlists_for_ui(data: dict[str, Any]) -> list[dict[str, Any]]:
+    """Build UI playlist rows from catalog metadata plus any scanned entries."""
+    scanned_by_id = {
+        entry["id"]: entry for entry in data.get("playlists") or []
+    }
+    catalog = data.get("playlist_catalog") or []
+
+    if catalog:
+        rows: list[dict[str, Any]] = []
+        for entry in catalog:
+            scanned = scanned_by_id.get(entry["id"])
+            if scanned:
+                row = {key: value for key, value in scanned.items() if key != "tracks"}
+                row["scanned"] = True
+            else:
+                row = _catalog_only_row(entry)
+            rows.append(row)
+        return rows
+
+    rows = []
+    for entry in scanned_by_id.values():
+        row = {key: value for key, value in entry.items() if key != "tracks"}
+        row["scanned"] = True
+        rows.append(row)
+    return rows
+
+
+def store_playlist_tracks(
+    data: dict[str, Any],
+    playlist: spotify.Playlist,
+    tracks: list[Track],
+) -> dict[str, Any]:
+    """Insert or update a scanned playlist entry in *data*."""
+    entry = _playlist_entry(playlist, tracks)
+    playlists = list(data.get("playlists") or [])
+    replaced = False
+    for index, existing in enumerate(playlists):
+        if existing.get("id") == playlist.id:
+            playlists[index] = entry
+            replaced = True
+            break
+    if not replaced:
+        playlists.append(entry)
+    data["playlists"] = playlists
+    return entry
+
+
+def ensure_playlist_tracks(
+    client: spotipy.Spotify,
+    data: dict[str, Any],
+    entry: dict[str, Any],
+) -> list[Track]:
+    """Return cached tracks, fetching and storing them on demand when missing."""
+    tracks = cached_playlist_tracks(entry)
+    if tracks is not None:
+        return tracks
+    playlist = playlist_from_entry(entry)
+    tracks = spotify.fetch_tracks(client, playlist.id)
+    store_playlist_tracks(data, playlist, tracks)
+    return tracks
+
+
 def cached_album_tracks(data: dict[str, Any], album_id: str, *, album_name: str) -> list[Track] | None:
     """Return cached album tracks by album id, or None if missing."""
     raw = (data.get("album_tracks") or {}).get(album_id)

@@ -8,7 +8,7 @@ from unittest.mock import patch
 import pytest
 
 from djsync.config import Destination
-from djsync import cache, spotify
+from djsync import cache, quota, spotify
 from djsync.web import create_app
 
 
@@ -16,6 +16,7 @@ from djsync.web import create_app
 def client(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setenv("DJSYNC_DRIVE", str(tmp_path / "drive"))
     monkeypatch.setattr(cache, "CACHE_PATH", tmp_path / "cache.json")
+    monkeypatch.setattr(quota, "LEDGER_PATH", tmp_path / "quota.json")
     dest = Destination(
         drive=tmp_path / "drive",
         library_root="dj",
@@ -155,3 +156,67 @@ def test_api_refresh_rate_limited_preserves_cached_rows(client, monkeypatch: pyt
     saved = cache.load_cache()
     assert saved["playlists"][0]["name"] == "$d Keep"
     assert saved["collections"]["playlists"]["status"] == "rate_limited"
+
+
+def test_api_playlists_returns_full_catalog(client, monkeypatch: pytest.MonkeyPatch) -> None:
+    test_client, _dest = client
+    monkeypatch.setattr("djsync.web.spotify.get_client", lambda: object())
+    cache.save_cache(
+        {
+            "timestamp": "2024-08-01T00:00:00Z",
+            "playlist_catalog": [
+                {
+                    "id": "p1",
+                    "name": "$d Scanned",
+                    "sigils": ["d"],
+                    "track_count": 2,
+                    "snapshot_id": "s1",
+                },
+                {
+                    "id": "p2",
+                    "name": "Other playlist",
+                    "sigils": [],
+                    "track_count": 5,
+                    "snapshot_id": "s2",
+                },
+            ],
+            "playlists": [
+                {
+                    "id": "p1",
+                    "name": "$d Scanned",
+                    "sigils": ["d"],
+                    "track_count": 2,
+                    "snapshot_id": "s1",
+                    "tracks": [
+                        {"id": "t1", "duration_ms": 1, "added_at": "2024-01-01T00:00:00Z"},
+                        {"id": "t2", "duration_ms": 1, "added_at": "2024-02-01T00:00:00Z"},
+                    ],
+                    "downloaded_count": 1,
+                    "status": "partial",
+                    "last_added": "2024-02-01T00:00:00Z",
+                }
+            ],
+            "albums": [],
+            "album_tracks": {},
+            "collections": {"playlists": {"status": "ok"}, "albums": {"status": "never_fetched"}},
+        }
+    )
+
+    resp = test_client.get("/api/playlists")
+    assert resp.status_code == 200
+    data = resp.get_json()
+    assert data["total_playlists"] == 2
+    assert len(data["playlists"]) == 2
+    by_id = {p["id"]: p for p in data["playlists"]}
+    assert by_id["p1"]["status"] == "partial"
+    assert by_id["p2"]["status"] == "not_scanned"
+    assert by_id["p2"]["downloaded_count"] is None
+
+
+def test_api_quota_endpoint(client) -> None:
+    test_client, _dest = client
+    resp = test_client.get("/api/quota")
+    assert resp.status_code == 200
+    data = resp.get_json()
+    assert data["daily_budget"] == quota.quota_status()["daily_budget"]
+    assert "used_24h" in data

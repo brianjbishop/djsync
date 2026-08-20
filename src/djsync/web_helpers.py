@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any, Literal
 
-DownloadStatus = Literal["none", "partial", "complete"]
+DownloadStatus = Literal["none", "partial", "complete", "not_scanned"]
 SortKey = Literal["name", "track_count", "last_added", "status"]
 AlbumSortKey = Literal[
     "name", "artist", "total_tracks", "status", "added_at", "release_date"
@@ -12,17 +12,76 @@ AlbumSortKey = Literal[
 GroupBy = Literal["none", "sigil", "genre"]
 AlbumGroupBy = Literal["none", "artist"]
 
-STATUS_ORDER = {"none": 0, "partial": 1, "complete": 2}
+STATUS_ORDER = {"not_scanned": -1, "none": 0, "partial": 1, "complete": 2}
+SIGIL_ANY = "__any__"
+SIGIL_NONE = "__none__"
 BYTES_PER_TRACK = int(9.5 * 1024 * 1024)
 
 
-def compute_status(downloaded_count: int, track_count: int) -> DownloadStatus:
+def compute_status(downloaded_count: int | None, track_count: int) -> DownloadStatus:
     """Return download status from local vs playlist track counts."""
+    if downloaded_count is None:
+        return "not_scanned"
     if track_count == 0 or downloaded_count >= track_count:
         return "complete"
     if downloaded_count == 0:
         return "none"
     return "partial"
+
+
+def playlist_matches_sigil_filter(
+    playlist: dict[str, Any],
+    sigil_filters: set[str],
+) -> bool:
+    """Return True if *playlist* matches the sigil filter set."""
+    if not sigil_filters:
+        return True
+    sigils = set(playlist.get("sigils") or [])
+    matches = False
+    if SIGIL_NONE in sigil_filters and not sigils:
+        matches = True
+    if SIGIL_ANY in sigil_filters and sigils:
+        matches = True
+    if sigils & (sigil_filters - {SIGIL_ANY, SIGIL_NONE}):
+        matches = True
+    return matches
+
+
+def filter_playlists(
+    playlists: list[dict[str, Any]],
+    *,
+    search: str = "",
+    sigil_filters: set[str] | None = None,
+    status_filters: set[str] | None = None,
+    added_since: str | None = None,
+) -> list[dict[str, Any]]:
+    """Filter playlists; conditions combine with AND across filter types."""
+    search_lower = search.strip().casefold()
+    sigil_filters = sigil_filters or set()
+    status_filters = status_filters or set()
+
+    filtered: list[dict[str, Any]] = []
+    for playlist in playlists:
+        if search_lower and search_lower not in playlist.get("name", "").casefold():
+            continue
+        if sigil_filters and not playlist_matches_sigil_filter(playlist, sigil_filters):
+            continue
+        if status_filters and playlist.get("status", "none") not in status_filters:
+            continue
+        if added_since:
+            last_added = playlist.get("last_added")
+            if not last_added or last_added < added_since:
+                continue
+        filtered.append(playlist)
+    return filtered
+
+
+def collect_sigil_filter_options(playlists: list[dict[str, Any]]) -> list[str]:
+    """Return sorted unique sigils present in *playlists*."""
+    sigils: set[str] = set()
+    for playlist in playlists:
+        sigils.update(playlist.get("sigils") or [])
+    return sorted(sigils)
 
 
 def estimate_size_bytes(track_count: int) -> int:
@@ -174,13 +233,17 @@ def selection_summary(
     selected = [p for p in playlists if p["id"] in selected_ids]
     total_tracks = sum(p["track_count"] for p in selected)
     missing_tracks = sum(
-        max(0, p["track_count"] - p.get("downloaded_count", 0)) for p in selected
+        max(0, p["track_count"] - (p.get("downloaded_count") or 0))
+        for p in selected
+        if p.get("status") != "not_scanned"
     )
+    unscanned = sum(1 for p in selected if p.get("status") == "not_scanned")
     size_bytes = estimate_size_bytes(missing_tracks)
     return {
         "playlist_count": len(selected),
         "total_tracks": total_tracks,
         "missing_tracks": missing_tracks,
+        "unscanned_count": unscanned,
         "size_bytes": size_bytes,
         "size_display": format_size(size_bytes),
         "playlists": [

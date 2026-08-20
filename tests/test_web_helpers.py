@@ -4,8 +4,11 @@ from __future__ import annotations
 
 from djsync.web_helpers import (
     BYTES_PER_TRACK,
+    SIGIL_ANY,
+    SIGIL_NONE,
     compute_status,
     estimate_size_bytes,
+    filter_playlists,
     format_size,
     group_playlists,
     sort_playlists,
@@ -17,7 +20,7 @@ def _playlist(
     id_: str = "p1",
     name: str = "Alpha",
     track_count: int = 10,
-    downloaded_count: int = 0,
+    downloaded_count: int | None = 0,
     status: str = "none",
     last_added: str | None = "2024-01-15",
     sigils: list[str] | None = None,
@@ -59,6 +62,46 @@ def test_format_size_units() -> None:
     assert format_size(500) == "0.5 KB"
     assert format_size(1024 * 1024) == "1.0 MB"
     assert format_size(2 * 1024 * 1024 * 1024) == "2.00 GB"
+
+
+def test_compute_status_not_scanned() -> None:
+    assert compute_status(None, 10) == "not_scanned"
+
+
+def test_filter_playlists_combined_sigil_status_search() -> None:
+    playlists = [
+        _playlist(id_="a", name="Warmup Set", sigils=["d"], status="partial"),
+        _playlist(id_="b", name="Chill Mix", sigils=["ave"], status="none"),
+        _playlist(id_="c", name="Plain list", sigils=[], status="not_scanned", downloaded_count=None),
+    ]
+    filtered = filter_playlists(
+        playlists,
+        search="mix",
+        sigil_filters={"ave"},
+        status_filters={"none"},
+    )
+    assert [p["id"] for p in filtered] == ["b"]
+
+
+def test_filter_playlists_sigil_any_and_none() -> None:
+    playlists = [
+        _playlist(id_="a", name="A", sigils=["d"]),
+        _playlist(id_="b", name="B", sigils=[]),
+    ]
+    any_only = filter_playlists(playlists, sigil_filters={SIGIL_ANY})
+    assert [p["id"] for p in any_only] == ["a"]
+    none_only = filter_playlists(playlists, sigil_filters={SIGIL_NONE})
+    assert [p["id"] for p in none_only] == ["b"]
+
+
+def test_filter_select_all_scope_is_filtered_subset() -> None:
+    playlists = [
+        _playlist(id_="a", name="Alpha", sigils=["d"]),
+        _playlist(id_="b", name="Beta", sigils=[]),
+    ]
+    filtered = filter_playlists(playlists, sigil_filters={"d"})
+    selected_ids = {p["id"] for p in filtered}
+    assert selected_ids == {"a"}
 
 
 def test_sort_playlists_by_name() -> None:

@@ -26,6 +26,8 @@
   --partial: #f5a623;
   --partial-bg: rgba(245, 166, 35, 0.18);
   --none: #6b7280;
+  --not-scanned: #7c8694;
+  --not-scanned-bg: rgba(124, 134, 148, 0.15);
   --radius: 6px;
   --radius-sm: 4px;
   --font: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -153,6 +155,130 @@ a:hover { text-decoration: underline; }
 }
 
 .toolbar-spacer { flex: 1; }
+
+.quota-meta {
+  font-size: var(--fs-xs);
+  color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 8px 16px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.filter-bar.hidden { display: none; }
+
+.filter-bar label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--fs-sm);
+  color: var(--text-muted);
+}
+
+.filter-bar input[type="search"],
+.filter-bar input[type="date"],
+.filter-bar select {
+  background: var(--bg-muted);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 5px 8px;
+  color: var(--text);
+  outline: none;
+  min-width: 120px;
+}
+
+.filter-bar input[type="search"] { min-width: 180px; }
+
+.filter-count {
+  margin-left: auto;
+  font-size: var(--fs-sm);
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.sigil-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  align-items: center;
+}
+
+.sigil-filter-label {
+  font-size: var(--fs-sm);
+  color: var(--text-muted);
+  margin-right: 2px;
+}
+
+.sigil-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: var(--fs-xs);
+  font-family: var(--mono);
+  color: var(--text-dim);
+  background: transparent;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: color 0.12s, background 0.12s, border-color 0.12s, box-shadow 0.12s;
+  line-height: 1.4;
+}
+
+.sigil-pill.meta {
+  font-family: var(--font);
+}
+
+.sigil-pill:hover:not([aria-pressed="true"]) {
+  color: var(--text-muted);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.sigil-pill:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--accent-glow), 0 0 0 1px var(--accent);
+}
+
+.sigil-pill[aria-pressed="true"] {
+  color: var(--accent);
+  background: var(--accent-glow);
+  border-color: rgba(29, 185, 84, 0.35);
+}
+
+.sigil-pill[aria-pressed="true"]:hover {
+  background: var(--accent-glow);
+  border-color: var(--accent-dim);
+}
+
+.status-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.status-filter label.filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.status-filter label.filter-chip:has(input:checked) {
+  border-color: var(--accent);
+  color: var(--text);
+}
 
 .toolbar label {
   display: flex;
@@ -421,6 +547,12 @@ td.col-dl {
 
 .dl-badge.none {
   color: var(--none);
+}
+
+.dl-badge.not_scanned {
+  color: var(--not-scanned);
+  background: var(--not-scanned-bg);
+  font-style: italic;
 }
 
 .sigils {
@@ -803,6 +935,7 @@ tr.group-header:first-child td {
     </div>
     <span class="destination" id="destinationInfo" title=""></span>
     <span class="meta" id="generatedAt">Loading…</span>
+    <span class="quota-meta" id="quotaInfo"></span>
     <div class="toolbar-spacer"></div>
     <label>
       Group
@@ -818,6 +951,20 @@ tr.group-header:first-child td {
       Refresh
     </button>
   </header>
+
+  <div class="filter-bar" id="filterBar">
+    <label>Search <input type="search" id="filterSearch" placeholder="Playlist name…" autocomplete="off"></label>
+    <div class="sigil-filter" id="sigilFilters"></div>
+    <div class="status-filter" id="statusFilters">
+      <span style="font-size:var(--fs-sm);color:var(--text-muted);margin-right:4px">Status</span>
+      <label class="filter-chip"><input type="checkbox" value="complete"> complete</label>
+      <label class="filter-chip"><input type="checkbox" value="partial"> partial</label>
+      <label class="filter-chip"><input type="checkbox" value="none"> none</label>
+      <label class="filter-chip"><input type="checkbox" value="not_scanned"> not scanned</label>
+    </div>
+    <label>Added since <input type="date" id="filterAddedSince"></label>
+    <span class="filter-count" id="filterCount"></span>
+  </div>
 
   <div class="alert alert-error hidden" id="errorAlert"></div>
   <div class="alert alert-info hidden" id="infoAlert"></div>
@@ -906,7 +1053,9 @@ tr.group-header:first-child td {
   "use strict";
 
   const BYTES_PER_TRACK = 9.5 * 1024 * 1024;
-  const STATUS_ORDER = { none: 0, partial: 1, complete: 2 };
+  const STATUS_ORDER = { not_scanned: -1, none: 0, partial: 1, complete: 2 };
+  const SIGIL_ANY = "__any__";
+  const SIGIL_NONE = "__none__";
 
   const PLAYLIST_HEADERS = [
     { cls: "col-check", sort: null, label: '<span class="sr-only">Select</span>' },
@@ -948,6 +1097,14 @@ tr.group-header:first-child td {
     statusTimer: null,
     loading: true,
     refreshing: false,
+    quota: null,
+    totalPlaylists: 0,
+    playlistFilters: {
+      search: "",
+      sigils: new Set(),
+      statuses: new Set(),
+      addedSince: "",
+    },
   };
 
   const $ = (id) => document.getElementById(id);
@@ -957,6 +1114,13 @@ tr.group-header:first-child td {
     tabAlbums: $("tabAlbums"),
     destinationInfo: $("destinationInfo"),
     generatedAt: $("generatedAt"),
+    quotaInfo: $("quotaInfo"),
+    filterBar: $("filterBar"),
+    filterSearch: $("filterSearch"),
+    sigilFilters: $("sigilFilters"),
+    statusFilters: $("statusFilters"),
+    filterAddedSince: $("filterAddedSince"),
+    filterCount: $("filterCount"),
     groupBy: $("groupBy"),
     btnSelectAll: $("btnSelectAll"),
     btnClearAll: $("btnClearAll"),
@@ -993,6 +1157,102 @@ tr.group-header:first-child td {
   function isPlaylists() {
     return state.activeTab === "playlists";
   }
+  function renderQuotaInfo() {
+    const q = state.quota;
+    if (!q) {
+      els.quotaInfo.textContent = "";
+      return;
+    }
+    els.quotaInfo.textContent = "API: " + q.used_24h + "/" + q.daily_budget + " today";
+  }
+
+  function playlistMatchesSigilFilter(playlist, sigilFilters) {
+    if (!sigilFilters.size) return true;
+    const sigils = new Set(playlist.sigils || []);
+    let matches = false;
+    if (sigilFilters.has(SIGIL_NONE) && sigils.size === 0) matches = true;
+    if (sigilFilters.has(SIGIL_ANY) && sigils.size > 0) matches = true;
+    for (const s of sigilFilters) {
+      if (s !== SIGIL_ANY && s !== SIGIL_NONE && sigils.has(s)) matches = true;
+    }
+    return matches;
+  }
+
+  function filterPlaylists(list) {
+    const f = state.playlistFilters;
+    const searchLower = f.search.trim().toLowerCase();
+    return list.filter((p) => {
+      if (searchLower && !p.name.toLowerCase().includes(searchLower)) return false;
+      if (!playlistMatchesSigilFilter(p, f.sigils)) return false;
+      if (f.statuses.size && !f.statuses.has(p.status || "none")) return false;
+      if (f.addedSince) {
+        const last = p.last_added;
+        if (!last || last < f.addedSince) return false;
+      }
+      return true;
+    });
+  }
+
+  function filteredActiveItems() {
+    const items = activeItems();
+    return isPlaylists() ? filterPlaylists(items) : items;
+  }
+
+  function collectSigilOptions() {
+    const sigils = new Set();
+    for (const p of state.playlists) {
+      for (const s of p.sigils || []) sigils.add(s);
+    }
+    return Array.from(sigils).sort((a, b) => a.localeCompare(b));
+  }
+
+  function renderSigilFilterOptions() {
+    const sigils = collectSigilOptions();
+    const active = state.playlistFilters.sigils;
+    const allActive = active.size === 0;
+
+    let html = '<span class="sigil-filter-label">Sigils</span>';
+    html += '<button type="button" class="sigil-pill meta" data-sigil-action="clear" aria-pressed="' + allActive + '">All</button>';
+    html += '<button type="button" class="sigil-pill meta" data-sigil="' + SIGIL_ANY + '" aria-pressed="' + active.has(SIGIL_ANY) + '">any</button>';
+    html += '<button type="button" class="sigil-pill meta" data-sigil="' + SIGIL_NONE + '" aria-pressed="' + active.has(SIGIL_NONE) + '">none</button>';
+    for (const s of sigils) {
+      const isActive = active.has(s);
+      html += '<button type="button" class="sigil-pill" data-sigil="' + escapeHtml(s) + '" aria-pressed="' + isActive + '">$' + escapeHtml(s) + "</button>";
+    }
+    els.sigilFilters.innerHTML = html;
+
+    els.sigilFilters.querySelectorAll('button[data-sigil-action="clear"]').forEach((btn) => {
+      btn.addEventListener("click", () => {
+        if (!state.playlistFilters.sigils.size) return;
+        state.playlistFilters.sigils.clear();
+        renderTable();
+      });
+    });
+
+    els.sigilFilters.querySelectorAll("button[data-sigil]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const key = btn.dataset.sigil;
+        if (state.playlistFilters.sigils.has(key)) state.playlistFilters.sigils.delete(key);
+        else state.playlistFilters.sigils.add(key);
+        renderTable();
+      });
+    });
+  }
+
+  function syncStatusFilterChecks() {
+    els.statusFilters.querySelectorAll("input[type=checkbox]").forEach((cb) => {
+      cb.checked = state.playlistFilters.statuses.has(cb.value);
+    });
+  }
+
+  function updateFilterCount(shown, total) {
+    if (!isPlaylists()) {
+      els.filterCount.textContent = "";
+      return;
+    }
+    els.filterCount.textContent = "Showing " + shown + " of " + total;
+  }
+
   function activeCollectionStatus() {
     return isPlaylists() ? state.playlistStatus : state.albumStatus;
   }
@@ -1018,10 +1278,23 @@ tr.group-header:first-child td {
   }
 
   function renderCollectionBanner() {
+    const quotaLock = state.quota && state.quota.lockout;
     const status = activeCollectionStatus();
     const rate = activeRateLimit();
     clearError();
     clearInfo();
+
+    if (quotaLock && quotaLock.reset_at) {
+      let resetText = quotaLock.reset_at;
+      try {
+        resetText = new Date(quotaLock.reset_at).toLocaleString();
+      } catch (_) { /* keep raw */ }
+      const reason = quotaLock.reason || "QUOTA_EXCEEDED";
+      showError(
+        reason + ": Spotify quota lockout active. Resets around " + resetText + ". API calls are blocked until then."
+      );
+      return;
+    }
 
     if (status === "rate_limited" && rate) {
       let resetText = "soon";
@@ -1268,13 +1541,21 @@ tr.group-header:first-child td {
   }
 
   function renderPlaylistRow(p) {
-    const dl = p.downloaded_count + "/" + p.track_count;
-    const statusClass = "status-" + (p.status || "none");
+    const status = p.status || "none";
+    const statusClass = "status-" + status;
+    let dlText;
+    let badgeClass = status;
+    if (status === "not_scanned") {
+      dlText = "not scanned";
+      badgeClass = "not_scanned";
+    } else {
+      dlText = (p.downloaded_count || 0) + "/" + p.track_count;
+    }
     let html = '<tr class="data-row ' + statusClass + (p.selected ? " selected" : "") + '" data-id="' + escapeHtml(p.id) + '">';
     html += '<td class="col-check"><input type="checkbox" class="row-check" data-id="' + escapeHtml(p.id) + '"' + (p.selected ? " checked" : "") + "></td>";
     html += '<td class="col-name" title="' + escapeHtml(p.name) + '">' + escapeHtml(p.name) + "</td>";
     html += '<td class="col-tracks">' + p.track_count + "</td>";
-    html += '<td class="col-dl"><span class="dl-badge ' + escapeHtml(p.status || "none") + '">' + dl + "</span></td>";
+    html += '<td class="col-dl"><span class="dl-badge ' + escapeHtml(badgeClass) + '">' + dlText + "</span></td>";
     html += '<td class="col-sigils"><div class="sigils">' + renderSigils(p.sigils) + "</div></td>";
     html += '<td class="col-date">' + formatDate(p.last_added) + "</td>";
     html += '<td class="col-spotify"><a class="btn-spotify" href="' + escapeHtml(p.spotify_uri) + '" title="Open in Spotify" data-no-toggle="1">' + spotifyIcon() + "</a></td>";
@@ -1303,11 +1584,18 @@ tr.group-header:first-child td {
   function renderTable() {
     renderTableHead();
     updateGroupByOptions();
+    els.filterBar.classList.toggle("hidden", !isPlaylists());
 
-    const items = activeItems();
+    const allItems = activeItems();
+    const items = filteredActiveItems();
     const sorted = sortItems(items);
     const rows = isPlaylists() ? buildGroupedPlaylistRows(sorted) : buildGroupedAlbumRows(sorted);
     const colCount = isPlaylists() ? 7 : 7;
+    const totalCount = isPlaylists() ? (state.totalPlaylists || allItems.length) : allItems.length;
+    updateFilterCount(sorted.length, totalCount);
+
+    if (isPlaylists()) renderSigilFilterOptions();
+    syncStatusFilterChecks();
 
     if (!sorted.length && !state.loading) {
       els.tableBody.innerHTML = "";
@@ -1323,9 +1611,9 @@ tr.group-header:first-child td {
         els.emptyTitle.textContent = isPlaylists() ? "Playlists unavailable" : "Albums unavailable";
         els.emptyHint.textContent = "Spotify rate limit is active — see the banner above for when refresh is available again.";
       } else {
-        els.emptyTitle.textContent = isPlaylists() ? "No playlists" : "No saved albums";
+        els.emptyTitle.textContent = isPlaylists() ? "No playlists match filters" : "No saved albums";
         els.emptyHint.textContent = isPlaylists()
-          ? "No $d playlists are in the cache."
+          ? "Try clearing filters or click Refresh to scan Spotify."
           : "You have no saved albums in the cache.";
       }
     } else {
@@ -1338,11 +1626,11 @@ tr.group-header:first-child td {
       if (row.type === "group") {
         const collapsed = state.collapsedGroups.has(row.label);
         const allSelected = row.ids.every((id) => {
-          const item = items.find((x) => x.id === id);
+          const item = allItems.find((x) => x.id === id);
           return item && item.selected;
         });
         const someSelected = !allSelected && row.ids.some((id) => {
-          const item = items.find((x) => x.id === id);
+          const item = allItems.find((x) => x.id === id);
           return item && item.selected;
         });
         html += '<tr class="group-header" data-group="' + escapeHtml(row.label) + '">';
@@ -1403,9 +1691,14 @@ tr.group-header:first-child td {
   }
 
   function updateSummary() {
-    const selected = activeItems().filter((item) => item.selected);
+    const visible = filteredActiveItems();
+    const selected = visible.filter((item) => item.selected);
     const trackTotal = selected.reduce((s, item) => s + trackCount(item), 0);
-    const sizeBytes = trackTotal * BYTES_PER_TRACK;
+    const missingTracks = selected.reduce((s, item) => {
+      if (item.status === "not_scanned") return s;
+      return s + Math.max(0, trackCount(item) - (item.downloaded_count || 0));
+    }, 0);
+    const sizeBytes = missingTracks * BYTES_PER_TRACK;
 
     els.sumItems.textContent = String(selected.length);
     els.sumItemsLabel.textContent = (isPlaylists() ? "playlists" : "albums") + " selected";
@@ -1420,9 +1713,10 @@ tr.group-header:first-child td {
     } else {
       els.btnDownload.title = "";
     }
-    els.btnSelectAll.disabled = state.syncing || !activeItems().length;
-    els.btnClearAll.disabled = state.syncing || !activeItems().length;
-    els.btnRefresh.disabled = state.refreshing || state.syncing || activeCollectionStatus() === "rate_limited";
+    els.btnSelectAll.disabled = state.syncing || !visible.length;
+    els.btnClearAll.disabled = state.syncing || !visible.length;
+    const quotaLocked = state.quota && state.quota.lockout;
+    els.btnRefresh.disabled = state.refreshing || state.syncing || activeCollectionStatus() === "rate_limited" || !!quotaLocked;
   }
 
   function updateGeneratedAt() {
@@ -1454,7 +1748,10 @@ tr.group-header:first-child td {
     state.albums = data.albums || [];
     state.timestamp = data.timestamp || null;
     state.destination = data.destination || state.destination;
+    state.quota = data.quota || state.quota;
+    state.totalPlaylists = data.total_playlists || state.playlists.length;
     state.loading = false;
+    renderQuotaInfo();
     updateGeneratedAt();
     renderDestination();
     renderTable();
@@ -1488,6 +1785,8 @@ tr.group-header:first-child td {
         playlists: plData.playlists,
         albums: alData.albums,
         destination: plData.destination || alData.destination,
+        quota: plData.quota || alData.quota,
+        total_playlists: plData.total_playlists || (plData.playlists || []).length,
       });
       renderCollectionBanner();
     } catch (err) {
@@ -1526,14 +1825,14 @@ tr.group-header:first-child td {
 
   function setAllSelected(selected) {
     if (state.syncing) return;
-    for (const item of activeItems()) item.selected = selected;
+    for (const item of filteredActiveItems()) item.selected = selected;
     renderTable();
     scheduleSelectionSave();
   }
 
   function setGroupSelected(groupLabel, selected) {
     if (state.syncing) return;
-    const sorted = sortItems(activeItems());
+    const sorted = sortItems(filteredActiveItems());
     let ids = [];
 
     if (isPlaylists()) {
@@ -1740,6 +2039,24 @@ tr.group-header:first-child td {
       }
     } catch (_) { /* ignore initial status failure */ }
   }
+
+  els.filterSearch.addEventListener("input", () => {
+    state.playlistFilters.search = els.filterSearch.value;
+    renderTable();
+  });
+
+  els.filterAddedSince.addEventListener("change", () => {
+    state.playlistFilters.addedSince = els.filterAddedSince.value;
+    renderTable();
+  });
+
+  els.statusFilters.querySelectorAll("input[type=checkbox]").forEach((cb) => {
+    cb.addEventListener("change", () => {
+      if (cb.checked) state.playlistFilters.statuses.add(cb.value);
+      else state.playlistFilters.statuses.delete(cb.value);
+      renderTable();
+    });
+  });
 
   els.tabPlaylists.addEventListener("click", () => setTab("playlists"));
   els.tabAlbums.addEventListener("click", () => setTab("albums"));

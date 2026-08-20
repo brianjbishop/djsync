@@ -8,7 +8,7 @@ from typing import Any
 import pytest
 from spotipy.exceptions import SpotifyException
 
-from djsync import cache, spotify
+from djsync import cache, quota, spotify
 from djsync.config import Destination
 
 
@@ -131,6 +131,11 @@ def _album_track_item(*, track_id: str) -> dict[str, Any]:
         "disc_number": 1,
         "explicit": False,
     }
+
+
+@pytest.fixture(autouse=True)
+def _isolated_quota_ledger(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(quota, "LEDGER_PATH", tmp_path / "quota.json")
 
 
 @pytest.fixture
@@ -326,6 +331,34 @@ def test_max_playlists_limits_track_refetch(dest: Destination) -> None:
     cache.build_cache(client, prior=prior, max_playlists=1)
 
     assert len(client.playlist_tracks_calls) == 1
+
+
+def test_catalog_playlists_for_ui_marks_unscanned() -> None:
+    data = {
+        "playlist_catalog": [
+            {"id": "p1", "name": "$d One", "track_count": 1, "sigils": ["d"], "snapshot_id": "s1"},
+            {"id": "p2", "name": "Plain", "track_count": 3, "sigils": [], "snapshot_id": "s2"},
+        ],
+        "playlists": [
+            {
+                "id": "p1",
+                "name": "$d One",
+                "track_count": 1,
+                "sigils": ["d"],
+                "snapshot_id": "s1",
+                "tracks": [{"id": "t1", "duration_ms": 1, "added_at": "2024-01-01T00:00:00Z"}],
+                "downloaded_count": 0,
+                "status": "none",
+            }
+        ],
+    }
+    rows = cache.catalog_playlists_for_ui(data)
+    assert len(rows) == 2
+    by_id = {row["id"]: row for row in rows}
+    assert by_id["p1"]["status"] == "none"
+    assert by_id["p1"]["scanned"] is True
+    assert by_id["p2"]["status"] == "not_scanned"
+    assert by_id["p2"]["downloaded_count"] is None
 
 
 def test_playlists_from_catalog_rebuilds_playlist_objects() -> None:

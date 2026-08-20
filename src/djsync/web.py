@@ -12,7 +12,7 @@ from typing import Any, Literal
 import spotipy
 from flask import Flask, jsonify, request, send_from_directory
 
-from djsync import cache, genres, selection, spotify, sync
+from djsync import cache, genres, quota, selection, spotify, sync
 from djsync.config import PROJECT_ROOT, get_destination
 from djsync.web_helpers import format_size
 
@@ -68,16 +68,32 @@ _genre_lock = threading.Lock()
 
 
 def _merge_playlists(cache_data: dict[str, Any]) -> list[dict[str, Any]]:
-    """Attach selection and genre fields to cached playlist rows."""
+    """Attach selection and genre fields to all catalog playlist rows."""
     selected = selection.load_selection("playlists")
     genre_map = genres.load_genres()
     rows: list[dict[str, Any]] = []
-    for p in cache_data.get("playlists") or []:
-        row = {key: value for key, value in p.items() if key != "tracks"}
+    for playlist in cache.catalog_playlists_for_ui(cache_data):
+        row = dict(playlist)
         row["selected"] = row["id"] in selected
         row["genre"] = genre_map.get(row["id"])
         rows.append(row)
     return rows
+
+
+def _quota_payload() -> dict[str, Any]:
+    return quota.quota_status()
+
+
+def _rate_limit_from_quota() -> dict[str, Any] | None:
+    lockout = quota.get_lockout()
+    if lockout is None:
+        return None
+    return {
+        "retry_after_seconds": lockout.get("retry_after_seconds"),
+        "reset_at": lockout.get("reset_at"),
+        "error": lockout.get("reason") or "Spotify quota exceeded",
+        "reason": lockout.get("reason"),
+    }
 
 
 def _merge_albums(cache_data: dict[str, Any]) -> list[dict[str, Any]]:
@@ -92,11 +108,14 @@ def _merge_albums(cache_data: dict[str, Any]) -> list[dict[str, Any]]:
 
 
 def _cache_response(data: dict[str, Any]) -> dict[str, Any]:
+    playlists = _merge_playlists(data)
     return {
         "timestamp": data.get("timestamp"),
-        "playlists": _merge_playlists(data),
+        "playlists": playlists,
         "albums": _merge_albums(data),
         "destination": _destination_payload(),
+        "quota": _quota_payload(),
+        "total_playlists": len(playlists),
     }
 
 
@@ -131,6 +150,10 @@ def create_app() -> Flask:
             429,
         )
 
+    @app.get("/api/quota")
+    def api_quota() -> Any:
+        return jsonify(_quota_payload())
+
     @app.get("/api/playlists")
     def api_playlists() -> Any:
         refresh = request.args.get("refresh") == "1"
@@ -145,17 +168,23 @@ def create_app() -> Flask:
         except RuntimeError as exc:
             return jsonify({"error": str(exc)}), 500
         payload = _collection_json(data, "playlists")
-        return jsonify(
-            {
-                "timestamp": payload["timestamp"],
-                "status": payload["status"],
-                "retry_after_seconds": payload.get("retry_after_seconds"),
-                "reset_at": payload.get("reset_at"),
-                "error": payload.get("error"),
-                "playlists": payload["playlists"],
-                "destination": payload["destination"],
-            }
-        )
+        quota_rate = _rate_limit_from_quota()
+        response = {
+            "timestamp": payload["timestamp"],
+            "status": payload["status"],
+            "retry_after_seconds": payload.get("retry_after_seconds"),
+            "reset_at": payload.get("reset_at"),
+            "error": payload.get("error"),
+            "playlists": payload["playlists"],
+            "total_playlists": payload["total_playlists"],
+            "destination": payload["destination"],
+            "quota": payload["quota"],
+        }
+        if quota_rate:
+            response["rate_limited"] = True
+            response["status"] = "rate_limited"
+            response.update(quota_rate)
+        return jsonify(response)
 
     @app.get("/api/albums")
     def api_albums() -> Any:
@@ -171,17 +200,22 @@ def create_app() -> Flask:
         except RuntimeError as exc:
             return jsonify({"error": str(exc)}), 500
         payload = _collection_json(data, "albums")
-        return jsonify(
-            {
-                "timestamp": payload["timestamp"],
-                "status": payload["status"],
-                "retry_after_seconds": payload.get("retry_after_seconds"),
-                "reset_at": payload.get("reset_at"),
-                "error": payload.get("error"),
-                "albums": payload["albums"],
-                "destination": payload["destination"],
-            }
-        )
+        quota_rate = _rate_limit_from_quota()
+        response = {
+            "timestamp": payload["timestamp"],
+            "status": payload["status"],
+            "retry_after_seconds": payload.get("retry_after_seconds"),
+            "reset_at": payload.get("reset_at"),
+            "error": payload.get("error"),
+            "albums": payload["albums"],
+            "destination": payload["destination"],
+            "quota": payload["quota"],
+        }
+        if quota_rate:
+            response["rate_limited"] = True
+            response["status"] = "rate_limited"
+            response.update(quota_rate)
+        return jsonify(response)
 
     @app.post("/api/refresh")
     def api_refresh() -> Any:
@@ -192,12 +226,43 @@ def create_app() -> Flask:
         try:
             client = spotify.get_client()
             prior = cache.load_cache() or cache.load_cache_or_empty()
+            cost = quota.estimate_refresh_cost(prior, max_playlists=max_playlists)
+            if not quota.can_spend(cost):
+                lockout = quota.get_lockout()
+                if lockout:
+                    retry = int(lockout.get("retry_after_seconds") or 0)
+                    raise spotify.RateLimitedError(
+                        retry,
+                        message=(
+                            f"{lockout.get('reason') or 'QUOTA_EXCEEDED'}: "
+                            f"{spotify.format_rate_limit_message(retry)}"
+                        ),
+                    )
+                remaining = max(
+                    0,
+                    _quota_payload()["daily_budget"] - _quota_payload()["used_24h"],
+                )
+                return (
+                    jsonify(
+                        {
+                            "error": (
+                                f"Refresh would need ~{cost} API requests but only "
+                                f"{remaining} remain in today's budget."
+                            ),
+                            "estimated_cost": cost,
+                            "quota": _quota_payload(),
+                        }
+                    ),
+                    429,
+                )
             data = cache.build_cache(
                 client,
                 max_playlists=max_playlists,
                 prior=prior,
             )
             cache.save_cache(data)
+        except quota.QuotaBudgetError as exc:
+            return jsonify({"error": str(exc), "quota": _quota_payload()}), 429
         except spotify.RateLimitedError as exc:
             saved = cache.load_cache()
             if saved is not None:
@@ -311,9 +376,7 @@ def create_app() -> Flask:
             if not isinstance(item_ids, list) or not item_ids:
                 return jsonify({"error": "expected non-empty playlist_ids"}), 400
 
-        cached = cache.load_cache()
-        if cached is None:
-            return jsonify({"error": "no cache; refresh first"}), 400
+        cached = cache.load_cache() or cache.load_cache_or_empty()
 
         if kind == "albums":
             by_id = {a["id"]: a for a in cached.get("albums") or []}
@@ -337,26 +400,16 @@ def create_app() -> Flask:
                 album_tracks[entry["id"]] = tracks
             count_key = "total_tracks"
         else:
-            by_id = {p["id"]: p for p in cached.get("playlists") or []}
+            by_id: dict[str, dict[str, Any]] = {}
             targets = []
-            playlist_tracks: dict[str, list[Any]] = {}
             for pid in item_ids:
-                entry = by_id.get(str(pid))
+                entry = cache.playlist_entry_by_id(cached, str(pid))
                 if entry is None:
                     continue
+                by_id[str(pid)] = entry
                 targets.append(cache.playlist_from_entry(entry))
-                tracks = cache.cached_playlist_tracks(entry)
-                if tracks is None:
-                    return jsonify(
-                        {
-                            "error": (
-                                f'No cached tracks for playlist "{entry["name"]}". '
-                                "Refresh the library first."
-                            )
-                        }
-                    ), 400
-                playlist_tracks[entry["id"]] = tracks
             count_key = "track_count"
+            playlist_tracks: dict[str, list[Any]] = {}
 
         if not targets:
             label = "albums" if kind == "albums" else "playlists"
@@ -375,7 +428,7 @@ def create_app() -> Flask:
                     max(
                         0,
                         by_id[str(iid)][count_key]
-                        - by_id[str(iid)]["downloaded_count"],
+                        - (by_id[str(iid)].get("downloaded_count") or 0),
                     )
                     for iid in item_ids
                     if str(iid) in by_id
@@ -392,6 +445,12 @@ def create_app() -> Flask:
                     name = target.name if kind == "playlists" else target.name
                     with _job_lock:
                         _job.current_item = name
+
+                    if kind == "playlists":
+                        entry = by_id[target.id]
+                        tracks = cache.ensure_playlist_tracks(client, cached, entry)
+                        cache.save_cache(cached)
+                        playlist_tracks[target.id] = tracks
 
                     def on_log(msg: str) -> None:
                         with _job_lock:
@@ -432,7 +491,7 @@ def create_app() -> Flask:
                         _job.skipped += result.skipped
                         _job.failed += result.failed
                         _job.unverified_explicit.extend(result.unverified_explicit)
-            except (spotify.RateLimitedError, RuntimeError) as exc:
+            except (spotify.RateLimitedError, quota.QuotaBudgetError, RuntimeError) as exc:
                 with _job_lock:
                     _job.log.append(f"ERROR: {exc}")
             finally:

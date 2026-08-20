@@ -47,6 +47,10 @@ REMOTE_COMPONENTS = ["ejs:github"]
 # seconds between tracks costs little and looks nothing like a scraper.
 SLEEP_BETWEEN_DOWNLOADS = (3, 8)  # random delay range, seconds
 
+# Spotify API usage budgets (local ledger; Spotify publishes no quota endpoint).
+DAILY_REQUEST_BUDGET = int(os.getenv("DJSYNC_DAILY_REQUEST_BUDGET", "1000"))
+BURST_PER_30S = int(os.getenv("DJSYNC_BURST_PER_30S", "100"))
+
 
 @dataclass(frozen=True)
 class Destination:
