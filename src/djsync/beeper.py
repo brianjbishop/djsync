@@ -14,7 +14,6 @@ from typing import Any
 
 from djsync import agent
 from djsync.config import get_beeper_settings
-from djsync.report import album_progress, playlist_progress
 
 logger = logging.getLogger(__name__)
 
@@ -283,6 +282,11 @@ def _active_event_messages(
         )
 
     if data:
+        # Imported here, not at module scope: report imports agent, which
+        # imports this module. A top-level import closes that cycle and breaks
+        # `djsync report` entirely.
+        from djsync.report import album_progress, playlist_progress
+
         pl_have, pl_total = playlist_progress(data)
         if pl_total > 0 and pl_have >= pl_total:
             active["playlists_complete"] = "All $d playlists are complete."
