@@ -100,10 +100,16 @@ def run_beeper_auth(*, redirect_uri: str = DEFAULT_REDIRECT_URI) -> str:
             "Beeper Desktop is not running. Start Beeper Desktop and retry."
         ) from exc
 
+    info = _fetch_json(f"{base}/v1/info")
+    oauth = ((info or {}).get("endpoints") or {}).get("oauth") or {}
+
+    # /v1/info publishes the OAuth endpoints authoritatively. Deriving them by
+    # scanning /v1/spec picked /v1/app/setup/register - a different endpoint
+    # that answers 409. Fall back to spec-scanning only if info is missing them.
     spec = _fetch_json(f"{base}/v1/spec")
     paths = _spec_paths(spec if isinstance(spec, dict) else {})
 
-    register_url = f"{base}{paths['register']}"
+    register_url = oauth.get("registration_endpoint") or f"{base}{paths['register']}"
     client_name = "djsync"
     register_body: dict[str, Any] = {
         "client_name": client_name,
@@ -128,7 +134,8 @@ def run_beeper_auth(*, redirect_uri: str = DEFAULT_REDIRECT_URI) -> str:
         "response_type": "code",
         "state": state,
     }
-    authorize_url = f"{base}{paths['authorize']}?{urllib.parse.urlencode(auth_params)}"
+    authorize_base = oauth.get("authorization_endpoint") or f"{base}{paths['authorize']}"
+    authorize_url = f"{authorize_base}?{urllib.parse.urlencode(auth_params)}"
     print("Open this URL in your browser to authorize djsync:", flush=True)
     print(authorize_url, flush=True)
     try:
@@ -138,7 +145,7 @@ def run_beeper_auth(*, redirect_uri: str = DEFAULT_REDIRECT_URI) -> str:
 
     code = _wait_for_code(redirect_uri)
 
-    token_url = f"{base}{paths['token']}"
+    token_url = (oauth.get("token_endpoint") or f"{base}{paths['token']}")
     token_body = {
         "grant_type": "authorization_code",
         "code": code,
