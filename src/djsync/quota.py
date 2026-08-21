@@ -99,15 +99,26 @@ def record_429(
     *,
     now: datetime | None = None,
 ) -> None:
-    """Persist a Spotify 429 lockout and count the request."""
+    """Persist a Spotify 429 lockout and count the request.
+
+    A missing/zero Retry-After must not clear immediately — that produces false
+    confidence for the next run. Fall back to spotify.DEFAULT_429_RETRY_AFTER.
+    """
+    from djsync.spotify import DEFAULT_429_RETRY_AFTER
+
     now = now or _now()
+    effective = (
+        retry_after_seconds
+        if retry_after_seconds > 0
+        else DEFAULT_429_RETRY_AFTER
+    )
     data = _load_ledger()
     _prune_requests(data, now=now)
     data["requests"].append(now.isoformat())
-    reset = now + timedelta(seconds=max(0, retry_after_seconds))
+    reset = now + timedelta(seconds=effective)
     data["lockout"] = {
         "reason": reason,
-        "retry_after_seconds": retry_after_seconds,
+        "retry_after_seconds": effective,
         "reset_at": reset.isoformat(),
     }
     _save_ledger(data)
@@ -241,13 +252,23 @@ def quota_status(*, now: datetime | None = None) -> dict[str, Any]:
     }
 
 
+def _ceil_div(n: int, size: int) -> int:
+    return max(1, (max(0, n) + size - 1) // size)
+
+
 def estimate_refresh_cost(
     prior: dict[str, Any] | None = None,
     *,
     max_playlists: int | None = None,
 ) -> int:
-    """Estimate Spotify requests for a full cache refresh."""
-    from djsync import cache
+    """Estimate Spotify requests for a cache refresh, including pagination.
+
+    playlist listing = ceil(total_playlists / 50)
+    playlist pages   = ceil(track_count / 100) per playlist needing a refetch
+    albums           = ceil(saved_albums / 50) + 1 per album whose tracks are
+                       uncached (only when SYNC_ALBUMS is enabled)
+    """
+    from djsync import cache, config
 
     prior = dict(prior or {})
     catalog = prior.get("playlist_catalog") or []
@@ -256,30 +277,50 @@ def estimate_refresh_cost(
         scanned = prior.get("playlists") or []
         playlist_count = max(len(scanned), 1)
 
-    playlist_list_pages = max(1, (playlist_count + 49) // 50)
+    playlist_list_pages = _ceil_div(playlist_count, 50)
 
-    marked_d = [
-        cache.playlist_from_entry(entry)
-        for entry in prior.get("playlists") or []
-        if "d" in (entry.get("sigils") or [])
-    ]
     if catalog:
         marked_d = [
             cache.playlist_from_entry(entry)
             for entry in catalog
             if "d" in (entry.get("sigils") or [])
         ]
+    else:
+        marked_d = [
+            cache.playlist_from_entry(entry)
+            for entry in prior.get("playlists") or []
+            if "d" in (entry.get("sigils") or [])
+        ]
 
-    refetch = cache.estimate_playlist_refetches(
-        marked_d,
-        prior,
+    old_by_id = {
+        entry["id"]: entry for entry in prior.get("playlists") or []
+    }
+    needing = [
+        playlist
+        for playlist in marked_d
+        if cache._needs_track_refetch(playlist, old_by_id.get(playlist.id))
+    ]
+    needing.sort(
+        key=lambda playlist: cache._refetch_priority(
+            playlist, old_by_id.get(playlist.id)
+        )
     )
     if max_playlists is not None:
-        refetch = min(refetch, max_playlists)
+        needing = needing[: max(0, max_playlists)]
 
-    albums = prior.get("albums") or []
-    album_pages = max(1, (len(albums) + 49) // 50) if albums else 1
-    album_tracks_cache = prior.get("album_tracks") or {}
-    new_album_tracks = sum(1 for album in albums if album.get("id") not in album_tracks_cache)
+    track_pages = sum(
+        _ceil_div(int(playlist.track_count or 0), 100) for playlist in needing
+    )
 
-    return playlist_list_pages + refetch + album_pages + new_album_tracks
+    total = playlist_list_pages + track_pages
+
+    if config.SYNC_ALBUMS:
+        albums = prior.get("albums") or []
+        album_pages = _ceil_div(len(albums), 50) if albums else 1
+        album_tracks_cache = prior.get("album_tracks") or {}
+        new_album_tracks = sum(
+            1 for album in albums if album.get("id") not in album_tracks_cache
+        )
+        total += album_pages + new_album_tracks
+
+    return total

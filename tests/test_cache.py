@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 from typing import Any
 
@@ -226,11 +227,15 @@ def test_album_tracks_fetched_once_and_reused(dest: Destination) -> None:
         album_tracks={album_id: [_album_track_item(track_id="at1")]},
     )
 
-    first = cache.build_cache(client, prior={"playlists": [], "albums": [], "album_tracks": {}})
+    first = cache.build_cache(
+        client,
+        prior={"playlists": [], "albums": [], "album_tracks": {}},
+        sync_albums=True,
+    )
     assert client.album_tracks_calls == [album_id]
 
     client.album_tracks_calls.clear()
-    second = cache.build_cache(client, prior=first)
+    second = cache.build_cache(client, prior=first, sync_albums=True)
 
     assert client.album_tracks_calls == []
     assert second["albums"][0]["downloaded_count"] == 0
@@ -385,8 +390,147 @@ def test_spotify_exception_non_429_is_reraised() -> None:
         spotify._spotify_call(_raise_spotify, exc)
 
 
-def test_rate_limit_without_header_defaults_to_zero() -> None:
+def test_rate_limit_without_header_uses_default_lockout() -> None:
     exc = SpotifyException(429, -1, "rate limited", headers={})
     with pytest.raises(spotify.RateLimitedError) as err:
         spotify._spotify_call(_raise_spotify, exc)
-    assert err.value.retry_after_seconds == 0
+    assert err.value.retry_after_seconds == spotify.DEFAULT_429_RETRY_AFTER
+    assert quota.get_lockout() is not None
+    assert quota.get_lockout()["retry_after_seconds"] == spotify.DEFAULT_429_RETRY_AFTER
+
+
+def test_incremental_refresh_resumes_without_refetching(
+    dest: Destination,
+) -> None:
+    playlists = [
+        _playlist_item(
+            id_=f"pl{i}",
+            name=f"$d P{i}",
+            snapshot_id=f"snap{i}",
+            track_count=1,
+        )
+        for i in range(10)
+    ]
+    tracks = {
+        f"pl{i}": [_playlist_track_item(track_id=f"t{i}")] for i in range(10)
+    }
+    client = FakeSpotifyClient(playlists=playlists, playlist_tracks=tracks)
+
+    first = cache.build_cache(client, prior=None, max_playlists=5, sync_albums=False)
+    assert len(client.playlist_tracks_calls) == 5
+    assert len(first["playlists"]) == 5
+    saved = cache.load_cache()
+    assert saved is not None
+    assert len(saved["playlists"]) == 5
+
+    client.playlist_tracks_calls.clear()
+    second = cache.build_cache(
+        client, prior=saved, max_playlists=5, sync_albums=False
+    )
+    assert len(client.playlist_tracks_calls) == 5
+    assert set(client.playlist_tracks_calls) == {f"pl{i}" for i in range(5, 10)}
+    assert len(second["playlists"]) == 10
+
+
+def test_atomic_save_leaves_cache_intact_on_interrupted_write(
+    dest: Destination,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    good = {
+        "timestamp": "2024-01-01T00:00:00+00:00",
+        "playlist_catalog": [],
+        "playlists": [{"id": "p1", "name": "$d Ok", "sigils": ["d"], "tracks": [{"id": "t1"}]}],
+        "albums": [],
+        "album_tracks": {},
+        "collections": {"playlists": {"status": "ok"}, "albums": {"status": "never_fetched"}},
+    }
+    cache.save_cache(good)
+    original = cache.CACHE_PATH.read_bytes()
+
+    real_replace = os.replace
+
+    def boom_replace(src: str, dst: str) -> None:
+        raise OSError("simulated crash before replace")
+
+    monkeypatch.setattr(os, "replace", boom_replace)
+    with pytest.raises(OSError, match="simulated crash"):
+        cache.save_cache({**good, "playlists": []})
+
+    monkeypatch.setattr(os, "replace", real_replace)
+    assert cache.CACHE_PATH.read_bytes() == original
+    loaded = cache.load_cache()
+    assert loaded is not None
+    assert loaded["playlists"][0]["id"] == "p1"
+
+
+def test_429_mid_refresh_keeps_completed_playlists_and_records_lockout(
+    dest: Destination,
+) -> None:
+    playlists = [
+        _playlist_item(id_=f"pl{i}", name=f"$d P{i}", snapshot_id=f"s{i}")
+        for i in range(4)
+    ]
+    tracks = {
+        f"pl{i}": [_playlist_track_item(track_id=f"t{i}")] for i in range(4)
+    }
+    client = FakeSpotifyClient(playlists=playlists, playlist_tracks=tracks)
+    calls = {"n": 0}
+    real_tracks = client.playlist_tracks
+
+    def flaky(playlist_id: str, *, limit: int = 100, offset: int = 0) -> dict[str, Any]:
+        calls["n"] += 1
+        if calls["n"] > 2:
+            raise SpotifyException(
+                429,
+                -1,
+                "QUOTA_EXCEEDED",
+                headers={"Retry-After": "7200"},
+            )
+        return real_tracks(playlist_id, limit=limit, offset=offset)
+
+    client.playlist_tracks = flaky  # type: ignore[method-assign]
+
+    data = cache.build_cache(client, prior=None, sync_albums=False)
+
+    assert data["collections"]["playlists"]["status"] == "rate_limited"
+    assert len(data["playlists"]) == 2
+    saved = cache.load_cache()
+    assert saved is not None
+    assert len(saved["playlists"]) == 2
+    lockout = quota.get_lockout()
+    assert lockout is not None
+    assert lockout["retry_after_seconds"] == 7200
+
+
+def test_max_playlists_prefers_never_fetched_over_changed(
+    dest: Destination,
+) -> None:
+    playlists = [
+        _playlist_item(id_="changed", name="$d Changed", snapshot_id="new"),
+        _playlist_item(id_="fresh", name="$d Fresh", snapshot_id="s1"),
+    ]
+    client = FakeSpotifyClient(
+        playlists=playlists,
+        playlist_tracks={
+            "changed": [_playlist_track_item(track_id="tc")],
+            "fresh": [_playlist_track_item(track_id="tf")],
+        },
+    )
+    prior = {
+        "playlists": [
+            {
+                "id": "changed",
+                "name": "$d Changed",
+                "sigils": ["d"],
+                "track_count": 1,
+                "snapshot_id": "old",
+                "tracks": [{"id": "old", "duration_ms": 1, "added_at": "2024-01-01T00:00:00Z"}],
+            }
+        ],
+        "albums": [],
+        "album_tracks": {},
+        "playlist_catalog": [],
+    }
+    cache.build_cache(client, prior=prior, max_playlists=1, sync_albums=False)
+    assert client.playlist_tracks_calls == ["fresh"]
+

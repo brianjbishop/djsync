@@ -151,9 +151,9 @@ def test_rate_limit_during_refresh_preserves_prior_cache(
     monkeypatch.setattr("djsync.cache.spotify.fetch_playlists", _rate_limited)
     client = FakeSpotifyClient()
 
-    with pytest.raises(spotify.RateLimitedError):
-        cache.build_cache(client, prior=prior)
+    data = cache.build_cache(client, prior=prior)
 
+    assert data["collections"]["playlists"]["status"] == "rate_limited"
     saved = cache.load_cache()
     assert saved is not None
     assert saved["playlists"][0]["name"] == "$d Warm"

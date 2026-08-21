@@ -160,7 +160,10 @@ def _cache_payload(
     }
 
 
-def test_work_queue_partial_before_untouched_then_smaller_first() -> None:
+def test_work_queue_partial_before_untouched_then_smaller_first(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr("djsync.agent.SYNC_ALBUMS", True)
     data = _cache_payload(
         [
             _playlist_entry(
@@ -678,3 +681,54 @@ def test_beeper_lockout_reannounces_after_clear(
         urlopen=fake_urlopen,
     )
     assert len(posts) == 2
+
+
+def test_agent_downloads_from_cache_when_refresh_skipped_entirely(
+    isolated_state: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    dest = _dest(isolated_state, mounted=True)
+    _mount(monkeypatch, dest, True)
+    old = (datetime.now(UTC) - timedelta(hours=20)).isoformat()
+    cache.save_cache(
+        _cache_payload(
+            [
+                _playlist_entry(
+                    playlist_id="p1", name="$d Work", downloaded=0, total=3
+                )
+            ],
+            timestamp=old,
+        )
+    )
+    monkeypatch.setattr(quota, "can_spend", lambda *_a, **_k: False)
+    refresh = MagicMock()
+    monkeypatch.setattr(agent, "refresh_cache", refresh)
+    monkeypatch.setattr(
+        agent, "sync_playlist", lambda *_a, **_k: SyncResult(downloaded=1)
+    )
+
+    code = agent.run_agent(dest=dest, notify=lambda _msg: None)
+
+    assert code == 0
+    refresh.assert_not_called()
+    assert downloads.used_last_24h() == 3
+
+
+def test_work_queue_skips_albums_when_sync_albums_disabled(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr("djsync.agent.SYNC_ALBUMS", False)
+    data = _cache_payload(
+        [
+            _playlist_entry(
+                playlist_id="p1", name="$d Only", downloaded=0, total=2
+            )
+        ],
+        [
+            _album_entry(
+                album_id="a1", name="Album", downloaded=0, total=5
+            )
+        ],
+    )
+    names = [item.name for item in agent.build_work_queue(data)]
+    assert names == ["$d Only"]

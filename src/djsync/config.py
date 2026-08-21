@@ -64,13 +64,24 @@ REMOTE_COMPONENTS = ["ejs:github"]
 SLEEP_BETWEEN_DOWNLOADS = (3, 8)  # random delay range, seconds
 
 # Spotify API usage budgets (local ledger; Spotify publishes no quota endpoint).
-DAILY_REQUEST_BUDGET = int(os.getenv("DJSYNC_DAILY_REQUEST_BUDGET", "1000"))
-BURST_PER_30S = int(os.getenv("DJSYNC_BURST_PER_30S", "100"))
+# ~788 requests in ~4 minutes triggered a ~24h lockout on a development-mode app;
+# these defaults are deliberately conservative and all env-overridable.
+DAILY_REQUEST_BUDGET = int(os.getenv("DJSYNC_DAILY_REQUEST_BUDGET", "300"))
+BURST_PER_30S = int(os.getenv("DJSYNC_BURST_PER_30S", "15"))
+SPOTIFY_MIN_REQUEST_INTERVAL = float(
+    os.getenv("DJSYNC_SPOTIFY_MIN_REQUEST_INTERVAL", "1.5")
+)
 
 # YouTube download cap (rolling 24h) and unattended-agent knobs.
 DAILY_DOWNLOAD_CAP = int(os.getenv("DJSYNC_DAILY_DOWNLOAD_CAP", "800"))
 STALE_AFTER_HOURS = float(os.getenv("DJSYNC_STALE_AFTER_HOURS", "12"))
 CIRCUIT_BREAKER_FAILURES = int(os.getenv("DJSYNC_CIRCUIT_BREAKER_FAILURES", "5"))
+PLAYLISTS_PER_RUN = int(os.getenv("DJSYNC_PLAYLISTS_PER_RUN", "10"))
+SYNC_ALBUMS = os.getenv("DJSYNC_SYNC_ALBUMS", "false").strip().lower() in (
+    "1",
+    "true",
+    "yes",
+)
 
 DJSYNC_REPORT_EMAIL = os.getenv("DJSYNC_REPORT_EMAIL", "brian.rio11@gmail.com")
 

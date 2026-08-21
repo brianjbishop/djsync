@@ -89,7 +89,10 @@ def test_spotify_429_records_lockout(ledger_path: Path) -> None:
     assert quota.get_lockout()["reason"] == "QUOTA_EXCEEDED"
 
 
-def test_estimate_refresh_cost_counts_catalog_and_refetches() -> None:
+def test_estimate_refresh_cost_counts_catalog_and_refetches(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr("djsync.config.SYNC_ALBUMS", True)
     prior = {
         "playlist_catalog": [{"id": f"p{i}", "name": f"P{i}", "sigils": ["d"] if i == 0 else [], "track_count": 1, "snapshot_id": "s"} for i in range(100)],
         "playlists": [],
@@ -98,3 +101,67 @@ def test_estimate_refresh_cost_counts_catalog_and_refetches() -> None:
     }
     cost = quota.estimate_refresh_cost(prior)
     assert cost >= 2  # playlist pages + album page + refetch for one $d playlist
+
+
+def test_estimate_refresh_cost_523_track_playlist_costs_six_pages(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A 523-track playlist costs 6 track requests (ceil(523/100)), not 1."""
+    monkeypatch.setattr("djsync.config.SYNC_ALBUMS", False)
+    assert quota._ceil_div(523, 100) == 6
+    prior = {
+        "playlist_catalog": [
+            {
+                "id": "big",
+                "name": "$d Big",
+                "sigils": ["d"],
+                "track_count": 523,
+                "snapshot_id": "s1",
+            }
+        ],
+        "playlists": [],
+        "albums": [],
+        "album_tracks": {},
+    }
+    cost = quota.estimate_refresh_cost(prior)
+    # 1 catalog listing page + 6 track pages (albums off).
+    assert cost == 1 + 6
+    assert cost != 1 + 1  # old bug: counted one request per playlist
+
+
+def test_warning_shaped_429_is_recorded_in_ledger(ledger_path: Path) -> None:
+    import logging
+
+    def fn() -> dict[str, bool]:
+        logging.getLogger("urllib3.util.retry").warning(
+            "Retrying after ResponseError('too many 429 error responses') "
+            "Retry-After: 5400"
+        )
+        return {"ok": True}
+
+    with pytest.raises(spotify.RateLimitedError) as err:
+        spotify._spotify_call(fn)
+
+    assert err.value.retry_after_seconds == 5400
+    lockout = quota.get_lockout()
+    assert lockout is not None
+    assert lockout["retry_after_seconds"] == 5400
+
+
+def test_min_request_interval_enforced_between_calls(
+    ledger_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    clock = {"t": 100.0}
+    slept: list[float] = []
+
+    monkeypatch.setattr(spotify, "SPOTIFY_MIN_REQUEST_INTERVAL", 1.5)
+    monkeypatch.setattr(spotify, "_last_request_at", None)
+    monkeypatch.setattr(spotify, "_monotonic", lambda: clock["t"])
+    monkeypatch.setattr(spotify, "_sleep", lambda seconds: slept.append(seconds))
+
+    spotify._spotify_call(lambda: {"a": 1})
+    clock["t"] = 100.4  # only 0.4s later
+    spotify._spotify_call(lambda: {"b": 2})
+
+    assert slept == [pytest.approx(1.1)]

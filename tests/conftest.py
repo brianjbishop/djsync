@@ -18,7 +18,7 @@ from __future__ import annotations
 
 import pytest
 
-from djsync import agent, downloads, events, quota
+from djsync import agent, downloads, events, quota, spotify
 
 
 @pytest.fixture(autouse=True)
@@ -33,3 +33,9 @@ def _isolate_runtime_state(tmp_path, monkeypatch):
     for attr in ("LEDGER_PATH", "DOWNLOADS_PATH", "STATE_PATH"):
         if hasattr(downloads, attr):
             monkeypatch.setattr(downloads, attr, tmp_path / f"downloads_{attr}.json")
+
+    # Production pacing defaults are intentionally slow; tests must not sleep.
+    monkeypatch.setattr(spotify, "SPOTIFY_MIN_REQUEST_INTERVAL", 0.0)
+    monkeypatch.setattr(quota, "BURST_PER_30S", 10_000)
+    monkeypatch.setattr(quota, "DAILY_REQUEST_BUDGET", 100_000)
+    monkeypatch.setattr(spotify, "_last_request_at", None)

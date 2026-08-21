@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import json
 import logging
+import os
+import tempfile
 from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
@@ -12,7 +14,7 @@ from typing import Any, Literal
 import spotipy
 
 from djsync import spotify
-from djsync.config import PROJECT_ROOT, get_destination
+from djsync.config import PROJECT_ROOT, SYNC_ALBUMS, get_destination
 from djsync.library import album_folder, existing_spotify_ids, playlist_folder
 from djsync.models import Track
 from djsync.web_helpers import compute_status
@@ -505,6 +507,15 @@ def _needs_track_refetch(
     return False
 
 
+def _refetch_priority(
+    playlist: spotify.Playlist,
+    cached_entry: dict[str, Any] | None,
+) -> tuple[int, str, str]:
+    """Sort key: never-fetched first, then changed snapshot_id."""
+    never_fetched = cached_entry is None or not cached_entry.get("tracks")
+    return (0 if never_fetched else 1, playlist.name.casefold(), playlist.id)
+
+
 def estimate_playlist_refetches(
     marked_d: list[spotify.Playlist],
     prior: dict[str, Any] | None,
@@ -518,24 +529,70 @@ def estimate_playlist_refetches(
     )
 
 
+def _ordered_scanned_playlists(
+    marked_d: list[spotify.Playlist],
+    by_id: dict[str, dict[str, Any]],
+) -> list[dict[str, Any]]:
+    """Keep scanned rows aligned with the live $d catalog order."""
+    rows: list[dict[str, Any]] = []
+    for playlist in marked_d:
+        entry = by_id.get(playlist.id)
+        if entry is not None and entry.get("tracks"):
+            rows.append(entry)
+    return rows
+
+
+def _refresh_local_counts_for_unchanged(
+    marked_d: list[spotify.Playlist],
+    by_id: dict[str, dict[str, Any]],
+    fetched_ids: set[str],
+) -> None:
+    for playlist in marked_d:
+        if playlist.id in fetched_ids:
+            continue
+        cached = by_id.get(playlist.id)
+        if cached is None or not cached.get("tracks"):
+            continue
+        if _needs_track_refetch(playlist, cached):
+            continue
+        tracks = _deserialize_tracks(cached["tracks"])
+        by_id[playlist.id] = _playlist_entry(playlist, tracks)
+
+
 def build_cache(
     client: spotipy.Spotify,
     *,
     max_playlists: int | None = None,
     prior: dict[str, Any] | None = None,
     on_log: LogCallback | None = None,
+    sync_albums: bool | None = None,
 ) -> dict[str, Any]:
-    """Scan Spotify + drive and return cache payload."""
+    """Scan Spotify + drive and return cache payload.
+
+    Saves to disk after each playlist's tracks are fetched (atomic replace).
+    On RateLimitedError, persists completed work, records lockout state, and
+    returns cleanly without raising.
+    """
     def log(msg: str) -> None:
         if on_log:
             on_log(msg)
         else:
             logger.info(msg)
 
+    include_albums = SYNC_ALBUMS if sync_albums is None else sync_albums
     prior = dict(prior if prior is not None else load_cache() or {})
     _ensure_collections(prior)
+    if "playlists" not in prior:
+        prior["playlists"] = []
+    if "albums" not in prior:
+        prior["albums"] = []
+    if "album_tracks" not in prior:
+        prior["album_tracks"] = {}
+    if "playlist_catalog" not in prior:
+        prior["playlist_catalog"] = []
+
     old_playlists_by_id = {
-        entry["id"]: entry for entry in prior.get("playlists") or []
+        entry["id"]: dict(entry) for entry in prior.get("playlists") or []
     }
     album_tracks_cache: dict[str, list[dict[str, Any]]] = dict(
         prior.get("album_tracks") or {}
@@ -546,14 +603,22 @@ def build_cache(
     except spotify.RateLimitedError as exc:
         record_collection_rate_limit(prior, "playlists", exc)
         save_cache(prior)
-        raise
+        return prior
 
     playlist_catalog = [_playlist_catalog_entry(p) for p in all_playlists]
     marked_d = [p for p in all_playlists if "d" in p.sigils]
+    prior["playlist_catalog"] = playlist_catalog
+    prior["timestamp"] = datetime.now(UTC).isoformat()
+    save_cache(prior)
 
     needs_refetch = [
         p for p in marked_d if _needs_track_refetch(p, old_playlists_by_id.get(p.id))
     ]
+    needs_refetch.sort(
+        key=lambda playlist: _refetch_priority(
+            playlist, old_playlists_by_id.get(playlist.id)
+        )
+    )
     refetch_estimate = len(needs_refetch)
     if refetch_estimate > REFETCH_WARN_THRESHOLD:
         log(
@@ -561,68 +626,107 @@ def build_cache(
             f"(>{REFETCH_WARN_THRESHOLD}); unchanged playlists reuse cached data."
         )
 
-    fetch_budget = refetch_estimate if max_playlists is None else max_playlists
-    fetch_remaining = fetch_budget
-
-    playlist_entries: list[dict[str, Any]] = []
-    for playlist in marked_d:
-        cached = old_playlists_by_id.get(playlist.id)
-        if _needs_track_refetch(playlist, cached):
-            if fetch_remaining > 0:
-                tracks = spotify.fetch_tracks(client, playlist.id)
-                fetch_remaining -= 1
-            elif cached and cached.get("tracks"):
+    if max_playlists is not None:
+        to_fetch = needs_refetch[: max(0, max_playlists)]
+        for playlist in needs_refetch[max(0, max_playlists) :]:
+            cached = old_playlists_by_id.get(playlist.id)
+            if cached and cached.get("tracks"):
                 log(
                     f"Skipping track refetch for {playlist.name!r} "
                     f"(max_playlists limit); using cached tracks."
                 )
-                tracks = _deserialize_tracks(cached["tracks"])
-                playlist = spotify.Playlist(
-                    id=playlist.id,
-                    name=playlist.name,
-                    track_count=playlist.track_count,
-                    sigils=playlist.sigils,
-                    snapshot_id=cached.get("snapshot_id") or playlist.snapshot_id,
-                )
-            else:
-                tracks = spotify.fetch_tracks(client, playlist.id)
-        else:
-            tracks = _deserialize_tracks(cached["tracks"])
+    else:
+        to_fetch = needs_refetch
 
-        playlist_entries.append(_playlist_entry(playlist, tracks))
+    playlists_by_id = dict(old_playlists_by_id)
+    fetched_ids: set[str] = set()
 
-    prior["playlist_catalog"] = playlist_catalog
-    prior["playlists"] = playlist_entries
+    for playlist in to_fetch:
+        try:
+            tracks = spotify.fetch_tracks(client, playlist.id)
+        except spotify.RateLimitedError as exc:
+            record_collection_rate_limit(prior, "playlists", exc)
+            _refresh_local_counts_for_unchanged(marked_d, playlists_by_id, fetched_ids)
+            prior["playlists"] = _ordered_scanned_playlists(marked_d, playlists_by_id)
+            save_cache(prior)
+            return prior
+
+        playlists_by_id[playlist.id] = _playlist_entry(playlist, tracks)
+        fetched_ids.add(playlist.id)
+        _refresh_local_counts_for_unchanged(marked_d, playlists_by_id, fetched_ids)
+        prior["playlists"] = _ordered_scanned_playlists(marked_d, playlists_by_id)
+        prior["timestamp"] = datetime.now(UTC).isoformat()
+        # Persist after EACH playlist so a lockout never discards completed work.
+        save_cache(prior)
+
+    _refresh_local_counts_for_unchanged(marked_d, playlists_by_id, fetched_ids)
+    prior["playlists"] = _ordered_scanned_playlists(marked_d, playlists_by_id)
     record_collection_ok(prior, "playlists")
 
-    album_entries: list[dict[str, Any]] = []
-    try:
-        saved_albums = spotify.fetch_saved_albums(client)
-    except spotify.RateLimitedError as exc:
-        record_collection_rate_limit(prior, "albums", exc)
-        prior["timestamp"] = datetime.now(UTC).isoformat()
-        save_cache(prior)
-        raise
+    if include_albums:
+        try:
+            saved_albums = spotify.fetch_saved_albums(client)
+        except spotify.RateLimitedError as exc:
+            record_collection_rate_limit(prior, "albums", exc)
+            prior["timestamp"] = datetime.now(UTC).isoformat()
+            save_cache(prior)
+            return prior
 
-    for album in saved_albums:
-        cached_tracks = album_tracks_cache.get(album.id)
-        if cached_tracks is not None:
-            tracks = _deserialize_album_tracks(cached_tracks, album_name=album.name)
-        else:
-            tracks = spotify.fetch_album_tracks(client, album.id, album_name=album.name)
-            album_tracks_cache[album.id] = _serialize_album_tracks(tracks)
-        album_entries.append(_album_entry(album, tracks))
+        album_entries: list[dict[str, Any]] = []
+        for album in saved_albums:
+            cached_tracks = album_tracks_cache.get(album.id)
+            if cached_tracks is not None:
+                tracks = _deserialize_album_tracks(cached_tracks, album_name=album.name)
+            else:
+                try:
+                    tracks = spotify.fetch_album_tracks(
+                        client, album.id, album_name=album.name
+                    )
+                except spotify.RateLimitedError as exc:
+                    record_collection_rate_limit(prior, "albums", exc)
+                    prior["albums"] = album_entries
+                    prior["album_tracks"] = album_tracks_cache
+                    prior["timestamp"] = datetime.now(UTC).isoformat()
+                    save_cache(prior)
+                    return prior
+                album_tracks_cache[album.id] = _serialize_album_tracks(tracks)
+            album_entries.append(_album_entry(album, tracks))
+            prior["albums"] = album_entries
+            prior["album_tracks"] = album_tracks_cache
+            prior["timestamp"] = datetime.now(UTC).isoformat()
+            save_cache(prior)
 
-    prior["albums"] = album_entries
-    prior["album_tracks"] = album_tracks_cache
-    record_collection_ok(prior, "albums")
+        prior["albums"] = album_entries
+        prior["album_tracks"] = album_tracks_cache
+        record_collection_ok(prior, "albums")
+
     prior["timestamp"] = datetime.now(UTC).isoformat()
+    save_cache(prior)
     return prior
 
 
 def save_cache(data: dict[str, Any]) -> None:
-    """Write cache to disk."""
-    CACHE_PATH.write_text(json.dumps(data, indent=2), encoding="utf-8")
+    """Write cache to disk atomically (temp file + os.replace)."""
+    CACHE_PATH.parent.mkdir(parents=True, exist_ok=True)
+    payload = json.dumps(data, indent=2)
+    fd, tmp_name = tempfile.mkstemp(
+        dir=str(CACHE_PATH.parent),
+        prefix=".djsync_cache.",
+        suffix=".tmp",
+    )
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as handle:
+            handle.write(payload)
+            handle.write("\n")
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.replace(tmp_name, CACHE_PATH)
+    except Exception:
+        try:
+            os.unlink(tmp_name)
+        except OSError:
+            pass
+        raise
 
 
 def load_cache() -> dict[str, Any] | None:
@@ -702,5 +806,6 @@ def get_or_build_cache(
         prior=prior,
         on_log=on_log,
     )
+    # build_cache already saves incrementally; final save is a no-op safety net.
     save_cache(data)
     return data

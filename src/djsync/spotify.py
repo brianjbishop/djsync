@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import logging
+import re
+import time
 from dataclasses import dataclass
 from typing import Any, Callable, TypeVar
 
@@ -10,6 +13,7 @@ from spotipy.exceptions import SpotifyException
 from spotipy.oauth2 import SpotifyOAuth
 
 from djsync import sigils
+from djsync.config import SPOTIFY_MIN_REQUEST_INTERVAL as _CONFIG_MIN_INTERVAL
 from djsync.models import Track
 
 __all__ = [
@@ -31,7 +35,20 @@ SCOPE = (
 )
 CACHE_PATH = ".cache"
 
+# When Spotify (or spotipy's Max-Retries path) omits Retry-After, assume a
+# conservative lockout. retry_after=0 would clear immediately and is worse than
+# no tracking — it creates false confidence for the next run.
+DEFAULT_429_RETRY_AFTER = 3600
+
+# Module-level so tests can monkeypatch without reloading config.
+SPOTIFY_MIN_REQUEST_INTERVAL = float(_CONFIG_MIN_INTERVAL)
+_last_request_at: float | None = None
+_monotonic = time.monotonic
+_sleep = time.sleep
+
 T = TypeVar("T")
+
+_RETRY_AFTER_RE = re.compile(r"Retry-After[=:\s]+(\d+)", re.IGNORECASE)
 
 
 class RateLimitedError(Exception):
@@ -69,6 +86,20 @@ def _parse_retry_after(headers: Any) -> int:
         return 0
 
 
+def _parse_retry_after_from_text(text: str) -> int:
+    match = _RETRY_AFTER_RE.search(text)
+    if not match:
+        return 0
+    try:
+        return int(match.group(1))
+    except ValueError:
+        return 0
+
+
+def _effective_retry_after(seconds: int) -> int:
+    return seconds if seconds > 0 else DEFAULT_429_RETRY_AFTER
+
+
 def call_spotify(fn: Callable[..., T], /, *args: Any, **kwargs: Any) -> T:
     """Call a Spotipy method and translate HTTP 429 into RateLimitedError."""
     return _spotify_call(fn, *args, **kwargs)
@@ -87,25 +118,154 @@ def _parse_429_reason(exc: SpotifyException) -> str:
     return "QUOTA_EXCEEDED"
 
 
+def _message_looks_like_429(msg: str) -> bool:
+    lower = msg.lower()
+    return (
+        "429" in msg
+        or "too many 429" in lower
+        or "quota_exceeded" in lower
+        or "rate limit" in lower
+    )
+
+
+class _429WarningCapture(logging.Handler):
+    """Catch spotipy/urllib3 429 warnings that never become exceptions."""
+
+    def __init__(self) -> None:
+        super().__init__(level=logging.WARNING)
+        self.seen = False
+        self.retry_after = 0
+        self.reason = "QUOTA_EXCEEDED"
+
+    def emit(self, record: logging.LogRecord) -> None:
+        try:
+            msg = record.getMessage()
+        except Exception:
+            return
+        if not _message_looks_like_429(msg):
+            return
+        self.seen = True
+        parsed = _parse_retry_after_from_text(msg)
+        if parsed > 0:
+            self.retry_after = parsed
+        if "QUOTA_EXCEEDED" in msg:
+            self.reason = "QUOTA_EXCEEDED"
+        elif "RATE_LIMIT" in msg.upper():
+            self.reason = "RATE_LIMITED"
+
+
+def _enforce_min_interval() -> None:
+    """Sleep so consecutive Spotify calls respect SPOTIFY_MIN_REQUEST_INTERVAL."""
+    global _last_request_at
+    interval = float(SPOTIFY_MIN_REQUEST_INTERVAL)
+    if interval <= 0:
+        return
+    now = _monotonic()
+    if _last_request_at is not None:
+        elapsed = now - _last_request_at
+        if elapsed < interval:
+            _sleep(interval - elapsed)
+
+
+def _mark_request_time() -> None:
+    global _last_request_at
+    _last_request_at = _monotonic()
+
+
+def _record_and_raise_429(reason: str, retry_after: int) -> None:
+    from djsync import quota
+
+    effective = _effective_retry_after(retry_after)
+    quota.record_429(reason, effective)
+    raise RateLimitedError(effective)
+
+
 def _spotify_call(fn: Callable[..., T], /, *args: Any, **kwargs: Any) -> T:
-    """Call a Spotipy method through the quota ledger."""
+    """Call a Spotipy method through the quota ledger with pacing."""
     from djsync import quota
 
     # A full burst window is a pacing signal, not an error: wait it out.
     # check_can_spend still refuses on lockout or exhausted daily budget.
     quota.wait_for_burst_capacity(1)
     quota.check_can_spend(1)
+    _enforce_min_interval()
+
+    capture = _429WarningCapture()
+    loggers = [
+        logging.getLogger("spotipy"),
+        logging.getLogger("urllib3"),
+        logging.getLogger("urllib3.util.retry"),
+        logging.getLogger("requests"),
+    ]
+    for logger in loggers:
+        logger.addHandler(capture)
+
     try:
-        result = fn(*args, **kwargs)
-    except SpotifyException as exc:
-        if exc.http_status == 429:
-            retry_after = _parse_retry_after(exc.headers)
-            reason = _parse_429_reason(exc)
-            quota.record_429(reason, retry_after)
-            raise RateLimitedError(retry_after) from exc
-        raise
-    quota.record_request()
-    return result
+        try:
+            result = fn(*args, **kwargs)
+        except SpotifyException as exc:
+            _mark_request_time()
+            if exc.http_status == 429:
+                retry_after = _parse_retry_after(exc.headers)
+                reason = _parse_429_reason(exc)
+                _record_and_raise_429(reason, retry_after)
+            raise
+        except RateLimitedError:
+            _mark_request_time()
+            raise
+        except Exception as exc:
+            _mark_request_time()
+            # urllib3 MaxRetryError / requests RetryError after internal 429 retries.
+            name = type(exc).__name__
+            if name in ("RetryError", "MaxRetryError"):
+                retry_after = _parse_retry_after_from_text(str(exc))
+                _record_and_raise_429("QUOTA_EXCEEDED", retry_after)
+            raise
+        else:
+            _mark_request_time()
+            if capture.seen:
+                _record_and_raise_429(capture.reason, capture.retry_after)
+            quota.record_request()
+            return result
+    finally:
+        for logger in loggers:
+            logger.removeHandler(capture)
+
+
+def get_client() -> spotipy.Spotify:
+    """Return an authenticated Spotify client."""
+    from djsync.config import load_config
+
+    config = load_config()
+    auth_manager = SpotifyOAuth(
+        client_id=config["SPOTIFY_CLIENT_ID"],
+        client_secret=config["SPOTIFY_CLIENT_SECRET"],
+        redirect_uri=config["SPOTIFY_REDIRECT_URI"],
+        scope=SCOPE,
+        cache_path=CACHE_PATH,
+    )
+    # Do not let urllib3/spotipy silently retry 429s (they log WARNING and can
+    # surface Max-Retries without Retry-After headers). We handle 429 ourselves.
+    return spotipy.Spotify(
+        auth_manager=auth_manager,
+        retries=0,
+        status_retries=0,
+        status_forcelist=(),
+    )
+
+
+def _track_total(item: dict) -> int:
+    """Return a playlist's track count.
+
+    Spotify renamed the simplified playlist object's ``tracks`` field to
+    ``items``; both carry ``{"href": ..., "total": N}``. Accept either so the
+    count survives the API changing back or serving mixed shapes.
+    """
+    for key in ("items", "tracks"):
+        value = item.get(key)
+        if isinstance(value, dict) and "total" in value:
+            return value["total"] or 0
+    return 0
 
 
 @dataclass(frozen=True)
@@ -127,35 +287,6 @@ class Album:
     added_at: str
     spotify_url: str
     spotify_uri: str
-
-
-def get_client() -> spotipy.Spotify:
-    """Return an authenticated Spotify client."""
-    from djsync.config import load_config
-
-    config = load_config()
-    auth_manager = SpotifyOAuth(
-        client_id=config["SPOTIFY_CLIENT_ID"],
-        client_secret=config["SPOTIFY_CLIENT_SECRET"],
-        redirect_uri=config["SPOTIFY_REDIRECT_URI"],
-        scope=SCOPE,
-        cache_path=CACHE_PATH,
-    )
-    return spotipy.Spotify(auth_manager=auth_manager)
-
-
-def _track_total(item: dict) -> int:
-    """Return a playlist's track count.
-
-    Spotify renamed the simplified playlist object's ``tracks`` field to
-    ``items``; both carry ``{"href": ..., "total": N}``. Accept either so the
-    count survives the API changing back or serving mixed shapes.
-    """
-    for key in ("items", "tracks"):
-        value = item.get(key)
-        if isinstance(value, dict) and "total" in value:
-            return value["total"] or 0
-    return 0
 
 
 def fetch_playlists(client: spotipy.Spotify) -> list[Playlist]:

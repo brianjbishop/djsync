@@ -279,6 +279,14 @@ def create_app() -> Flask:
             return _rate_limit_response(exc)
         except RuntimeError as exc:
             return jsonify({"error": str(exc)}), 500
+        # build_cache returns cleanly after a mid-refresh 429; surface it.
+        for name in ("playlists", "albums"):
+            fields = cache.collection_api_fields(data, name)
+            if fields.get("status") == "rate_limited":
+                resp = _cache_response(data)
+                resp["rate_limited"] = True
+                resp.update(fields)
+                return jsonify(resp), 429
         return jsonify(_cache_response(data))
 
     @app.post("/api/selection")

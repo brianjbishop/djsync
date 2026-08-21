@@ -120,6 +120,16 @@ def refresh_cmd(max_playlists: int | None) -> None:
     except RuntimeError as exc:
         _exit_on_spotify_error(exc)
 
+    status = cache.collection_status(data, "playlists")
+    if status.get("status") == "rate_limited":
+        click.echo(status.get("error") or "Spotify rate limited", err=True)
+        click.echo(
+            f"Partial cache saved at {data.get('timestamp')} "
+            f"({len(data.get('playlists') or [])} playlists with tracks).",
+            err=True,
+        )
+        sys.exit(1)
+
     click.echo(f"Cache refreshed at {data['timestamp']}")
 
 

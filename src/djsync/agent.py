@@ -20,8 +20,10 @@ from djsync import beeper, cache, config, downloads, events, quota, spotify
 from djsync.config import (
     CIRCUIT_BREAKER_FAILURES,
     DAILY_DOWNLOAD_CAP,
+    PLAYLISTS_PER_RUN,
     PROJECT_ROOT,
     STALE_AFTER_HOURS,
+    SYNC_ALBUMS,
     Destination,
     get_destination,
 )
@@ -303,25 +305,26 @@ def build_work_queue(
                 total=total,
             )
         )
-    for entry in data.get("albums") or []:
-        name = str(entry.get("name") or "")
-        if name.casefold() in skip_fold:
-            continue
-        total = int(entry.get("total_tracks") or 0)
-        downloaded = int(entry.get("downloaded_count") or 0)
-        missing = max(0, total - downloaded)
-        if missing <= 0:
-            continue
-        items.append(
-            WorkItem(
-                kind="album",
-                id=str(entry["id"]),
-                name=name,
-                missing=missing,
-                downloaded=downloaded,
-                total=total,
+    if SYNC_ALBUMS:
+        for entry in data.get("albums") or []:
+            name = str(entry.get("name") or "")
+            if name.casefold() in skip_fold:
+                continue
+            total = int(entry.get("total_tracks") or 0)
+            downloaded = int(entry.get("downloaded_count") or 0)
+            missing = max(0, total - downloaded)
+            if missing <= 0:
+                continue
+            items.append(
+                WorkItem(
+                    kind="album",
+                    id=str(entry["id"]),
+                    name=name,
+                    missing=missing,
+                    downloaded=downloaded,
+                    total=total,
+                )
             )
-        )
     items.sort(
         key=lambda item: (
             0 if item.downloaded > 0 else 1,
@@ -341,7 +344,12 @@ def refresh_cache() -> dict[str, Any]:
     """Rebuild the library cache from Spotify. Isolated for tests."""
     client = spotify.get_client()
     prior = cache.load_cache()
-    data = cache.build_cache(client, prior=prior)
+    data = cache.build_cache(
+        client,
+        prior=prior,
+        max_playlists=PLAYLISTS_PER_RUN,
+        sync_albums=SYNC_ALBUMS,
+    )
     cache.save_cache(data)
     return data
 
@@ -354,12 +362,16 @@ def _maybe_refresh(
 ) -> dict[str, Any] | None:
     if dry_run or not cache_is_stale(data, now=now):
         return data
-    cost = quota.estimate_refresh_cost(data)
+    cost = quota.estimate_refresh_cost(data, max_playlists=PLAYLISTS_PER_RUN)
     # Affordability, not rate: the burst ceiling is enforced per request.
     if not quota.can_spend(cost, now=now, burst=False):
         logger.info("cache stale but refresh cost %s exceeds quota; skipping", cost)
         return data
-    logger.info("cache stale; refreshing (estimated %s Spotify requests)", cost)
+    logger.info(
+        "cache stale; refreshing up to %s playlists (estimated %s Spotify requests)",
+        PLAYLISTS_PER_RUN,
+        cost,
+    )
     return refresh_cache()
 
 
@@ -499,11 +511,12 @@ def _run_locked(
     try:
         data = _maybe_refresh(data, now=now, dry_run=dry_run)
     except spotify.RateLimitedError as exc:
-        save_state({"last_error": str(exc), "stop_reason": "lockout"}, now=now)
-        notify("djsync — Spotify lockout detected")
-        lockout = quota.get_lockout(now=now)
-        beeper.check_and_announce_events(data=data, lockout=lockout, now=now)
-        return 0
+        # Refresh recorded the lockout and saved partial work; keep going so
+        # any already-cached playlists with missing files still download.
+        logger.warning("refresh hit rate limit (%s); continuing from cache", exc)
+        save_state({"last_error": str(exc)}, now=now)
+        notify("djsync — Spotify lockout during refresh; downloading from cache")
+        data = cache.load_cache() or data
     except Exception as exc:
         logger.exception("refresh failed; continuing with existing cache")
         save_state({"last_error": f"refresh failed: {exc}"}, now=now)
