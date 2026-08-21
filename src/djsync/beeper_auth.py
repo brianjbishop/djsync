@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import base64
+import hashlib
 import json
 import secrets
 import urllib.error
@@ -128,11 +130,22 @@ def run_beeper_auth(*, redirect_uri: str = DEFAULT_REDIRECT_URI) -> str:
         raise RuntimeError("Beeper OAuth registration did not return a client_id")
 
     state = secrets.token_urlsafe(16)
+    # Beeper requires PKCE for public clients ("PKCE code_challenge is required
+    # for public clients"), so derive an S256 challenge from a fresh verifier
+    # and send the verifier back at token exchange.
+    code_verifier = secrets.token_urlsafe(64)[:128]
+    code_challenge = (
+        base64.urlsafe_b64encode(hashlib.sha256(code_verifier.encode()).digest())
+        .decode()
+        .rstrip("=")
+    )
     auth_params = {
         "client_id": client_id,
         "redirect_uri": redirect_uri,
         "response_type": "code",
         "state": state,
+        "code_challenge": code_challenge,
+        "code_challenge_method": "S256",
     }
     authorize_base = oauth.get("authorization_endpoint") or f"{base}{paths['authorize']}"
     authorize_url = f"{authorize_base}?{urllib.parse.urlencode(auth_params)}"
@@ -151,6 +164,7 @@ def run_beeper_auth(*, redirect_uri: str = DEFAULT_REDIRECT_URI) -> str:
         "code": code,
         "redirect_uri": redirect_uri,
         "client_id": client_id,
+        "code_verifier": code_verifier,
     }
     token_resp = _fetch_json(token_url, method="POST", data=token_body)
     token = token_resp.get("access_token") or token_resp.get("accessToken")

@@ -355,7 +355,8 @@ def _maybe_refresh(
     if dry_run or not cache_is_stale(data, now=now):
         return data
     cost = quota.estimate_refresh_cost(data)
-    if not quota.can_spend(cost, now=now):
+    # Affordability, not rate: the burst ceiling is enforced per request.
+    if not quota.can_spend(cost, now=now, burst=False):
         logger.info("cache stale but refresh cost %s exceeds quota; skipping", cost)
         return data
     logger.info("cache stale; refreshing (estimated %s Spotify requests)", cost)

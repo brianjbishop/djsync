@@ -143,8 +143,16 @@ def used_last_30s(*, now: datetime | None = None) -> int:
     return count
 
 
-def can_spend(n: int, *, now: datetime | None = None) -> bool:
-    """Return True if *n* requests are allowed under lockout and budget rules."""
+def can_spend(n: int, *, now: datetime | None = None, burst: bool = True) -> bool:
+    """Return True if *n* requests are allowed under lockout and budget rules.
+
+    ``burst`` applies the 30-second rate ceiling. Leave it on for a single
+    request about to be made. Turn it OFF when asking whether a multi-request
+    operation is affordable overall: BURST_PER_30S is a rate, not a total, and
+    a batch is spread over minutes by per-request pacing. Applying it to the
+    whole batch makes any operation larger than the burst limit permanently
+    impossible however much daily budget remains.
+    """
     if n <= 0:
         return True
     now = now or _now()
@@ -154,7 +162,7 @@ def can_spend(n: int, *, now: datetime | None = None) -> bool:
     used_24h = len(_prune_requests(data, now=now))
     if used_24h + n > DAILY_REQUEST_BUDGET:
         return False
-    if used_last_30s(now=now) + n > BURST_PER_30S:
+    if burst and used_last_30s(now=now) + n > BURST_PER_30S:
         return False
     return True
 

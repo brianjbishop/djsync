@@ -1,6 +1,14 @@
 {
-  "last_run": "2026-08-20T00:52:44.083167+00:00",
-  "last_error": "QUOTA_EXCEEDED",
+  "last_run": "2026-08-21T06:53:03.313372+00:00",
+  "last_error": "circuit breaker: 5 consecutive download failures",
   "last_success": null,
-  "stop_reason": "lockout"
+  "stop_reason": "circuit_breaker",
+  "discord_announced": [],
+  "beeper_announced": [],
+  "drive_unmounted_since": null,
+  "paused": false,
+  "skip_list": [],
+  "sync_priority": null,
+  "beeper_last_message_id": null,
+  "downloaded": 0
 }
