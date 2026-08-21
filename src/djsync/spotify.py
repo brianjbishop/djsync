@@ -91,6 +91,9 @@ def _spotify_call(fn: Callable[..., T], /, *args: Any, **kwargs: Any) -> T:
     """Call a Spotipy method through the quota ledger."""
     from djsync import quota
 
+    # A full burst window is a pacing signal, not an error: wait it out.
+    # check_can_spend still refuses on lockout or exhausted daily budget.
+    quota.wait_for_burst_capacity(1)
     quota.check_can_spend(1)
     try:
         result = fn(*args, **kwargs)

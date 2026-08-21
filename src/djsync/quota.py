@@ -167,6 +167,40 @@ def can_spend(n: int, *, now: datetime | None = None, burst: bool = True) -> boo
     return True
 
 
+def wait_for_burst_capacity(n: int = 1, *, sleep=None, now_fn=None) -> float:
+    """Block until *n* requests fit inside the 30s burst window.
+
+    Exceeding a RATE limit means wait, not fail. Only a lockout or the daily
+    budget are refusals. Returns the seconds actually slept (0 if none needed).
+    """
+    import time as _time
+
+    sleeper = sleep or _time.sleep
+    clock = now_fn or _now
+    slept = 0.0
+    # Bounded: one burst window plus slack. A caller that cannot get capacity
+    # in that time has a real problem, and spinning here would hide it.
+    deadline = 60.0
+    while slept < deadline:
+        now = clock()
+        data = _load_ledger()
+        _prune_requests(data, now=now)
+        recent = []
+        for raw in data.get("requests") or []:
+            ts = _parse_ts(raw)
+            if ts is not None and (now - ts).total_seconds() < 30:
+                recent.append(ts)
+        recent.sort()
+        if len(recent) + n <= BURST_PER_30S:
+            return slept
+        # Wait just past the moment the oldest in-window request ages out.
+        wait = 30.0 - (now - recent[0]).total_seconds() + 0.25
+        wait = max(0.25, min(wait, 30.0))
+        sleeper(wait)
+        slept += wait
+    return slept
+
+
 def check_can_spend(n: int, *, now: datetime | None = None) -> None:
     """Raise if *n* requests cannot be spent (lockout or budget)."""
     from djsync.spotify import RateLimitedError, format_rate_limit_message
