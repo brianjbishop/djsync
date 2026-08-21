@@ -14,6 +14,7 @@ from typing import Any, Literal
 import spotipy
 
 from djsync import spotify
+from djsync import config as app_config
 from djsync.config import PROJECT_ROOT, SYNC_ALBUMS, get_destination
 from djsync.library import album_folder, existing_spotify_ids, playlist_folder
 from djsync.models import Track
@@ -440,6 +441,36 @@ def playlists_from_catalog(data: dict[str, Any]) -> list[spotify.Playlist]:
     return playlists
 
 
+def _parse_ts(raw: str) -> datetime | None:
+    try:
+        return datetime.fromisoformat(raw.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+
+
+def catalog_is_stale(
+    data: dict[str, Any] | None,
+    *,
+    now: datetime | None = None,
+    ttl_hours: float | None = None,
+) -> bool:
+    """Return True when the playlist catalog must be re-listed from Spotify."""
+    if not data:
+        return True
+    catalog = data.get("playlist_catalog") or []
+    if not catalog:
+        return True
+    fetched_raw = data.get("catalog_fetched_at")
+    if not fetched_raw:
+        return True
+    ts = _parse_ts(str(fetched_raw))
+    if ts is None:
+        return True
+    now = now or datetime.now(UTC)
+    hours = app_config.CATALOG_TTL_HOURS if ttl_hours is None else ttl_hours
+    return now - ts > timedelta(hours=hours)
+
+
 def _playlist_entry(
     playlist: spotify.Playlist,
     tracks: list[Track],
@@ -566,12 +597,22 @@ def build_cache(
     prior: dict[str, Any] | None = None,
     on_log: LogCallback | None = None,
     sync_albums: bool | None = None,
+    force_catalog: bool = False,
+    now: datetime | None = None,
 ) -> dict[str, Any]:
     """Scan Spotify + drive and return cache payload.
 
     Saves to disk after each playlist's tracks are fetched (atomic replace).
     On RateLimitedError, persists completed work, records lockout state, and
     returns cleanly without raising.
+
+    The playlist *catalog* (id/name/sigils/track_count/snapshot_id) is cached
+    separately with CATALOG_TTL_HOURS. Re-listing ~1050 playlists costs
+    ceil(N/50) requests (~22) and would burn most of the daily budget if done
+    every run. Without a fresh catalog we cannot see snapshot_id changes, so a
+    playlist edited today may not be noticed until the next catalog refresh —
+    that is the correct trade at this budget. Daily catalog refresh is the
+    mechanism that eventually catches those edits.
     """
     def log(msg: str) -> None:
         if on_log:
@@ -579,6 +620,7 @@ def build_cache(
         else:
             logger.info(msg)
 
+    clock = now or datetime.now(UTC)
     include_albums = SYNC_ALBUMS if sync_albums is None else sync_albums
     prior = dict(prior if prior is not None else load_cache() or {})
     _ensure_collections(prior)
@@ -598,18 +640,24 @@ def build_cache(
         prior.get("album_tracks") or {}
     )
 
-    try:
-        all_playlists = spotify.fetch_playlists(client)
-    except spotify.RateLimitedError as exc:
-        record_collection_rate_limit(prior, "playlists", exc)
-        save_cache(prior)
-        return prior
+    refresh_catalog = force_catalog or catalog_is_stale(prior, now=clock)
+    if refresh_catalog:
+        try:
+            all_playlists = spotify.fetch_playlists(client)
+        except spotify.RateLimitedError as exc:
+            record_collection_rate_limit(prior, "playlists", exc)
+            save_cache(prior)
+            return prior
 
-    playlist_catalog = [_playlist_catalog_entry(p) for p in all_playlists]
-    marked_d = [p for p in all_playlists if "d" in p.sigils]
-    prior["playlist_catalog"] = playlist_catalog
-    prior["timestamp"] = datetime.now(UTC).isoformat()
-    save_cache(prior)
+        playlist_catalog = [_playlist_catalog_entry(p) for p in all_playlists]
+        prior["playlist_catalog"] = playlist_catalog
+        prior["catalog_fetched_at"] = clock.isoformat()
+        prior["timestamp"] = clock.isoformat()
+        save_cache(prior)
+        marked_d = [p for p in all_playlists if "d" in p.sigils]
+    else:
+        all_playlists = playlists_from_catalog(prior)
+        marked_d = [p for p in all_playlists if "d" in p.sigils]
 
     needs_refetch = [
         p for p in marked_d if _needs_track_refetch(p, old_playlists_by_id.get(p.id))
@@ -765,8 +813,10 @@ def refresh_playlist_catalog(
     client: spotipy.Spotify,
     *,
     prior: dict[str, Any] | None = None,
+    now: datetime | None = None,
 ) -> dict[str, Any]:
     """Fetch the playlist list and update catalog metadata in the cache."""
+    clock = now or datetime.now(UTC)
     prior = dict(prior if prior is not None else load_cache() or {})
     _ensure_collections(prior)
     try:
@@ -776,7 +826,8 @@ def refresh_playlist_catalog(
         save_cache(prior)
         raise
     prior["playlist_catalog"] = [_playlist_catalog_entry(p) for p in all_playlists]
-    prior["timestamp"] = datetime.now(UTC).isoformat()
+    prior["catalog_fetched_at"] = clock.isoformat()
+    prior["timestamp"] = clock.isoformat()
     if "playlists" not in prior:
         prior["playlists"] = []
     if "albums" not in prior:
@@ -791,6 +842,7 @@ def get_or_build_cache(
     *,
     refresh: bool = False,
     max_playlists: int | None = None,
+    force_catalog: bool = False,
     on_log: LogCallback | None = None,
 ) -> dict[str, Any]:
     """Return cached data, building it first if *refresh* is requested."""
@@ -804,6 +856,7 @@ def get_or_build_cache(
         client,
         max_playlists=max_playlists,
         prior=prior,
+        force_catalog=force_catalog,
         on_log=on_log,
     )
     # build_cache already saves incrementally; final save is a no-op safety net.

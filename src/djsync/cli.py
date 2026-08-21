@@ -104,7 +104,12 @@ def playlists_cmd(as_json: bool, refresh: bool) -> None:
     default=None,
     help="Fetch tracks for at most N changed playlists this refresh.",
 )
-def refresh_cmd(max_playlists: int | None) -> None:
+@click.option(
+    "--force-catalog",
+    is_flag=True,
+    help="Re-list playlists from Spotify even when the catalog cache is fresh.",
+)
+def refresh_cmd(max_playlists: int | None, force_catalog: bool) -> None:
     """Rebuild the library cache from Spotify (reuses unchanged playlists)."""
     try:
         client = spotify.get_client()
@@ -112,6 +117,7 @@ def refresh_cmd(max_playlists: int | None) -> None:
             client,
             max_playlists=max_playlists,
             prior=cache.load_cache(),
+            force_catalog=force_catalog,
             on_log=lambda msg: click.echo(msg, err=True),
         )
         cache.save_cache(data)

@@ -75,6 +75,9 @@ SPOTIFY_MIN_REQUEST_INTERVAL = float(
 # YouTube download cap (rolling 24h) and unattended-agent knobs.
 DAILY_DOWNLOAD_CAP = int(os.getenv("DJSYNC_DAILY_DOWNLOAD_CAP", "800"))
 STALE_AFTER_HOURS = float(os.getenv("DJSYNC_STALE_AFTER_HOURS", "12"))
+# Playlist *listing* is expensive (~22 requests for ~1050 playlists) and rarely
+# changes. Cache it separately and only re-list when older than this TTL.
+CATALOG_TTL_HOURS = float(os.getenv("DJSYNC_CATALOG_TTL_HOURS", "24"))
 CIRCUIT_BREAKER_FAILURES = int(os.getenv("DJSYNC_CIRCUIT_BREAKER_FAILURES", "5"))
 PLAYLISTS_PER_RUN = int(os.getenv("DJSYNC_PLAYLISTS_PER_RUN", "10"))
 SYNC_ALBUMS = os.getenv("DJSYNC_SYNC_ALBUMS", "false").strip().lower() in (

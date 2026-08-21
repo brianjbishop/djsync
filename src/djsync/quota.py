@@ -260,10 +260,13 @@ def estimate_refresh_cost(
     prior: dict[str, Any] | None = None,
     *,
     max_playlists: int | None = None,
+    force_catalog: bool = False,
+    now: datetime | None = None,
 ) -> int:
     """Estimate Spotify requests for a cache refresh, including pagination.
 
-    playlist listing = ceil(total_playlists / 50)
+    playlist listing = ceil(total_playlists / 50) — only when the catalog is
+    stale (or force_catalog), otherwise the cached catalog is reused
     playlist pages   = ceil(track_count / 100) per playlist needing a refetch
     albums           = ceil(saved_albums / 50) + 1 per album whose tracks are
                        uncached (only when SYNC_ALBUMS is enabled)
@@ -278,6 +281,7 @@ def estimate_refresh_cost(
         playlist_count = max(len(scanned), 1)
 
     playlist_list_pages = _ceil_div(playlist_count, 50)
+    include_listing = force_catalog or cache.catalog_is_stale(prior, now=now)
 
     if catalog:
         marked_d = [
@@ -312,7 +316,9 @@ def estimate_refresh_cost(
         _ceil_div(int(playlist.track_count or 0), 100) for playlist in needing
     )
 
-    total = playlist_list_pages + track_pages
+    total = track_pages
+    if include_listing:
+        total += playlist_list_pages
 
     if config.SYNC_ALBUMS:
         albums = prior.get("albums") or []
@@ -324,3 +330,34 @@ def estimate_refresh_cost(
         total += album_pages + new_album_tracks
 
     return total
+
+
+def max_playlists_fitting_budget(
+    prior: dict[str, Any] | None,
+    *,
+    remaining: int,
+    desired: int,
+    force_catalog: bool = False,
+    now: datetime | None = None,
+) -> int:
+    """Largest playlist batch that fits in *remaining* Spotify requests.
+
+    Returns 0 when even one playlist (plus a stale-catalog listing, if needed)
+    cannot fit — callers should skip refresh entirely rather than start work
+    they cannot finish.
+    """
+    if remaining <= 0 or desired <= 0:
+        return 0
+    best = 0
+    for n in range(1, desired + 1):
+        cost = estimate_refresh_cost(
+            prior,
+            max_playlists=n,
+            force_catalog=force_catalog,
+            now=now,
+        )
+        if cost <= remaining:
+            best = n
+        else:
+            break
+    return best

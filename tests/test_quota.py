@@ -110,6 +110,7 @@ def test_estimate_refresh_cost_523_track_playlist_costs_six_pages(
     monkeypatch.setattr("djsync.config.SYNC_ALBUMS", False)
     assert quota._ceil_div(523, 100) == 6
     prior = {
+        # No catalog_fetched_at → catalog treated as stale → listing counted.
         "playlist_catalog": [
             {
                 "id": "big",

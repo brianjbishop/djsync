@@ -95,7 +95,7 @@ install() {
 
   install_one "$AGENT_LABEL" "$AGENT_TEMPLATE" "$AGENT_DEST" "$AGENT_DOMAIN" "$AGENT_LOG"
   echo "Program: ${ROOT}/djsync-run agent"
-  echo "StartInterval: 7200 seconds (2 hours)"
+  echo "StartInterval: 21600 seconds (6 hours)"
   echo "RunAtLoad: true"
   echo "WatchPaths: /Volumes"
   echo "Logs: ${AGENT_LOG}"

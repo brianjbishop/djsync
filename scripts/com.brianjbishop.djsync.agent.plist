@@ -14,7 +14,7 @@
     <key>RunAtLoad</key>
     <true/>
     <key>StartInterval</key>
-    <integer>7200</integer>
+    <integer>21600</integer>
     <key>WatchPaths</key>
     <array>
         <string>/Volumes</string>

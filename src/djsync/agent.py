@@ -340,14 +340,14 @@ def build_work_queue(
     return items
 
 
-def refresh_cache() -> dict[str, Any]:
+def refresh_cache(*, max_playlists: int | None = None) -> dict[str, Any]:
     """Rebuild the library cache from Spotify. Isolated for tests."""
     client = spotify.get_client()
     prior = cache.load_cache()
     data = cache.build_cache(
         client,
         prior=prior,
-        max_playlists=PLAYLISTS_PER_RUN,
+        max_playlists=PLAYLISTS_PER_RUN if max_playlists is None else max_playlists,
         sync_albums=SYNC_ALBUMS,
     )
     cache.save_cache(data)
@@ -362,17 +362,32 @@ def _maybe_refresh(
 ) -> dict[str, Any] | None:
     if dry_run or not cache_is_stale(data, now=now):
         return data
-    cost = quota.estimate_refresh_cost(data, max_playlists=PLAYLISTS_PER_RUN)
+    remaining = max(0, quota.DAILY_REQUEST_BUDGET - quota.used_last_24h(now=now))
+    batch = quota.max_playlists_fitting_budget(
+        data,
+        remaining=remaining,
+        desired=PLAYLISTS_PER_RUN,
+        now=now,
+    )
+    if batch <= 0:
+        logger.info(
+            "cache stale but remaining budget (%s requests) cannot cover a refresh; "
+            "downloading from cache",
+            remaining,
+        )
+        return data
+    cost = quota.estimate_refresh_cost(data, max_playlists=batch, now=now)
     # Affordability, not rate: the burst ceiling is enforced per request.
     if not quota.can_spend(cost, now=now, burst=False):
         logger.info("cache stale but refresh cost %s exceeds quota; skipping", cost)
         return data
     logger.info(
-        "cache stale; refreshing up to %s playlists (estimated %s Spotify requests)",
+        "refreshing %s of %s playlists (budget: %s requests remaining)",
+        batch,
         PLAYLISTS_PER_RUN,
-        cost,
+        remaining,
     )
-    return refresh_cache()
+    return refresh_cache(max_playlists=batch)
 
 
 def _playlist_entry(data: dict[str, Any], item: WorkItem) -> dict[str, Any] | None:
